@@ -17,7 +17,12 @@ interface AuthContextValue {
   session: Session | null;
   user: User | null;
   profile: Profile | null;
-  role: AppRole | null;
+  roles: AppRole[];
+  isLeader: boolean;
+  isMember: boolean;
+  /** Active dashboard view when user has both roles */
+  activeRole: AppRole;
+  setActiveRole: (r: AppRole) => void;
   loading: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -28,26 +33,32 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [role, setRole] = useState<AppRole | null>(null);
+  const [roles, setRoles] = useState<AppRole[]>([]);
+  const [activeRole, setActiveRoleState] = useState<AppRole>("member");
   const [loading, setLoading] = useState(true);
 
   const loadProfile = async (userId: string) => {
     const [{ data: p }, { data: r }] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
+      supabase.from("user_roles").select("role").eq("user_id", userId),
     ]);
     setProfile((p as Profile) ?? null);
-    setRole((r?.role as AppRole) ?? null);
+    const list = ((r as { role: AppRole }[]) ?? []).map((x) => x.role);
+    setRoles(list);
+    // Prefer leader view when available
+    setActiveRoleState((prev) => {
+      if (list.includes(prev)) return prev;
+      return list.includes("leader") ? "leader" : "member";
+    });
   };
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
-      if (s?.user) {
-        setTimeout(() => loadProfile(s.user.id), 0);
-      } else {
+      if (s?.user) setTimeout(() => loadProfile(s.user.id), 0);
+      else {
         setProfile(null);
-        setRole(null);
+        setRoles([]);
       }
     });
     supabase.auth.getSession().then(async ({ data: { session: s } }) => {
@@ -62,13 +73,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (session?.user) await loadProfile(session.user.id);
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  const setActiveRole = (r: AppRole) => {
+    if (roles.includes(r)) setActiveRoleState(r);
   };
 
   return (
     <AuthContext.Provider
-      value={{ session, user: session?.user ?? null, profile, role, loading, refresh, signOut }}
+      value={{
+        session,
+        user: session?.user ?? null,
+        profile,
+        roles,
+        isLeader: roles.includes("leader"),
+        isMember: roles.includes("member"),
+        activeRole,
+        setActiveRole,
+        loading,
+        refresh,
+        signOut: async () => {
+          await supabase.auth.signOut();
+        },
+      }}
     >
       {children}
     </AuthContext.Provider>

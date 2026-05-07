@@ -100,6 +100,70 @@ export type Database = {
           },
         ]
       }
+      transactions: {
+        Row: {
+          amount_usd: number
+          created_at: string
+          currency: string
+          exchange_rate: number | null
+          id: string
+          leader_id: string | null
+          local_amount: number | null
+          member_id: string
+          note: string | null
+          request_id: string | null
+          type: Database["public"]["Enums"]["txn_type"]
+        }
+        Insert: {
+          amount_usd: number
+          created_at?: string
+          currency?: string
+          exchange_rate?: number | null
+          id?: string
+          leader_id?: string | null
+          local_amount?: number | null
+          member_id: string
+          note?: string | null
+          request_id?: string | null
+          type: Database["public"]["Enums"]["txn_type"]
+        }
+        Update: {
+          amount_usd?: number
+          created_at?: string
+          currency?: string
+          exchange_rate?: number | null
+          id?: string
+          leader_id?: string | null
+          local_amount?: number | null
+          member_id?: string
+          note?: string | null
+          request_id?: string | null
+          type?: Database["public"]["Enums"]["txn_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_leader_id_fkey"
+            columns: ["leader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "withdrawal_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -121,6 +185,57 @@ export type Database = {
         }
         Relationships: []
       }
+      withdrawal_requests: {
+        Row: {
+          amount_usd: number
+          created_at: string
+          description: string
+          id: string
+          leader_id: string
+          leader_note: string | null
+          member_id: string
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["withdrawal_status"]
+        }
+        Insert: {
+          amount_usd: number
+          created_at?: string
+          description: string
+          id?: string
+          leader_id: string
+          leader_note?: string | null
+          member_id: string
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["withdrawal_status"]
+        }
+        Update: {
+          amount_usd?: number
+          created_at?: string
+          description?: string
+          id?: string
+          leader_id?: string
+          leader_note?: string | null
+          member_id?: string
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["withdrawal_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_requests_leader_id_fkey"
+            columns: ["leader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withdrawal_requests_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -133,6 +248,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      promote_member_to_leader: {
+        Args: { _member_id: string; _note?: string }
+        Returns: undefined
+      }
       validate_invite_code: {
         Args: { _code: string }
         Returns: {
@@ -143,6 +262,8 @@ export type Database = {
     }
     Enums: {
       app_role: "member" | "leader"
+      txn_type: "deposit" | "withdrawal" | "release" | "adjustment"
+      withdrawal_status: "pending" | "approved" | "declined"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -271,6 +392,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["member", "leader"],
+      txn_type: ["deposit", "withdrawal", "release", "adjustment"],
+      withdrawal_status: ["pending", "approved", "declined"],
     },
   },
 } as const

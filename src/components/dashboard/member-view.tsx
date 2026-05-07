@@ -1,0 +1,236 @@
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Wallet, TrendingUp, Clock, Plus } from "lucide-react";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth, type Profile } from "@/lib/auth-context";
+import { fmtUsd, fmtDate, fmtMoney } from "@/lib/format";
+import type { Transaction, WithdrawalRequest } from "@/lib/types";
+import { StatCard } from "@/components/dashboard/stat-card";
+
+const requestSchema = z.object({
+  amount: z.number().positive().max(1_000_000),
+  description: z.string().trim().min(5).max(500),
+});
+
+export function MemberView({ profile }: { profile: Profile }) {
+  const { refresh } = useAuth();
+  const [txns, setTxns] = useState<Transaction[]>([]);
+  const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
+  const [open, setOpen] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const load = async () => {
+    const [{ data: t }, { data: r }] = await Promise.all([
+      supabase.from("transactions").select("*").eq("member_id", profile.id).order("created_at", { ascending: false }),
+      supabase.from("withdrawal_requests").select("*").eq("member_id", profile.id).order("created_at", { ascending: false }),
+    ]);
+    setTxns((t as Transaction[]) ?? []);
+    setRequests((r as WithdrawalRequest[]) ?? []);
+  };
+
+  useEffect(() => {
+    load();
+  }, [profile.id]);
+
+  const pending = requests.filter((r) => r.status === "pending").length;
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = requestSchema.safeParse({ amount: Number(amount), description });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0].message);
+      return;
+    }
+    if (!profile.leader_id) {
+      toast.error("You don't have a team leader assigned.");
+      return;
+    }
+    if (parsed.data.amount > Number(profile.balance_usd)) {
+      toast.error("Amount exceeds your managed balance.");
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.from("withdrawal_requests").insert({
+      member_id: profile.id,
+      leader_id: profile.leader_id,
+      amount_usd: parsed.data.amount,
+      description: parsed.data.description,
+    });
+    setSubmitting(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Withdrawal request submitted");
+    setOpen(false);
+    setAmount("");
+    setDescription("");
+    await load();
+    await refresh();
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Welcome, {profile.full_name.split(" ")[0]}
+          </h1>
+          <p className="text-sm text-muted-foreground">Your managed funds and activity.</p>
+        </div>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button disabled={!profile.leader_id || Number(profile.balance_usd) <= 0}>
+              <Plus className="mr-1 size-4" /> Request withdrawal
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Request a withdrawal</DialogTitle>
+              <DialogDescription>
+                Your team leader will review and respond. Be clear about what the funds are for.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={submit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="amount">Amount (USD)</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  max={profile.balance_usd}
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Available: {fmtUsd(profile.balance_usd)}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="desc">Reason</Label>
+                <Textarea
+                  id="desc"
+                  rows={4}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="What is this withdrawal for?"
+                  required
+                />
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? "Submitting…" : "Submit request"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <StatCard label="Managed balance" value={fmtUsd(profile.balance_usd)} icon={Wallet} hint="Held by your leader" />
+        <StatCard label="Current rank" value={profile.rank} icon={TrendingUp} hint="Reach Director to unlock" />
+        <StatCard label="Pending requests" value={String(pending)} icon={Clock} />
+      </div>
+
+      <section className="rounded-2xl border bg-card p-6 shadow-card">
+        <h2 className="text-base font-semibold">Withdrawal requests</h2>
+        <div className="mt-4 divide-y rounded-xl border">
+          {requests.length === 0 && (
+            <p className="px-4 py-10 text-center text-sm text-muted-foreground">No requests yet.</p>
+          )}
+          {requests.map((r) => (
+            <div key={r.id} className="flex items-start justify-between gap-3 px-4 py-3">
+              <div className="min-w-0">
+                <p className="font-medium">{fmtUsd(r.amount_usd)}</p>
+                <p className="truncate text-xs text-muted-foreground">{r.description}</p>
+                {r.leader_note && (
+                  <p className="mt-1 text-xs italic text-muted-foreground">
+                    Leader: "{r.leader_note}"
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-muted-foreground">{fmtDate(r.created_at)}</p>
+              </div>
+              <StatusPill status={r.status} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border bg-card p-6 shadow-card">
+        <h2 className="text-base font-semibold">Transaction history</h2>
+        <div className="mt-4 overflow-x-auto rounded-xl border">
+          {txns.length === 0 ? (
+            <p className="px-4 py-10 text-center text-sm text-muted-foreground">No activity yet.</p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3 font-medium">When</th>
+                  <th className="px-4 py-3 font-medium">Type</th>
+                  <th className="px-4 py-3 font-medium">Note</th>
+                  <th className="px-4 py-3 text-right font-medium">USD</th>
+                  <th className="px-4 py-3 text-right font-medium">Local</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {txns.map((t) => (
+                  <tr key={t.id}>
+                    <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{fmtDate(t.created_at)}</td>
+                    <td className="px-4 py-3 capitalize">{t.type}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{t.note ?? "—"}</td>
+                    <td
+                      className={`px-4 py-3 text-right font-mono ${
+                        t.type === "deposit" || t.type === "adjustment" ? "text-success" : "text-foreground"
+                      }`}
+                    >
+                      {t.type === "withdrawal" || t.type === "release" ? "−" : "+"}
+                      {fmtUsd(t.amount_usd)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono text-muted-foreground">
+                      {t.local_amount && t.currency !== "USD"
+                        ? `${fmtMoney(t.local_amount, t.currency)} @ ${t.exchange_rate}`
+                        : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function StatusPill({ status }: { status: WithdrawalRequest["status"] }) {
+  const styles =
+    status === "pending"
+      ? "bg-warning/15 text-warning"
+      : status === "approved"
+        ? "bg-success/15 text-success"
+        : "bg-destructive/15 text-destructive";
+  return (
+    <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium capitalize ${styles}`}>
+      {status}
+    </span>
+  );
+}

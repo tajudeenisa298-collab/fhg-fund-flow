@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { Wallet, LogOut } from "lucide-react";
+import { Wallet, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth-context";
@@ -63,6 +63,9 @@ function DashboardPage() {
               <p className="text-sm font-medium leading-tight">{profile.full_name}</p>
               <p className="text-xs text-muted-foreground">{profile.email}</p>
             </div>
+            <Button variant="outline" size="icon" asChild aria-label="Settings">
+              <a href="/settings"><Settings className="size-4" /></a>
+            </Button>
             <Button
               variant="outline"
               size="icon"

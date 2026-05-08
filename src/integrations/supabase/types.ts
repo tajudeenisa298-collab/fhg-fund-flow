@@ -14,10 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          id: number
+          updated_at: string
+          usd_to_ngn: number
+        }
+        Insert: {
+          id?: number
+          updated_at?: string
+          usd_to_ngn?: number
+        }
+        Update: {
+          id?: number
+          updated_at?: string
+          usd_to_ngn?: number
+        }
+        Relationships: []
+      }
+      bank_accounts: {
+        Row: {
+          account_number: string
+          account_owner_name: string
+          bank_name: string
+          created_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_number: string
+          account_owner_name: string
+          bank_name: string
+          created_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_number?: string
+          account_owner_name?: string
+          bank_name?: string
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invite_codes: {
         Row: {
           code: string
           created_at: string
+          expires_at: string
           id: string
           leader_id: string
           revoked: boolean
@@ -27,6 +73,7 @@ export type Database = {
         Insert: {
           code: string
           created_at?: string
+          expires_at?: string
           id?: string
           leader_id: string
           revoked?: boolean
@@ -36,6 +83,7 @@ export type Database = {
         Update: {
           code?: string
           created_at?: string
+          expires_at?: string
           id?: string
           leader_id?: string
           revoked?: boolean
@@ -62,6 +110,7 @@ export type Database = {
       profiles: {
         Row: {
           balance_usd: number
+          can_handle_funds: boolean
           created_at: string
           email: string | null
           full_name: string
@@ -72,6 +121,7 @@ export type Database = {
         }
         Insert: {
           balance_usd?: number
+          can_handle_funds?: boolean
           created_at?: string
           email?: string | null
           full_name: string
@@ -82,6 +132,7 @@ export type Database = {
         }
         Update: {
           balance_usd?: number
+          can_handle_funds?: boolean
           created_at?: string
           email?: string | null
           full_name?: string
@@ -163,6 +214,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      upkeep_plans: {
+        Row: {
+          active: boolean
+          amount_usd: number
+          created_at: string
+          custom_days: number | null
+          frequency: Database["public"]["Enums"]["upkeep_frequency"]
+          id: string
+          leader_id: string
+          member_id: string
+          next_run_at: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          amount_usd: number
+          created_at?: string
+          custom_days?: number | null
+          frequency: Database["public"]["Enums"]["upkeep_frequency"]
+          id?: string
+          leader_id: string
+          member_id: string
+          next_run_at?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          amount_usd?: number
+          created_at?: string
+          custom_days?: number | null
+          frequency?: Database["public"]["Enums"]["upkeep_frequency"]
+          id?: string
+          leader_id?: string
+          member_id?: string
+          next_run_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -248,10 +338,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      promote_member: {
+        Args: {
+          _grant_fund_handler?: boolean
+          _member_id: string
+          _new_rank: string
+          _note?: string
+        }
+        Returns: undefined
+      }
       promote_member_to_leader: {
         Args: { _member_id: string; _note?: string }
         Returns: undefined
       }
+      run_due_upkeep: { Args: never; Returns: number }
       validate_invite_code: {
         Args: { _code: string }
         Returns: {
@@ -263,6 +363,12 @@ export type Database = {
     Enums: {
       app_role: "member" | "leader"
       txn_type: "deposit" | "withdrawal" | "release" | "adjustment"
+      upkeep_frequency:
+        | "every_3_days"
+        | "weekly"
+        | "biweekly"
+        | "monthly"
+        | "custom_days"
       withdrawal_status: "pending" | "approved" | "declined"
     }
     CompositeTypes: {
@@ -393,6 +499,13 @@ export const Constants = {
     Enums: {
       app_role: ["member", "leader"],
       txn_type: ["deposit", "withdrawal", "release", "adjustment"],
+      upkeep_frequency: [
+        "every_3_days",
+        "weekly",
+        "biweekly",
+        "monthly",
+        "custom_days",
+      ],
       withdrawal_status: ["pending", "approved", "declined"],
     },
   },

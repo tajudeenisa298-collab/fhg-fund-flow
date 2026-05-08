@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Wallet, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { BankCombobox } from "@/components/bank-combobox";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -26,6 +27,12 @@ const baseSchema = z.object({
   password: z.string().min(6).max(72),
 });
 
+const bankSchema = z.object({
+  bank_name: z.string().trim().min(2),
+  account_number: z.string().trim().regex(/^\d{10}$/, "Account number must be 10 digits"),
+  account_owner_name: z.string().trim().min(2).max(120),
+});
+
 function SignupPage() {
   const nav = useNavigate();
   const { session, loading: authLoading } = useAuth();
@@ -38,11 +45,15 @@ function SignupPage() {
   const [validating, setValidating] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Bank fields
+  const [bankName, setBankName] = useState("");
+  const [accNum, setAccNum] = useState("");
+  const [accOwner, setAccOwner] = useState("");
+
   useEffect(() => {
     if (!authLoading && session) nav({ to: "/dashboard" });
   }, [authLoading, session, nav]);
 
-  // Validate invite code (debounced)
   useEffect(() => {
     if (tab !== "member") return;
     const code = inviteCode.trim();
@@ -63,16 +74,25 @@ function SignupPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = baseSchema.safeParse({ full_name, email, password });
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
-      return;
-    }
+    if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     if (tab === "member" && !leaderName) {
-      toast.error("Enter a valid invite code from your team leader.");
-      return;
+      return toast.error("Enter a valid invite code from your team leader.");
     }
+    // Bank details optional, but if any field is filled, all required
+    const anyBank = bankName || accNum || accOwner;
+    let bankParsed: z.infer<typeof bankSchema> | null = null;
+    if (anyBank) {
+      const r = bankSchema.safeParse({
+        bank_name: bankName,
+        account_number: accNum,
+        account_owner_name: accOwner,
+      });
+      if (!r.success) return toast.error(r.error.issues[0].message);
+      bankParsed = r.data;
+    }
+
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data: authData, error } = await supabase.auth.signUp({
       email: parsed.data.email,
       password: parsed.data.password,
       options: {
@@ -83,12 +103,20 @@ function SignupPage() {
         },
       },
     });
-    setLoading(false);
     if (error) {
-      toast.error(error.message);
-      return;
+      setLoading(false);
+      return toast.error(error.message);
     }
-    toast.success("Account created! You're signed in.");
+    // Save bank details if provided (we have a session at this point per auto-confirm)
+    if (bankParsed && authData.user) {
+      const { error: bankErr } = await supabase.from("bank_accounts").insert({
+        user_id: authData.user.id,
+        ...bankParsed,
+      });
+      if (bankErr) toast.error(`Bank details: ${bankErr.message}`);
+    }
+    setLoading(false);
+    toast.success("Account created!");
     nav({ to: "/dashboard" });
   };
 
@@ -116,55 +144,28 @@ function SignupPage() {
             <form onSubmit={onSubmit} className="mt-5 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="full_name">Full name</Label>
-                <Input
-                  id="full_name"
-                  value={full_name}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                />
+                <Input id="full_name" value={full_name} onChange={(e) => setFullName(e.target.value)} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  required
-                />
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="new-password"
-                  required
-                />
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" required />
               </div>
 
               <TabsContent value="member" className="mt-0 space-y-2 p-0">
                 <Label htmlFor="invite">Invite code</Label>
-                <Input
-                  id="invite"
-                  value={inviteCode}
-                  onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                  placeholder="e.g. FHG-AB12CD"
-                  required
-                />
-                {validating && (
-                  <p className="text-xs text-muted-foreground">Checking code…</p>
-                )}
+                <Input id="invite" value={inviteCode} onChange={(e) => setInviteCode(e.target.value.toUpperCase())} placeholder="e.g. FHG-AB12CD" required />
+                {validating && <p className="text-xs text-muted-foreground">Checking code…</p>}
                 {!validating && leaderName && (
                   <p className="flex items-center gap-1.5 text-xs text-success">
                     <CheckCircle2 className="size-3.5" /> You'll join {leaderName}'s team
                   </p>
                 )}
                 {!validating && inviteCode && !leaderName && (
-                  <p className="text-xs text-destructive">Invalid or already-used code</p>
+                  <p className="text-xs text-destructive">Invalid, used or expired code</p>
                 )}
               </TabsContent>
 
@@ -174,6 +175,35 @@ function SignupPage() {
                   with invite codes once you're in.
                 </p>
               </TabsContent>
+
+              {/* Bank details — optional, but encouraged */}
+              <div className="space-y-3 rounded-lg border p-4">
+                <div>
+                  <p className="text-sm font-medium">Bank details (optional)</p>
+                  <p className="text-xs text-muted-foreground">
+                    Used for withdrawals — you can add or change these later in Settings.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bank-name">Bank</Label>
+                  <BankCombobox id="bank-name" value={bankName} onChange={setBankName} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="acc-num">Account number</Label>
+                  <Input
+                    id="acc-num"
+                    inputMode="numeric"
+                    maxLength={10}
+                    value={accNum}
+                    onChange={(e) => setAccNum(e.target.value.replace(/\D/g, ""))}
+                    placeholder="10 digits"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="acc-owner">Account holder name</Label>
+                  <Input id="acc-owner" value={accOwner} onChange={(e) => setAccOwner(e.target.value)} />
+                </div>
+              </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Creating account…" : "Create account"}

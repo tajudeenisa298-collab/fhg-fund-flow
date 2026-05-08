@@ -23,3 +23,40 @@ export interface WithdrawalRequest {
   created_at: string;
   resolved_at: string | null;
 }
+
+export type UpkeepFrequency =
+  | "every_3_days"
+  | "weekly"
+  | "biweekly"
+  | "monthly"
+  | "custom_days";
+
+export interface UpkeepPlan {
+  id: string;
+  leader_id: string;
+  member_id: string;
+  amount_usd: number;
+  frequency: UpkeepFrequency;
+  custom_days: number | null;
+  next_run_at: string;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BankAccount {
+  user_id: string;
+  bank_name: string;
+  account_number: string;
+  account_owner_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const FREQ_LABEL: Record<UpkeepFrequency, string> = {
+  every_3_days: "Every 3 days",
+  weekly: "Weekly",
+  biweekly: "Every 2 weeks",
+  monthly: "Monthly",
+  custom_days: "Custom",
+};

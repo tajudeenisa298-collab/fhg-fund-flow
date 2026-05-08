@@ -629,7 +629,7 @@ function PromoteDialog({ member, onDone }: { member: Profile; onDone: () => void
       _member_id: member.id,
       _new_rank: newRank,
       _grant_fund_handler: grant,
-      _note: note || null,
+      _note: note || undefined,
     });
     setBusy(false);
     if (error) return toast.error(error.message);

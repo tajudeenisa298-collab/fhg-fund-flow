@@ -616,7 +616,7 @@ function UpkeepDialog({
 function PromoteDialog({ member, onDone }: { member: Profile; onDone: () => void }) {
   const [open, setOpen] = useState(false);
   const currentIdx = Math.max(0, rankIndex(member.rank));
-  const [newRank, setNewRank] = useState(RANKS[Math.min(currentIdx + 1, RANKS.length - 1)]);
+  const [newRank, setNewRank] = useState<string>(RANKS[Math.min(currentIdx + 1, RANKS.length - 1)]);
   const [grant, setGrant] = useState(false);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
@@ -754,7 +754,7 @@ function ApproveDialog({
       .from("withdrawal_requests")
       .update({
         status: "approved",
-        leader_note: parsed.data.note ?? null,
+        leader_note: parsed.data.note ?? undefined,
         resolved_at: new Date().toISOString(),
       })
       .eq("id", request.id);

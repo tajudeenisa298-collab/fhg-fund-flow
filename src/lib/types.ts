@@ -2,7 +2,7 @@ export interface Transaction {
   id: string;
   member_id: string;
   leader_id: string | null;
-  type: "deposit" | "withdrawal" | "release" | "adjustment";
+  type: "deposit" | "withdrawal" | "release" | "adjustment" | "fund_deduction";
   amount_usd: number;
   currency: string;
   local_amount: number | null;
@@ -47,8 +47,10 @@ export interface UpkeepPlan {
 export interface BankAccount {
   user_id: string;
   bank_name: string;
+  bank_code: string | null;
   account_number: string;
   account_owner_name: string;
+  verified_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -60,3 +62,49 @@ export const FREQ_LABEL: Record<UpkeepFrequency, string> = {
   monthly: "Monthly",
   custom_days: "Custom",
 };
+
+export type FundKind = "per_usd" | "fixed";
+export type FundFrequency = "one_time" | "weekly" | "biweekly" | "monthly" | "custom_days";
+
+export interface FundRule {
+  id: string;
+  leader_id: string;
+  name: string;
+  kind: FundKind;
+  amount_ngn: number;
+  frequency: FundFrequency | null;
+  custom_days: number | null;
+  active: boolean;
+  description: string | null;
+  next_run_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const FUND_FREQ_LABEL: Record<FundFrequency, string> = {
+  one_time: "One-time",
+  weekly: "Weekly",
+  biweekly: "Every 2 weeks",
+  monthly: "Monthly",
+  custom_days: "Every N days",
+};
+
+export type NotificationKind =
+  | "request_new"
+  | "request_resolved"
+  | "deposit"
+  | "fund_deduction"
+  | "bank_updated"
+  | "upkeep"
+  | "generic";
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  title: string;
+  body: string | null;
+  kind: NotificationKind;
+  link: string | null;
+  read_at: string | null;
+  created_at: string;
+}

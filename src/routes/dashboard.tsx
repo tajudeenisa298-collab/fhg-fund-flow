@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth-context";
 import { MemberView } from "@/components/dashboard/member-view";
 import { LeaderView } from "@/components/dashboard/leader-view";
+import { NotificationBell } from "@/components/notification-bell";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -50,7 +51,7 @@ function DashboardPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {showSwitcher && (
               <Tabs value={activeRole} onValueChange={(v) => setActiveRole(v as "member" | "leader")}>
                 <TabsList>
@@ -63,6 +64,7 @@ function DashboardPage() {
               <p className="text-sm font-medium leading-tight">{profile.full_name}</p>
               <p className="text-xs text-muted-foreground">{profile.email}</p>
             </div>
+            <NotificationBell />
             <Button variant="outline" size="icon" asChild aria-label="Settings">
               <a href="/settings"><Settings className="size-4" /></a>
             </Button>

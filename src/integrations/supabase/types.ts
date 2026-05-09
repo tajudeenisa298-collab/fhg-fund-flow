@@ -36,26 +36,32 @@ export type Database = {
         Row: {
           account_number: string
           account_owner_name: string
+          bank_code: string | null
           bank_name: string
           created_at: string
           updated_at: string
           user_id: string
+          verified_at: string | null
         }
         Insert: {
           account_number: string
           account_owner_name: string
+          bank_code?: string | null
           bank_name: string
           created_at?: string
           updated_at?: string
           user_id: string
+          verified_at?: string | null
         }
         Update: {
           account_number?: string
           account_owner_name?: string
+          bank_code?: string | null
           bank_name?: string
           created_at?: string
           updated_at?: string
           user_id?: string
+          verified_at?: string | null
         }
         Relationships: []
       }
@@ -106,6 +112,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      paystack_banks: {
+        Row: {
+          active: boolean
+          code: string
+          fetched_at: string
+          name: string
+          slug: string | null
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          fetched_at?: string
+          name: string
+          slug?: string | null
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          fetched_at?: string
+          name?: string
+          slug?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

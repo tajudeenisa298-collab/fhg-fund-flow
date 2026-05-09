@@ -392,7 +392,12 @@ export type Database = {
     }
     Enums: {
       app_role: "member" | "leader"
-      txn_type: "deposit" | "withdrawal" | "release" | "adjustment"
+      txn_type:
+        | "deposit"
+        | "withdrawal"
+        | "release"
+        | "adjustment"
+        | "fund_deduction"
       upkeep_frequency:
         | "every_3_days"
         | "weekly"
@@ -528,7 +533,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["member", "leader"],
-      txn_type: ["deposit", "withdrawal", "release", "adjustment"],
+      txn_type: [
+        "deposit",
+        "withdrawal",
+        "release",
+        "adjustment",
+        "fund_deduction",
+      ],
       upkeep_frequency: [
         "every_3_days",
         "weekly",

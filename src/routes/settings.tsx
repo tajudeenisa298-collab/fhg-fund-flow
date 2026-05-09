@@ -1,14 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { BankCombobox } from "@/components/bank-combobox";
+import { BankVerifier, type VerifiedBank } from "@/components/bank-verifier";
 import type { BankAccount } from "@/lib/types";
 
 export const Route = createFileRoute("/settings")({
@@ -21,25 +20,13 @@ export const Route = createFileRoute("/settings")({
   component: SettingsPage,
 });
 
-const bankSchema = z.object({
-  bank_name: z.string().trim().min(2),
-  account_number: z.string().trim().regex(/^\d{10}$/, "Account number must be 10 digits"),
-  account_owner_name: z.string().trim().min(2).max(120),
-});
-
 function SettingsPage() {
   const { session, profile, loading } = useAuth();
   const nav = useNavigate();
 
   const [bank, setBank] = useState<BankAccount | null>(null);
   const [editing, setEditing] = useState(false);
-
-  // Edit form
-  const [bankName, setBankName] = useState("");
-  const [accNum, setAccNum] = useState("");
-  const [accOwner, setAccOwner] = useState("");
-
-  // OTP state
+  const [verified, setVerified] = useState<VerifiedBank | null>(null);
   const [otpStage, setOtpStage] = useState<"idle" | "sent" | "saving">("idle");
   const [otp, setOtp] = useState("");
 
@@ -54,26 +41,12 @@ function SettingsPage() {
       .select("*")
       .eq("user_id", session.user.id)
       .maybeSingle()
-      .then(({ data }) => {
-        const b = (data as BankAccount) ?? null;
-        setBank(b);
-        if (b) {
-          setBankName(b.bank_name);
-          setAccNum(b.account_number);
-          setAccOwner(b.account_owner_name);
-        }
-      });
+      .then(({ data }) => setBank((data as BankAccount) ?? null));
   }, [session?.user]);
 
   const requestCode = async () => {
     if (!session?.user?.email) return;
-    const parsed = bankSchema.safeParse({
-      bank_name: bankName,
-      account_number: accNum,
-      account_owner_name: accOwner,
-    });
-    if (!parsed.success) return toast.error(parsed.error.issues[0].message);
-
+    if (!verified) return toast.error("Verify the account first");
     const { error } = await supabase.auth.signInWithOtp({
       email: session.user.email,
       options: { shouldCreateUser: false },
@@ -84,7 +57,7 @@ function SettingsPage() {
   };
 
   const confirmAndSave = async () => {
-    if (!session?.user?.email) return;
+    if (!session?.user?.email || !verified) return;
     if (!/^\d{6}$/.test(otp)) return toast.error("Enter the 6-digit code");
     setOtpStage("saving");
     const { error: vErr } = await supabase.auth.verifyOtp({
@@ -98,9 +71,11 @@ function SettingsPage() {
     }
     const payload = {
       user_id: session.user.id,
-      bank_name: bankName,
-      account_number: accNum,
-      account_owner_name: accOwner,
+      bank_name: verified.bank_name,
+      bank_code: verified.bank_code,
+      account_number: verified.account_number,
+      account_owner_name: verified.account_owner_name,
+      verified_at: new Date().toISOString(),
     };
     const { error: upErr } = await supabase
       .from("bank_accounts")
@@ -118,12 +93,7 @@ function SettingsPage() {
     setEditing(false);
     setOtpStage("idle");
     setOtp("");
-  };
-
-  const startEdit = () => {
-    setEditing(true);
-    setOtpStage("idle");
-    setOtp("");
+    setVerified(null);
   };
 
   if (loading || !profile) {
@@ -151,11 +121,11 @@ function SettingsPage() {
             <div>
               <h2 className="text-lg font-semibold">Bank account</h2>
               <p className="text-sm text-muted-foreground">
-                Where your withdrawals get paid out.
+                We verify the account name automatically with Paystack before saving.
               </p>
             </div>
             {!editing && (
-              <Button onClick={startEdit}>{bank ? "Edit" : "Add details"}</Button>
+              <Button onClick={() => setEditing(true)}>{bank ? "Edit" : "Add details"}</Button>
             )}
           </div>
 
@@ -173,6 +143,9 @@ function SettingsPage() {
                 <dt className="text-xs uppercase tracking-wide text-muted-foreground">Holder</dt>
                 <dd className="mt-1 font-medium">{bank.account_owner_name}</dd>
               </div>
+              {bank.verified_at && (
+                <p className="sm:col-span-3 text-xs text-success">✓ Verified via Paystack</p>
+              )}
             </dl>
           )}
           {!editing && !bank && (
@@ -183,24 +156,19 @@ function SettingsPage() {
 
           {editing && (
             <div className="mt-6 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="bn">Bank</Label>
-                <BankCombobox id="bn" value={bankName} onChange={setBankName} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="an">Account number</Label>
-                <Input
-                  id="an"
-                  inputMode="numeric"
-                  maxLength={10}
-                  value={accNum}
-                  onChange={(e) => setAccNum(e.target.value.replace(/\D/g, ""))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ao">Account holder</Label>
-                <Input id="ao" value={accOwner} onChange={(e) => setAccOwner(e.target.value)} />
-              </div>
+              <BankVerifier
+                initial={
+                  bank
+                    ? {
+                        bank_name: bank.bank_name,
+                        bank_code: bank.bank_code ?? "",
+                        account_number: bank.account_number,
+                        account_owner_name: bank.account_owner_name,
+                      }
+                    : null
+                }
+                onVerified={setVerified}
+              />
 
               {otpStage === "idle" && (
                 <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-3 text-sm">
@@ -220,7 +188,6 @@ function SettingsPage() {
                     maxLength={6}
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                    placeholder="6-digit code from {session.user.email}"
                   />
                   <p className="text-xs text-muted-foreground">
                     Sent to {session?.user?.email}.{" "}
@@ -241,12 +208,15 @@ function SettingsPage() {
                   onClick={() => {
                     setEditing(false);
                     setOtpStage("idle");
+                    setVerified(null);
                   }}
                 >
                   Cancel
                 </Button>
                 {otpStage === "idle" ? (
-                  <Button onClick={requestCode}>Send verification code</Button>
+                  <Button onClick={requestCode} disabled={!verified}>
+                    {verified ? "Send verification code" : "Verify account first"}
+                  </Button>
                 ) : (
                   <Button onClick={confirmAndSave} disabled={otpStage === "saving"}>
                     {otpStage === "saving" ? "Saving…" : "Verify & save"}

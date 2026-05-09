@@ -1,0 +1,1 @@
+alter type public.txn_type add value if not exists 'fund_deduction';

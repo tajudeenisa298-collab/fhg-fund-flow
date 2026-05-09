@@ -45,6 +45,8 @@ import {
 import { RANKS, isDirectorOrAbove, rankIndex } from "@/lib/ranks";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { InviteCodeRow, type InviteCodeRowData } from "@/components/dashboard/invite-code-row";
+import { MemberDetailDialog } from "@/components/dashboard/member-detail-dialog";
+import { FundRulesSection } from "@/components/dashboard/fund-rules-section";
 
 export function LeaderView({ profile }: { profile: Profile }) {
   const { refresh, ngnRate } = useAuth();
@@ -53,6 +55,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
   const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
   const [plans, setPlans] = useState<UpkeepPlan[]>([]);
   const [tick, setTick] = useState(0); // periodic re-render to drop expired codes
+  const [detailMember, setDetailMember] = useState<Profile | null>(null);
 
   const load = useCallback(async () => {
     const [{ data: t }, { data: c }, { data: r }, { data: p }] = await Promise.all([
@@ -230,9 +233,13 @@ export function LeaderView({ profile }: { profile: Profile }) {
               </thead>
               <tbody className="divide-y">
                 {team.map((m) => (
-                  <tr key={m.id}>
+                  <tr
+                    key={m.id}
+                    className="cursor-pointer transition hover:bg-muted/40"
+                    onClick={() => setDetailMember(m)}
+                  >
                     <td className="px-4 py-3">
-                      <p className="font-medium">{m.full_name}</p>
+                      <p className="font-medium text-primary hover:underline">{m.full_name}</p>
                       <p className="text-xs text-muted-foreground">{m.email}</p>
                     </td>
                     <td className="px-4 py-3">
@@ -249,7 +256,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
                         {fmtNgn(m.balance_usd, ngnRate)}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-wrap justify-end gap-2">
                         <DepositDialog member={m} leaderId={profile.id} onDone={load} />
                         <UpkeepDialog

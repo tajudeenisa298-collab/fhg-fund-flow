@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Wallet, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { BankCombobox } from "@/components/bank-combobox";
+import { BankVerifier, type VerifiedBank } from "@/components/bank-verifier";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -27,12 +27,6 @@ const baseSchema = z.object({
   password: z.string().min(6).max(72),
 });
 
-const bankSchema = z.object({
-  bank_name: z.string().trim().min(2),
-  account_number: z.string().trim().regex(/^\d{10}$/, "Account number must be 10 digits"),
-  account_owner_name: z.string().trim().min(2).max(120),
-});
-
 function SignupPage() {
   const nav = useNavigate();
   const { session, loading: authLoading } = useAuth();
@@ -44,11 +38,7 @@ function SignupPage() {
   const [leaderName, setLeaderName] = useState<string | null>(null);
   const [validating, setValidating] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  // Bank fields
-  const [bankName, setBankName] = useState("");
-  const [accNum, setAccNum] = useState("");
-  const [accOwner, setAccOwner] = useState("");
+  const [verifiedBank, setVerifiedBank] = useState<VerifiedBank | null>(null);
 
   useEffect(() => {
     if (!authLoading && session) nav({ to: "/dashboard" });
@@ -78,18 +68,6 @@ function SignupPage() {
     if (tab === "member" && !leaderName) {
       return toast.error("Enter a valid invite code from your team leader.");
     }
-    // Bank details optional, but if any field is filled, all required
-    const anyBank = bankName || accNum || accOwner;
-    let bankParsed: z.infer<typeof bankSchema> | null = null;
-    if (anyBank) {
-      const r = bankSchema.safeParse({
-        bank_name: bankName,
-        account_number: accNum,
-        account_owner_name: accOwner,
-      });
-      if (!r.success) return toast.error(r.error.issues[0].message);
-      bankParsed = r.data;
-    }
 
     setLoading(true);
     const { data: authData, error } = await supabase.auth.signUp({
@@ -107,11 +85,14 @@ function SignupPage() {
       setLoading(false);
       return toast.error(error.message);
     }
-    // Save bank details if provided (we have a session at this point per auto-confirm)
-    if (bankParsed && authData.user) {
+    if (verifiedBank && authData.user) {
       const { error: bankErr } = await supabase.from("bank_accounts").insert({
         user_id: authData.user.id,
-        ...bankParsed,
+        bank_name: verifiedBank.bank_name,
+        bank_code: verifiedBank.bank_code,
+        account_number: verifiedBank.account_number,
+        account_owner_name: verifiedBank.account_owner_name,
+        verified_at: new Date().toISOString(),
       });
       if (bankErr) toast.error(`Bank details: ${bankErr.message}`);
     }
@@ -176,33 +157,15 @@ function SignupPage() {
                 </p>
               </TabsContent>
 
-              {/* Bank details — optional, but encouraged */}
+              {/* Bank details — optional */}
               <div className="space-y-3 rounded-lg border p-4">
                 <div>
                   <p className="text-sm font-medium">Bank details (optional)</p>
                   <p className="text-xs text-muted-foreground">
-                    Used for withdrawals — you can add or change these later in Settings.
+                    Verified automatically — needed for withdrawals. You can also add them later.
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bank-name">Bank</Label>
-                  <BankCombobox id="bank-name" value={bankName} onChange={setBankName} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="acc-num">Account number</Label>
-                  <Input
-                    id="acc-num"
-                    inputMode="numeric"
-                    maxLength={10}
-                    value={accNum}
-                    onChange={(e) => setAccNum(e.target.value.replace(/\D/g, ""))}
-                    placeholder="10 digits"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="acc-owner">Account holder name</Label>
-                  <Input id="acc-owner" value={accOwner} onChange={(e) => setAccOwner(e.target.value)} />
-                </div>
+                <BankVerifier onVerified={setVerifiedBank} />
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>

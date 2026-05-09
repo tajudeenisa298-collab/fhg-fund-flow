@@ -36,26 +36,77 @@ export type Database = {
         Row: {
           account_number: string
           account_owner_name: string
+          bank_code: string | null
           bank_name: string
           created_at: string
           updated_at: string
           user_id: string
+          verified_at: string | null
         }
         Insert: {
           account_number: string
           account_owner_name: string
+          bank_code?: string | null
           bank_name: string
           created_at?: string
           updated_at?: string
           user_id: string
+          verified_at?: string | null
         }
         Update: {
           account_number?: string
           account_owner_name?: string
+          bank_code?: string | null
           bank_name?: string
           created_at?: string
           updated_at?: string
           user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
+      fund_rules: {
+        Row: {
+          active: boolean
+          amount_ngn: number
+          created_at: string
+          custom_days: number | null
+          description: string | null
+          frequency: Database["public"]["Enums"]["fund_frequency"] | null
+          id: string
+          kind: Database["public"]["Enums"]["fund_kind"]
+          leader_id: string
+          name: string
+          next_run_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          amount_ngn: number
+          created_at?: string
+          custom_days?: number | null
+          description?: string | null
+          frequency?: Database["public"]["Enums"]["fund_frequency"] | null
+          id?: string
+          kind: Database["public"]["Enums"]["fund_kind"]
+          leader_id: string
+          name: string
+          next_run_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          amount_ngn?: number
+          created_at?: string
+          custom_days?: number | null
+          description?: string | null
+          frequency?: Database["public"]["Enums"]["fund_frequency"] | null
+          id?: string
+          kind?: Database["public"]["Enums"]["fund_kind"]
+          leader_id?: string
+          name?: string
+          next_run_at?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -106,6 +157,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["notification_kind"]
+          link: string | null
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["notification_kind"]
+          link?: string | null
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["notification_kind"]
+          link?: string | null
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      paystack_banks: {
+        Row: {
+          active: boolean
+          code: string
+          fetched_at: string
+          name: string
+          slug: string | null
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          fetched_at?: string
+          name: string
+          slug?: string | null
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          fetched_at?: string
+          name?: string
+          slug?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -338,6 +446,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      notify_user: {
+        Args: {
+          _body: string
+          _kind: Database["public"]["Enums"]["notification_kind"]
+          _link?: string
+          _title: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       promote_member: {
         Args: {
           _grant_fund_handler?: boolean
@@ -351,6 +469,7 @@ export type Database = {
         Args: { _member_id: string; _note?: string }
         Returns: undefined
       }
+      run_due_fund_rules: { Args: never; Returns: number }
       run_due_upkeep: { Args: never; Returns: number }
       validate_invite_code: {
         Args: { _code: string }
@@ -362,7 +481,27 @@ export type Database = {
     }
     Enums: {
       app_role: "member" | "leader"
-      txn_type: "deposit" | "withdrawal" | "release" | "adjustment"
+      fund_frequency:
+        | "one_time"
+        | "weekly"
+        | "biweekly"
+        | "monthly"
+        | "custom_days"
+      fund_kind: "per_usd" | "fixed"
+      notification_kind:
+        | "request_new"
+        | "request_resolved"
+        | "deposit"
+        | "fund_deduction"
+        | "bank_updated"
+        | "upkeep"
+        | "generic"
+      txn_type:
+        | "deposit"
+        | "withdrawal"
+        | "release"
+        | "adjustment"
+        | "fund_deduction"
       upkeep_frequency:
         | "every_3_days"
         | "weekly"
@@ -498,7 +637,30 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["member", "leader"],
-      txn_type: ["deposit", "withdrawal", "release", "adjustment"],
+      fund_frequency: [
+        "one_time",
+        "weekly",
+        "biweekly",
+        "monthly",
+        "custom_days",
+      ],
+      fund_kind: ["per_usd", "fixed"],
+      notification_kind: [
+        "request_new",
+        "request_resolved",
+        "deposit",
+        "fund_deduction",
+        "bank_updated",
+        "upkeep",
+        "generic",
+      ],
+      txn_type: [
+        "deposit",
+        "withdrawal",
+        "release",
+        "adjustment",
+        "fund_deduction",
+      ],
       upkeep_frequency: [
         "every_3_days",
         "weekly",

@@ -359,6 +359,15 @@ export function LeaderView({ profile }: { profile: Profile }) {
           ))}
         </div>
       </section>
+
+      {/* Flexible fund rules (per-USD deductions, fixed recurring stipends, etc.) */}
+      <FundRulesSection leaderId={profile.id} />
+
+      <MemberDetailDialog
+        member={detailMember}
+        open={!!detailMember}
+        onOpenChange={(v) => !v && setDetailMember(null)}
+      />
     </div>
   );
 }

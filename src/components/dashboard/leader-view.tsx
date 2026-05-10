@@ -117,8 +117,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
         />
         <StatCard
           label="Funds managed"
-          value={fmtUsd(totalManaged)}
-          hint={fmtNgn(totalManaged, ngnRate)}
+          valueNode={<Money usd={totalManaged} size="lg" />}
           icon={Wallet}
         />
         <StatCard

@@ -3,8 +3,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { BankVerifier, type VerifiedBank } from "@/components/bank-verifier";
@@ -27,8 +25,7 @@ function SettingsPage() {
   const [bank, setBank] = useState<BankAccount | null>(null);
   const [editing, setEditing] = useState(false);
   const [verified, setVerified] = useState<VerifiedBank | null>(null);
-  const [otpStage, setOtpStage] = useState<"idle" | "sent" | "saving">("idle");
-  const [otp, setOtp] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!loading && !session) nav({ to: "/login" });
@@ -44,31 +41,9 @@ function SettingsPage() {
       .then(({ data }) => setBank((data as BankAccount) ?? null));
   }, [session?.user]);
 
-  const requestCode = async () => {
-    if (!session?.user?.email) return;
-    if (!verified) return toast.error("Verify the account first");
-    const { error } = await supabase.auth.signInWithOtp({
-      email: session.user.email,
-      options: { shouldCreateUser: false },
-    });
-    if (error) return toast.error(error.message);
-    setOtpStage("sent");
-    toast.success("Verification code sent to your email");
-  };
-
-  const confirmAndSave = async () => {
-    if (!session?.user?.email || !verified) return;
-    if (!/^\d{6}$/.test(otp)) return toast.error("Enter the 6-digit code");
-    setOtpStage("saving");
-    const { error: vErr } = await supabase.auth.verifyOtp({
-      email: session.user.email,
-      token: otp,
-      type: "email",
-    });
-    if (vErr) {
-      setOtpStage("sent");
-      return toast.error(vErr.message);
-    }
+  const save = async () => {
+    if (!session?.user || !verified) return toast.error("Verify the account first");
+    setSaving(true);
     const payload = {
       user_id: session.user.id,
       bank_name: verified.bank_name,
@@ -80,10 +55,8 @@ function SettingsPage() {
     const { error: upErr } = await supabase
       .from("bank_accounts")
       .upsert(payload, { onConflict: "user_id" });
-    if (upErr) {
-      setOtpStage("idle");
-      return toast.error(upErr.message);
-    }
+    setSaving(false);
+    if (upErr) return toast.error(upErr.message);
     toast.success("Bank details updated");
     setBank({
       ...payload,
@@ -91,8 +64,6 @@ function SettingsPage() {
       updated_at: new Date().toISOString(),
     });
     setEditing(false);
-    setOtpStage("idle");
-    setOtp("");
     setVerified(null);
   };
 
@@ -170,58 +141,26 @@ function SettingsPage() {
                 onVerified={setVerified}
               />
 
-              {otpStage === "idle" && (
-                <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-3 text-sm">
-                  <ShieldCheck className="size-4 text-success" />
-                  <span className="text-muted-foreground">
-                    For security, we'll email a verification code before saving.
-                  </span>
-                </div>
-              )}
-
-              {otpStage !== "idle" && (
-                <div className="space-y-2">
-                  <Label htmlFor="otp">Verification code</Label>
-                  <Input
-                    id="otp"
-                    inputMode="numeric"
-                    maxLength={6}
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Sent to {session?.user?.email}.{" "}
-                    <button
-                      type="button"
-                      className="text-primary underline"
-                      onClick={requestCode}
-                    >
-                      Resend
-                    </button>
-                  </p>
-                </div>
-              )}
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-3 text-sm">
+                <ShieldCheck className="size-4 text-success" />
+                <span className="text-muted-foreground">
+                  Account name is verified live with Paystack — no email code needed.
+                </span>
+              </div>
 
               <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"
                   onClick={() => {
                     setEditing(false);
-                    setOtpStage("idle");
                     setVerified(null);
                   }}
                 >
                   Cancel
                 </Button>
-                {otpStage === "idle" ? (
-                  <Button onClick={requestCode} disabled={!verified}>
-                    {verified ? "Send verification code" : "Verify account first"}
-                  </Button>
-                ) : (
-                  <Button onClick={confirmAndSave} disabled={otpStage === "saving"}>
-                    {otpStage === "saving" ? "Saving…" : "Verify & save"}
-                  </Button>
-                )}
+                <Button onClick={save} disabled={!verified || saving}>
+                  {saving ? "Saving…" : verified ? "Save bank details" : "Verify account first"}
+                </Button>
               </div>
             </div>
           )}

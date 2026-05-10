@@ -3,8 +3,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { BankVerifier, type VerifiedBank } from "@/components/bank-verifier";

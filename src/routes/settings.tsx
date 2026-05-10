@@ -27,8 +27,7 @@ function SettingsPage() {
   const [bank, setBank] = useState<BankAccount | null>(null);
   const [editing, setEditing] = useState(false);
   const [verified, setVerified] = useState<VerifiedBank | null>(null);
-  const [otpStage, setOtpStage] = useState<"idle" | "sent" | "saving">("idle");
-  const [otp, setOtp] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!loading && !session) nav({ to: "/login" });
@@ -44,31 +43,9 @@ function SettingsPage() {
       .then(({ data }) => setBank((data as BankAccount) ?? null));
   }, [session?.user]);
 
-  const requestCode = async () => {
-    if (!session?.user?.email) return;
-    if (!verified) return toast.error("Verify the account first");
-    const { error } = await supabase.auth.signInWithOtp({
-      email: session.user.email,
-      options: { shouldCreateUser: false },
-    });
-    if (error) return toast.error(error.message);
-    setOtpStage("sent");
-    toast.success("Verification code sent to your email");
-  };
-
-  const confirmAndSave = async () => {
-    if (!session?.user?.email || !verified) return;
-    if (!/^\d{6}$/.test(otp)) return toast.error("Enter the 6-digit code");
-    setOtpStage("saving");
-    const { error: vErr } = await supabase.auth.verifyOtp({
-      email: session.user.email,
-      token: otp,
-      type: "email",
-    });
-    if (vErr) {
-      setOtpStage("sent");
-      return toast.error(vErr.message);
-    }
+  const save = async () => {
+    if (!session?.user || !verified) return toast.error("Verify the account first");
+    setSaving(true);
     const payload = {
       user_id: session.user.id,
       bank_name: verified.bank_name,
@@ -80,10 +57,8 @@ function SettingsPage() {
     const { error: upErr } = await supabase
       .from("bank_accounts")
       .upsert(payload, { onConflict: "user_id" });
-    if (upErr) {
-      setOtpStage("idle");
-      return toast.error(upErr.message);
-    }
+    setSaving(false);
+    if (upErr) return toast.error(upErr.message);
     toast.success("Bank details updated");
     setBank({
       ...payload,
@@ -91,8 +66,6 @@ function SettingsPage() {
       updated_at: new Date().toISOString(),
     });
     setEditing(false);
-    setOtpStage("idle");
-    setOtp("");
     setVerified(null);
   };
 

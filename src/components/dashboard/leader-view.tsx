@@ -36,6 +36,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, type Profile } from "@/lib/auth-context";
 import { fmtUsd, fmtNgn, fmtDate } from "@/lib/format";
+import { Money } from "@/components/money";
 import {
   FREQ_LABEL,
   type UpkeepFrequency,

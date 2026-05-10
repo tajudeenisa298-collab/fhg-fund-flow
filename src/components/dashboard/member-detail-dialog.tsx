@@ -162,7 +162,7 @@ export function MemberDetailDialog({
                           <td className="px-3 py-2 capitalize">{t.type.replace("_", " ")}</td>
                           <td className="px-3 py-2 text-muted-foreground">{t.note ?? "—"}</td>
                           <td className="px-3 py-2 text-right">
-                            <Money usd={t.amount_usd} size="sm" inline />
+                            <Money usd={t.amount_usd} rate={t.exchange_rate ?? undefined} size="sm" inline />
                           </td>
                         </tr>
                       ))}

@@ -256,6 +256,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-wrap justify-end gap-2">
                         <DepositDialog member={m} leaderId={profile.id} onDone={load} />
+                        <DeductDialog member={m} leaderId={profile.id} onDone={load} />
                         <UpkeepDialog
                           member={m}
                           leaderId={profile.id}

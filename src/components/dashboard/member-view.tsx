@@ -18,6 +18,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, type Profile } from "@/lib/auth-context";
 import { fmtUsd, fmtNgn, fmtDate, fmtMoney } from "@/lib/format";
+import { Money } from "@/components/money";
 import type { Transaction, WithdrawalRequest } from "@/lib/types";
 import { StatCard } from "@/components/dashboard/stat-card";
 

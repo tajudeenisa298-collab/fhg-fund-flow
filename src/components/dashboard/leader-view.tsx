@@ -878,3 +878,101 @@ function ApproveDialog({
     </>
   );
 }
+
+/* ─── Deduct dialog (fines / corrections) ─── */
+
+const deductSchema = z.object({
+  amount: z.number().positive().max(1_000_000),
+  reason: z.string().trim().min(2, "Reason is required").max(200),
+});
+
+function DeductDialog({
+  member,
+  leaderId,
+  onDone,
+}: {
+  member: Profile;
+  leaderId: string;
+  onDone: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = deductSchema.safeParse({ amount: Number(amount), reason });
+    if (!parsed.success) return toast.error(parsed.error.issues[0].message);
+    if (parsed.data.amount > Number(member.balance_usd)) {
+      return toast.error("Amount exceeds member's balance.");
+    }
+    setBusy(true);
+    const { error } = await supabase.from("transactions").insert({
+      member_id: member.id,
+      leader_id: leaderId,
+      type: "fund_deduction",
+      amount_usd: parsed.data.amount,
+      note: parsed.data.reason,
+    });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Deduction recorded — member notified");
+    setOpen(false);
+    setAmount("");
+    setReason("");
+    onDone();
+  };
+
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+        Deduct
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Deduct from {member.full_name}</DialogTitle>
+            <DialogDescription>
+              Reduces their managed balance. They'll receive a notification with your reason.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={submit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="ded-amount">Amount (USD)</Label>
+              <Input
+                id="ded-amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                max={Number(member.balance_usd)}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                Available: {fmtUsd(member.balance_usd)}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ded-reason">Reason</Label>
+              <Textarea
+                id="ded-reason"
+                rows={2}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="e.g. Fine for missed meeting, correction, refund…"
+                required
+              />
+            </div>
+            <DialogFooter>
+              <Button type="submit" variant="destructive" disabled={busy}>
+                {busy ? "Recording…" : "Deduct"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

@@ -143,58 +143,26 @@ function SettingsPage() {
                 onVerified={setVerified}
               />
 
-              {otpStage === "idle" && (
-                <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-3 text-sm">
-                  <ShieldCheck className="size-4 text-success" />
-                  <span className="text-muted-foreground">
-                    For security, we'll email a verification code before saving.
-                  </span>
-                </div>
-              )}
-
-              {otpStage !== "idle" && (
-                <div className="space-y-2">
-                  <Label htmlFor="otp">Verification code</Label>
-                  <Input
-                    id="otp"
-                    inputMode="numeric"
-                    maxLength={6}
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Sent to {session?.user?.email}.{" "}
-                    <button
-                      type="button"
-                      className="text-primary underline"
-                      onClick={requestCode}
-                    >
-                      Resend
-                    </button>
-                  </p>
-                </div>
-              )}
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-3 text-sm">
+                <ShieldCheck className="size-4 text-success" />
+                <span className="text-muted-foreground">
+                  Account name is verified live with Paystack — no email code needed.
+                </span>
+              </div>
 
               <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"
                   onClick={() => {
                     setEditing(false);
-                    setOtpStage("idle");
                     setVerified(null);
                   }}
                 >
                   Cancel
                 </Button>
-                {otpStage === "idle" ? (
-                  <Button onClick={requestCode} disabled={!verified}>
-                    {verified ? "Send verification code" : "Verify account first"}
-                  </Button>
-                ) : (
-                  <Button onClick={confirmAndSave} disabled={otpStage === "saving"}>
-                    {otpStage === "saving" ? "Saving…" : "Verify & save"}
-                  </Button>
-                )}
+                <Button onClick={save} disabled={!verified || saving}>
+                  {saving ? "Saving…" : verified ? "Save bank details" : "Verify account first"}
+                </Button>
               </div>
             </div>
           )}

@@ -18,6 +18,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, type Profile } from "@/lib/auth-context";
 import { fmtUsd, fmtNgn, fmtDate, fmtMoney } from "@/lib/format";
+import { Money } from "@/components/money";
 import type { Transaction, WithdrawalRequest } from "@/lib/types";
 import { StatCard } from "@/components/dashboard/stat-card";
 
@@ -148,9 +149,9 @@ export function MemberView({ profile }: { profile: Profile }) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           label="Managed balance"
-          value={fmtUsd(profile.balance_usd)}
+          valueNode={<Money usd={profile.balance_usd} size="lg" />}
           icon={Wallet}
-          hint={`${fmtNgn(profile.balance_usd, ngnRate)} · held by your leader`}
+          hint="Held by your leader"
         />
         <StatCard label="Current rank" value={profile.rank} icon={TrendingUp} hint="Reach Director to unlock" />
         <StatCard label="Pending requests" value={String(pending)} icon={Clock} />

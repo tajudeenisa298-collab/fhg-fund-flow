@@ -1,13 +1,15 @@
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 
 export function StatCard({
   label,
   value,
+  valueNode,
   hint,
   icon: Icon,
 }: {
   label: string;
-  value: string;
+  value?: string;
+  valueNode?: ReactNode;
   hint?: string;
   icon: ComponentType<{ className?: string }>;
 }) {
@@ -19,7 +21,9 @@ export function StatCard({
           <Icon className="size-4 text-accent-foreground" />
         </div>
       </div>
-      <p className="mt-3 text-3xl font-semibold tracking-tight">{value}</p>
+      <div className="mt-3 text-3xl font-semibold tracking-tight">
+        {valueNode ?? value}
+      </div>
       {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );

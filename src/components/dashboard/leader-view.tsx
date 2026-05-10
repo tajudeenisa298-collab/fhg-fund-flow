@@ -36,6 +36,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, type Profile } from "@/lib/auth-context";
 import { fmtUsd, fmtNgn, fmtDate } from "@/lib/format";
+import { Money } from "@/components/money";
 import {
   FREQ_LABEL,
   type UpkeepFrequency,
@@ -116,8 +117,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
         />
         <StatCard
           label="Funds managed"
-          value={fmtUsd(totalManaged)}
-          hint={fmtNgn(totalManaged, ngnRate)}
+          valueNode={<Money usd={totalManaged} size="lg" />}
           icon={Wallet}
         />
         <StatCard
@@ -251,10 +251,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <div className="font-mono">{fmtUsd(m.balance_usd)}</div>
-                      <div className="text-[11px] text-muted-foreground">
-                        {fmtNgn(m.balance_usd, ngnRate)}
-                      </div>
+                      <Money usd={m.balance_usd} size="sm" className="items-end" />
                     </td>
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-wrap justify-end gap-2">
@@ -359,6 +356,15 @@ export function LeaderView({ profile }: { profile: Profile }) {
           ))}
         </div>
       </section>
+
+      {/* Flexible fund rules (per-USD deductions, fixed recurring stipends, etc.) */}
+      <FundRulesSection leaderId={profile.id} />
+
+      <MemberDetailDialog
+        member={detailMember}
+        open={!!detailMember}
+        onOpenChange={(v) => !v && setDetailMember(null)}
+      />
     </div>
   );
 }

@@ -251,10 +251,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <div className="font-mono">{fmtUsd(m.balance_usd)}</div>
-                      <div className="text-[11px] text-muted-foreground">
-                        {fmtNgn(m.balance_usd, ngnRate)}
-                      </div>
+                      <Money usd={m.balance_usd} size="sm" className="items-end" />
                     </td>
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-wrap justify-end gap-2">

@@ -132,21 +132,46 @@ export function LeaderView({ profile }: { profile: Profile }) {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Total members" value={String(team.length)} icon={Users} />
         <StatCard
-          label="Team members"
-          value={String(team.length)}
-          icon={Users}
+          label="Total funds held"
+          valueNode={<Money usd={totalManaged - totalDebts} size="lg" />}
+          icon={Wallet}
+          hint={totalDebts > 0 ? `Net of ${fmtUsd(totalDebts)} debts` : undefined}
         />
         <StatCard
-          label="Funds managed"
-          valueNode={<Money usd={totalManaged} size="lg" />}
+          label="Total credit balance"
+          valueNode={<Money usd={totalCredits} size="lg" />}
+          icon={ArrowUpRight}
+        />
+        <StatCard
+          label="Total debts"
+          valueNode={<Money usd={totalDebts} size="lg" />}
+          icon={ArrowUpRight}
+        />
+        <StatCard
+          label="Office support"
+          value={fmtNgn(officeBalNgn / Math.max(ngnRate, 1), ngnRate)}
+          icon={Wallet}
+          hint={`In ${fmtNgn(officeIn / Math.max(ngnRate, 1), ngnRate)} · Out ${fmtNgn(officeOut / Math.max(ngnRate, 1), ngnRate)}`}
+        />
+        <StatCard
+          label="Office expenses"
+          value={fmtNgn(officeOut / Math.max(ngnRate, 1), ngnRate)}
+          icon={ArrowUpRight}
+        />
+        <StatCard
+          label="Team leader balance"
+          valueNode={<Money usd={purseBal} size="lg" />}
           icon={Wallet}
         />
         <StatCard
-          label="Pending requests"
-          value={String(pendingRequests.length)}
+          label="Total expenses"
+          valueNode={<Money usd={purseDebit + officeOut / Math.max(ngnRate, 1)} size="lg" />}
           icon={ArrowUpRight}
+          hint={`Withdrawals + office`}
         />
+        <StatCard label="Pending requests" value={String(pendingRequests.length)} icon={Plus} />
         <StatCard label="Active codes" value={String(visibleCodes.length)} icon={Plus} />
       </div>
 

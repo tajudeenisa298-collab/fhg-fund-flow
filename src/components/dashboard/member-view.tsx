@@ -21,6 +21,8 @@ import { fmtUsd, fmtNgn, fmtDate, fmtMoney } from "@/lib/format";
 import { Money } from "@/components/money";
 import type { Transaction, WithdrawalRequest } from "@/lib/types";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { DownlineSection } from "@/components/dashboard/downline-section";
+import { TeamFundRulesReadonly } from "@/components/dashboard/team-fund-rules-readonly";
 
 const requestSchema = z.object({
   amount: z.number().positive().max(1_000_000),
@@ -185,6 +187,12 @@ export function MemberView({ profile }: { profile: Profile }) {
           ))}
         </div>
       </section>
+
+      {/* Team fund rules — what your leader auto-deducts */}
+      <TeamFundRulesReadonly leaderId={profile.leader_id} />
+
+      {/* Pyramid: people you've sponsored, directly or indirectly */}
+      <DownlineSection rootId={profile.id} />
 
       <section className="rounded-2xl border bg-card p-6 shadow-card">
         <h2 className="text-base font-semibold">Transaction history</h2>

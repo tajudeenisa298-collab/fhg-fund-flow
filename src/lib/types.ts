@@ -1,16 +1,61 @@
+export type TxnType =
+  | "deposit"
+  | "withdrawal"
+  | "release"
+  | "adjustment"
+  | "fund_deduction"
+  | "bank_fee"
+  | "office_credit"
+  | "office_expense"
+  | "leader_credit"
+  | "leader_debit";
+
 export interface Transaction {
   id: string;
   member_id: string;
   leader_id: string | null;
-  type: "deposit" | "withdrawal" | "release" | "adjustment" | "fund_deduction";
+  type: TxnType;
   amount_usd: number;
   currency: string;
   local_amount: number | null;
   exchange_rate: number | null;
   note: string | null;
   request_id: string | null;
+  parent_txn_id: string | null;
   created_at: string;
 }
+
+export interface OfficeLedgerEntry {
+  id: string;
+  leader_id: string;
+  kind: "support_in" | "expense_out";
+  amount_ngn: number;
+  category: string | null;
+  note: string | null;
+  source_txn_id: string | null;
+  created_at: string;
+}
+
+export interface LeaderPurseEntry {
+  id: string;
+  leader_id: string;
+  kind: "credit" | "debit";
+  amount_usd: number;
+  note: string | null;
+  created_at: string;
+}
+
+export type Gender = "male" | "female" | "other" | "prefer_not_to_say";
+export const GENDER_LABEL: Record<Gender, string> = {
+  male: "Male",
+  female: "Female",
+  other: "Other",
+  prefer_not_to_say: "Prefer not to say",
+};
+
+export type FxRates = Record<string, number>;
+export const SUPPORTED_CURRENCIES = ["USD", "NGN", "GBP", "EUR"] as const;
+export type Currency = (typeof SUPPORTED_CURRENCIES)[number];
 
 export interface WithdrawalRequest {
   id: string;

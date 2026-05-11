@@ -16,16 +16,19 @@ export type Database = {
     Tables: {
       app_settings: {
         Row: {
+          fx_rates: Json
           id: number
           updated_at: string
           usd_to_ngn: number
         }
         Insert: {
+          fx_rates?: Json
           id?: number
           updated_at?: string
           usd_to_ngn?: number
         }
         Update: {
+          fx_rates?: Json
           id?: number
           updated_at?: string
           usd_to_ngn?: number
@@ -158,6 +161,33 @@ export type Database = {
           },
         ]
       }
+      leader_purse_ledger: {
+        Row: {
+          amount_usd: number
+          created_at: string
+          id: string
+          kind: string
+          leader_id: string
+          note: string | null
+        }
+        Insert: {
+          amount_usd: number
+          created_at?: string
+          id?: string
+          kind: string
+          leader_id: string
+          note?: string | null
+        }
+        Update: {
+          amount_usd?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          leader_id?: string
+          note?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
@@ -191,6 +221,47 @@ export type Database = {
         }
         Relationships: []
       }
+      office_ledger: {
+        Row: {
+          amount_ngn: number
+          category: string | null
+          created_at: string
+          id: string
+          kind: string
+          leader_id: string
+          note: string | null
+          source_txn_id: string | null
+        }
+        Insert: {
+          amount_ngn: number
+          category?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          leader_id: string
+          note?: string | null
+          source_txn_id?: string | null
+        }
+        Update: {
+          amount_ngn?: number
+          category?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          leader_id?: string
+          note?: string | null
+          source_txn_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_ledger_source_txn_id_fkey"
+            columns: ["source_txn_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       paystack_banks: {
         Row: {
           active: boolean
@@ -222,9 +293,11 @@ export type Database = {
           created_at: string
           email: string | null
           full_name: string
+          gender: Database["public"]["Enums"]["gender_kind"] | null
           id: string
           leader_id: string | null
           rank: string
+          sponsor_id: string | null
           updated_at: string
         }
         Insert: {
@@ -233,9 +306,11 @@ export type Database = {
           created_at?: string
           email?: string | null
           full_name: string
+          gender?: Database["public"]["Enums"]["gender_kind"] | null
           id: string
           leader_id?: string | null
           rank?: string
+          sponsor_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -244,9 +319,11 @@ export type Database = {
           created_at?: string
           email?: string | null
           full_name?: string
+          gender?: Database["public"]["Enums"]["gender_kind"] | null
           id?: string
           leader_id?: string | null
           rank?: string
+          sponsor_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -270,6 +347,7 @@ export type Database = {
           local_amount: number | null
           member_id: string
           note: string | null
+          parent_txn_id: string | null
           request_id: string | null
           type: Database["public"]["Enums"]["txn_type"]
         }
@@ -283,6 +361,7 @@ export type Database = {
           local_amount?: number | null
           member_id: string
           note?: string | null
+          parent_txn_id?: string | null
           request_id?: string | null
           type: Database["public"]["Enums"]["txn_type"]
         }
@@ -296,6 +375,7 @@ export type Database = {
           local_amount?: number | null
           member_id?: string
           note?: string | null
+          parent_txn_id?: string | null
           request_id?: string | null
           type?: Database["public"]["Enums"]["txn_type"]
         }
@@ -312,6 +392,13 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_parent_txn_id_fkey"
+            columns: ["parent_txn_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
             referencedColumns: ["id"]
           },
           {
@@ -446,6 +533,11 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_descendant_of: {
+        Args: { _ancestor: string; _descendant: string }
+        Returns: boolean
+      }
+      nearest_fund_handler: { Args: { _start: string }; Returns: string }
       notify_user: {
         Args: {
           _body: string
@@ -488,6 +580,7 @@ export type Database = {
         | "monthly"
         | "custom_days"
       fund_kind: "per_usd" | "fixed"
+      gender_kind: "male" | "female" | "other" | "prefer_not_to_say"
       notification_kind:
         | "request_new"
         | "request_resolved"
@@ -496,12 +589,18 @@ export type Database = {
         | "bank_updated"
         | "upkeep"
         | "generic"
+        | "office"
       txn_type:
         | "deposit"
         | "withdrawal"
         | "release"
         | "adjustment"
         | "fund_deduction"
+        | "bank_fee"
+        | "office_credit"
+        | "office_expense"
+        | "leader_credit"
+        | "leader_debit"
       upkeep_frequency:
         | "every_3_days"
         | "weekly"
@@ -645,6 +744,7 @@ export const Constants = {
         "custom_days",
       ],
       fund_kind: ["per_usd", "fixed"],
+      gender_kind: ["male", "female", "other", "prefer_not_to_say"],
       notification_kind: [
         "request_new",
         "request_resolved",
@@ -653,6 +753,7 @@ export const Constants = {
         "bank_updated",
         "upkeep",
         "generic",
+        "office",
       ],
       txn_type: [
         "deposit",
@@ -660,6 +761,11 @@ export const Constants = {
         "release",
         "adjustment",
         "fund_deduction",
+        "bank_fee",
+        "office_credit",
+        "office_expense",
+        "leader_credit",
+        "leader_debit",
       ],
       upkeep_frequency: [
         "every_3_days",

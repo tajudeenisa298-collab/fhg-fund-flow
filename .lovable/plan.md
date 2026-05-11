@@ -1,92 +1,76 @@
-## Overview
+# Pyramid Sponsorship + Leader Finance Upgrade
 
-Seven coordinated changes across DB, server, and UI. I'll batch them into 4 implementation slices so each ships verifiable.
+This is a sizeable change. Below is what I'll build, grouped into 5 slices. I'll ship them in order so you can see progress.
 
-⚠️ Important note on the test key: you pasted your `sk_test_...` Paystack key in plain chat. It will be stored as a server-side secret (never bundled to the browser), but **please rotate it in your Paystack dashboard after this**, since it's now in chat history. I'll prompt you to enter the (rotated) key via the secrets tool — don't paste it in chat again.
+## 1. Universal sponsorship (pyramid)
 
----
+Today only leaders can invite. Change so **every signed-up user gets their own invite code** and becomes a sponsor for whoever they invite.
 
-## Slice 1 — Paystack bank verification
+- Add `sponsor_id` to `profiles` (the direct upline — the person who invited you).
+- Keep `leader_id` as "the person who actually manages your funds" (the nearest ancestor with `can_handle_funds = true`). Auto-recomputed when promotions happen.
+- New recursive SQL function `get_downline(user_id)` returns the entire subtree (A → B → C → … → Z).
+- New RLS: any user can `SELECT` profiles, transactions, balances of anyone in their downline (read-only). The fund-handling leader keeps write access.
+- Invite codes table loses the leader-only restriction; anyone authenticated can mint a code tied to themselves.
 
-**DB**
-- Add `bank_code text` to `bank_accounts` and a new `verified_at timestamptz`.
-- Seed a `paystack_banks` lookup table (`name`, `code`, `slug`, `active`) — populated on first server call from Paystack `/bank` and cached.
+When member B is later promoted to fund-handler, no migration of members is needed — B was already seeing their downline; now B simply gains the deposit/deduct buttons.
 
-**Server**
-- New server route `POST /api/public/hooks/paystack-resolve` — wait, that's public. Use a **protected server function** instead: `resolveBankAccount` (`createServerFn` + `requireSupabaseAuth`) that calls `https://api.paystack.co/bank/resolve?account_number=…&bank_code=…` with `Authorization: Bearer ${PAYSTACK_SECRET_KEY}`. Validates 10-digit number, returns `{ account_name, status }`.
-- Second fn `listPaystackBanks` — proxies/caches `/bank` (NGN, type=nuban).
+## 2. Gender on signup
 
-**Frontend**
-- `BankCombobox` switched to fetch from `listPaystackBanks` (returns name+code).
-- Settings + Signup: account number input → debounced 600ms → call `resolveBankAccount` → show spinner → show verified name (read-only confirmation) → save button enabled only when verified.
+- Add `gender` enum (`male | female | other | prefer_not_to_say`) to `profiles`.
+- Required radio group on the signup form, editable later in `/settings`.
 
-**Secret**: request `PAYSTACK_SECRET_KEY` via `add_secret` tool. (You'll re-enter the rotated key.)
+## 3. Multi-currency deposits + bank fees
 
----
+When a leader records a deposit:
 
-## Slice 2 — NGN-first currency
+- Currency dropdown: USD, NGN, GBP, EUR (extensible).
+- Optional **bank fee** field in the same currency.
+- Logic: `net_local = gross_local - fee_local` → convert to USD using rate stored in `app_settings.fx_rates` (jsonb: `{ "USD":1, "NGN":1600, "GBP":1.27, "EUR":1.08 }`) → snapshot rate on the txn row (already done by `tg_snapshot_txn_rate`).
+- The fee is recorded as a separate `bank_fee` transaction type so it's auditable and shown on the member's history.
 
-- Flip `fmtUsdNgn` → `fmtNgnUsd(usd, rate)` returns `"₦160,000"` with `"$100"` shown smaller below (component, not string).
-- New `<Money usd rate />` component renders primary NGN line + muted USD line.
-- Replace existing `fmtUsdNgn` usages in `leader-view`, `member-view`, `dashboard`, `settings`, `invite-code-row` with `<Money>`.
-- Inputs: leader's "add deposit" / upkeep amount fields stay USD-entry (since exchange varies), but show live NGN preview underneath.
-- App settings page: editable `usd_to_ngn` rate input for leaders.
+## 4. Leader finance dashboard
 
----
+New stat cards on the leader dashboard, each computed from existing `transactions` plus two new ledgers:
 
-## Slice 3 — Notifications
+| Metric | Source |
+|---|---|
+| Total funds held | sum of all members' `balance_usd` (excluding office + leader purse) |
+| Total members | count of leader's downline with `can_handle_funds = false` |
+| Office support balance | new `office_ledger` rows, type `support_in/expense_out` |
+| Office expenses (period) | sum of `office_ledger` `expense_out` |
+| Team leader balance | new `leader_purse` per-leader, debit/credit rows |
+| Total expenses | office expenses + leader withdrawals |
+| Total debts | sum of negative balances across downline |
+| Total credit balance | sum of positive balances across downline (excludes office + leader purse) |
 
-**DB**
-- New `notifications` table: `id, user_id, title, body, kind enum(request_new|request_resolved|deposit|bank_updated|upkeep|generic), link text, read_at timestamptz, created_at`.
-- RLS: users see/update only their own.
-- Triggers:
-  - On `withdrawal_requests` insert → notify the leader.
-  - On `withdrawal_requests` update (status change) → notify the member.
-  - On `transactions` insert (deposit/release) → notify the member.
-  - On `bank_accounts` insert/update → notify user + their leader.
-- Realtime: `ALTER PUBLICATION supabase_realtime ADD TABLE notifications`.
+New tables:
+- `office_ledger(leader_id, kind: 'support_in'|'expense_out', amount_ngn, note, created_at)`
+- `leader_purse_ledger(leader_id, kind: 'credit'|'debit', amount_usd, note, created_at)`
 
-**Frontend**
-- `<NotificationBell />` in dashboard header: badge count of unread, popover list (title, body, relative time, unread dot). Click row → mark read + navigate to `link`.
-- Realtime subscription in auth context for live updates.
+UI:
+- "Log office expense" dialog (electricity, rent, etc.) → debits office balance.
+- "Withdraw from leader balance" dialog → debits leader purse.
+- Office support is auto-credited by existing `fund_rules` of kind `per_usd` (already deducting from members) — those NGN amounts now also credit `office_ledger` instead of just disappearing into a deduction note.
 
----
+## 5. Visible fund rules + fee display for members
 
-## Slice 4 — Clickable members + flexible fund rules
-
-**Member detail**
-- Click a row in leader-view team list → opens `<MemberDetailDialog>` (or route `/dashboard/member/$id`).
-- Shows: profile, totals (paid / pending / approved / rejected / per-fund deductions), full transaction list with date, type, status, note, linked bank.
-- Reuses RLS: leader can already select team transactions/profiles/bank.
-
-**Fund rules (replaces simple upkeep)**
-- New `fund_rules` table: `id, leader_id, name, kind enum(per_usd|fixed), amount_ngn numeric, frequency enum(one_time|weekly|biweekly|monthly|custom_days), custom_days, active bool, description, created_at, updated_at`.
-  - `per_usd`: when leader records a deposit of $X, system auto-creates a deduction transaction of `amount_ngn × X` (converted back to USD at current rate for storage consistency).
-  - `fixed`: behaves like upkeep — recurring deduction via cron.
-- Migrate existing `upkeep_plans` data into `fund_rules` as `kind=fixed` (keep upkeep_plans for now, mark deprecated).
-- New transaction `type` enum value: `'fund_deduction'` (`apply_transaction_to_balance` already handles via existing categories — extend trigger to subtract for `fund_deduction`).
-- Extend `run_due_upkeep` → `run_due_fund_rules` cron job.
-- Leader settings UI: list fund rules, add/edit/delete, toggle active. Per-rule frequency picker + amount with kind toggle.
-- When leader adds a deposit, server fn `recordDeposit` runs deposit + applies all active `per_usd` rules atomically.
-
-**Member detail "deductions breakdown"** ties back to fund_rules by name.
+- New `<TeamFundRules />` card on the member dashboard listing every active rule from their leader: `"5% per deposit → Office"`, `"₦2,000 / week → TV fund"`, etc. Read-only, friendly copy.
+- Member transaction history shows the bank fee row right under the deposit it belongs to (linked via `parent_txn_id`).
 
 ---
 
-## Out of scope (call out now)
+## Technical notes
 
-- Live Paystack switchover (you'll just swap the secret value via secrets tool when ready — no code change needed).
-- Per-bank account number length variation (Paystack handles validation server-side).
-- Push/email notifications (in-app only).
-- Multi-currency beyond NGN/USD.
+- New txn types: `bank_fee`, `office_credit`, `office_expense`, `leader_credit`, `leader_debit`. Trigger `apply_transaction_to_balance` updated to ignore office/leader types for member balance.
+- Recursive downline view uses `WITH RECURSIVE` on `profiles.sponsor_id`; cycle protection via depth limit (50).
+- `<Money />` component already handles USD↔NGN with snapshotted rate — extended to accept any source currency.
+- Backfill migration: copy existing `leader_id` into `sponsor_id` so current relationships are preserved.
 
 ---
 
-## Order of operations
+## Out of scope for this round (ask me if you want them)
 
-1. Slice 1 migration + secret prompt + server fns + UI.
-2. Slice 2 NGN-first refactor.
-3. Slice 3 notifications migration + bell.
-4. Slice 4 fund rules migration + member detail + leader settings.
+- Editing/deleting historical office or leader-purse entries (we'll only insert).
+- Multi-level commission splits (e.g. A gets 1% of Z's deposit). The pyramid is *visibility-only* for now.
 
-Approve and I'll start with Slice 1 (which begins by asking you to enter the rotated Paystack key).
+Reply **proceed** and I'll start with slice 1 (pyramid + gender), then continue through 5.

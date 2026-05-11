@@ -39,15 +39,22 @@ import { fmtUsd, fmtNgn, fmtDate } from "@/lib/format";
 import { Money } from "@/components/money";
 import {
   FREQ_LABEL,
+  SUPPORTED_CURRENCIES,
+  type Currency,
   type UpkeepFrequency,
   type UpkeepPlan,
   type WithdrawalRequest,
+  type OfficeLedgerEntry,
+  type LeaderPurseEntry,
 } from "@/lib/types";
 import { RANKS, isDirectorOrAbove, rankIndex } from "@/lib/ranks";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { InviteCodeRow, type InviteCodeRowData } from "@/components/dashboard/invite-code-row";
 import { MemberDetailDialog } from "@/components/dashboard/member-detail-dialog";
 import { FundRulesSection } from "@/components/dashboard/fund-rules-section";
+import { OfficeSection } from "@/components/dashboard/office-section";
+import { LeaderPurseSection } from "@/components/dashboard/leader-purse-section";
+import { DownlineSection } from "@/components/dashboard/downline-section";
 
 export function LeaderView({ profile }: { profile: Profile }) {
   const { refresh, ngnRate } = useAuth();
@@ -57,18 +64,25 @@ export function LeaderView({ profile }: { profile: Profile }) {
   const [plans, setPlans] = useState<UpkeepPlan[]>([]);
   const [tick, setTick] = useState(0); // periodic re-render to drop expired codes
   const [detailMember, setDetailMember] = useState<Profile | null>(null);
+  const [office, setOffice] = useState<OfficeLedgerEntry[]>([]);
+  const [purse, setPurse] = useState<LeaderPurseEntry[]>([]);
 
   const load = useCallback(async () => {
-    const [{ data: t }, { data: c }, { data: r }, { data: p }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
-      supabase.from("invite_codes").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
-      supabase.from("withdrawal_requests").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
-      supabase.from("upkeep_plans").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
-    ]);
+    const [{ data: t }, { data: c }, { data: r }, { data: p }, { data: o }, { data: pu }] =
+      await Promise.all([
+        supabase.from("profiles").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
+        supabase.from("invite_codes").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
+        supabase.from("withdrawal_requests").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
+        supabase.from("upkeep_plans").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
+        supabase.from("office_ledger").select("*").eq("leader_id", profile.id),
+        supabase.from("leader_purse_ledger").select("*").eq("leader_id", profile.id),
+      ]);
     setTeam((t as Profile[]) ?? []);
     setCodes((c as InviteCodeRowData[]) ?? []);
     setRequests((r as WithdrawalRequest[]) ?? []);
     setPlans((p as UpkeepPlan[]) ?? []);
+    setOffice((o as OfficeLedgerEntry[]) ?? []);
+    setPurse((pu as LeaderPurseEntry[]) ?? []);
   }, [profile.id]);
 
   useEffect(() => {
@@ -76,6 +90,14 @@ export function LeaderView({ profile }: { profile: Profile }) {
   }, [load]);
 
   const totalManaged = team.reduce((s, m) => s + Number(m.balance_usd), 0);
+  const totalDebts = team.reduce((s, m) => (Number(m.balance_usd) < 0 ? s + Math.abs(Number(m.balance_usd)) : s), 0);
+  const totalCredits = team.reduce((s, m) => (Number(m.balance_usd) > 0 ? s + Number(m.balance_usd) : s), 0);
+  const officeIn = office.filter((r) => r.kind === "support_in").reduce((s, r) => s + Number(r.amount_ngn), 0);
+  const officeOut = office.filter((r) => r.kind === "expense_out").reduce((s, r) => s + Number(r.amount_ngn), 0);
+  const officeBalNgn = officeIn - officeOut;
+  const purseCredit = purse.filter((r) => r.kind === "credit").reduce((s, r) => s + Number(r.amount_usd), 0);
+  const purseDebit = purse.filter((r) => r.kind === "debit").reduce((s, r) => s + Number(r.amount_usd), 0);
+  const purseBal = purseCredit - purseDebit;
   const visibleCodes = useMemo(
     () =>
       codes.filter(
@@ -110,21 +132,46 @@ export function LeaderView({ profile }: { profile: Profile }) {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Total members" value={String(team.length)} icon={Users} />
         <StatCard
-          label="Team members"
-          value={String(team.length)}
-          icon={Users}
+          label="Total funds held"
+          valueNode={<Money usd={totalManaged - totalDebts} size="lg" />}
+          icon={Wallet}
+          hint={totalDebts > 0 ? `Net of ${fmtUsd(totalDebts)} debts` : undefined}
         />
         <StatCard
-          label="Funds managed"
-          valueNode={<Money usd={totalManaged} size="lg" />}
+          label="Total credit balance"
+          valueNode={<Money usd={totalCredits} size="lg" />}
+          icon={ArrowUpRight}
+        />
+        <StatCard
+          label="Total debts"
+          valueNode={<Money usd={totalDebts} size="lg" />}
+          icon={ArrowUpRight}
+        />
+        <StatCard
+          label="Office support"
+          value={fmtNgn(officeBalNgn / Math.max(ngnRate, 1), ngnRate)}
+          icon={Wallet}
+          hint={`In ${fmtNgn(officeIn / Math.max(ngnRate, 1), ngnRate)} · Out ${fmtNgn(officeOut / Math.max(ngnRate, 1), ngnRate)}`}
+        />
+        <StatCard
+          label="Office expenses"
+          value={fmtNgn(officeOut / Math.max(ngnRate, 1), ngnRate)}
+          icon={ArrowUpRight}
+        />
+        <StatCard
+          label="Team leader balance"
+          valueNode={<Money usd={purseBal} size="lg" />}
           icon={Wallet}
         />
         <StatCard
-          label="Pending requests"
-          value={String(pendingRequests.length)}
+          label="Total expenses"
+          valueNode={<Money usd={purseDebit + officeOut / Math.max(ngnRate, 1)} size="lg" />}
           icon={ArrowUpRight}
+          hint={`Withdrawals + office`}
         />
+        <StatCard label="Pending requests" value={String(pendingRequests.length)} icon={Plus} />
         <StatCard label="Active codes" value={String(visibleCodes.length)} icon={Plus} />
       </div>
 
@@ -358,7 +405,16 @@ export function LeaderView({ profile }: { profile: Profile }) {
         </div>
       </section>
 
-      {/* Flexible fund rules (per-USD deductions, fixed recurring stipends, etc.) */}
+      {/* Office support ledger */}
+      <OfficeSection leaderId={profile.id} />
+
+      {/* Team leader's personal purse */}
+      <LeaderPurseSection leaderId={profile.id} />
+
+      {/* Pyramid downline */}
+      <DownlineSection rootId={profile.id} />
+
+      {/* Flexible fund rules */}
       <FundRulesSection leaderId={profile.id} />
 
       <MemberDetailDialog
@@ -449,29 +505,46 @@ function DepositDialog({
   leaderId: string;
   onDone: () => void;
 }) {
+  const { fxRates } = useAuth();
   const [open, setOpen] = useState(false);
+  const [currency, setCurrency] = useState<Currency>("NGN");
   const [amount, setAmount] = useState("");
+  const [fee, setFee] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const rate = fxRates[currency] ?? 1;
+  const grossUsd = Number(amount) > 0 ? Number(amount) / rate : 0;
+  const feeUsd = Number(fee) > 0 ? Number(fee) / rate : 0;
+  const netUsd = Math.max(0, grossUsd - feeUsd);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = depositSchema.safeParse({ amount: Number(amount), note: note || undefined });
-    if (!parsed.success) return toast.error(parsed.error.issues[0].message);
+    if (!(grossUsd > 0)) return toast.error("Enter a valid amount");
     setBusy(true);
-    const { error } = await supabase.from("transactions").insert({
+    const { data: dep, error } = await supabase.from("transactions").insert({
       member_id: member.id,
       leader_id: leaderId,
       type: "deposit",
-      amount_usd: parsed.data.amount,
-      note: parsed.data.note ?? null,
-    });
+      amount_usd: Number(grossUsd.toFixed(2)),
+      currency,
+      note: note.trim() || null,
+    }).select("id").single();
+    if (error) { setBusy(false); return toast.error(error.message); }
+    if (feeUsd > 0 && dep) {
+      await supabase.from("transactions").insert({
+        member_id: member.id,
+        leader_id: leaderId,
+        type: "bank_fee",
+        amount_usd: Number(feeUsd.toFixed(2)),
+        currency,
+        note: `Bank fee on ${currency} ${amount}`,
+        parent_txn_id: dep.id,
+      });
+    }
     setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Deposit recorded");
-    setOpen(false);
-    setAmount("");
-    setNote("");
+    toast.success(`Deposit recorded · net ${fmtUsd(netUsd)}`);
+    setOpen(false); setAmount(""); setFee(""); setNote("");
     onDone();
   };
 
@@ -487,17 +560,32 @@ function DepositDialog({
             <DialogDescription>This adds to their managed balance.</DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="dep-ccy">Currency</Label>
+                <Select value={currency} onValueChange={(v) => setCurrency(v as Currency)}>
+                  <SelectTrigger id="dep-ccy"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SUPPORTED_CURRENCIES.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="dep-amount">Gross amount ({currency})</Label>
+                <Input id="dep-amount" type="number" step="0.01" min="0.01"
+                  value={amount} onChange={(e) => setAmount(e.target.value)} required />
+              </div>
+            </div>
             <div className="space-y-2">
-              <Label htmlFor="dep-amount">Amount (USD)</Label>
-              <Input
-                id="dep-amount"
-                type="number"
-                step="0.01"
-                min="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-              />
+              <Label htmlFor="dep-fee">Bank fee ({currency}, optional)</Label>
+              <Input id="dep-fee" type="number" step="0.01" min="0"
+                value={fee} onChange={(e) => setFee(e.target.value)} placeholder="0" />
+            </div>
+            <div className="rounded-lg bg-muted/60 px-3 py-2 text-xs">
+              Net to member: <span className="font-mono font-semibold">{fmtUsd(netUsd)}</span>
+              {feeUsd > 0 && <> · fee {fmtUsd(feeUsd)}</>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="dep-note">Note (optional)</Label>

@@ -9,9 +9,11 @@ export interface Profile {
   full_name: string;
   email: string | null;
   leader_id: string | null;
+  sponsor_id: string | null;
   rank: string;
   balance_usd: number;
   can_handle_funds: boolean;
+  gender: "male" | "female" | "other" | "prefer_not_to_say" | null;
 }
 
 interface AuthContextValue {

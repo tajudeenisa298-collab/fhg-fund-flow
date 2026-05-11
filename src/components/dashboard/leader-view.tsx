@@ -560,17 +560,32 @@ function DepositDialog({
             <DialogDescription>This adds to their managed balance.</DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="dep-ccy">Currency</Label>
+                <Select value={currency} onValueChange={(v) => setCurrency(v as Currency)}>
+                  <SelectTrigger id="dep-ccy"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SUPPORTED_CURRENCIES.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="dep-amount">Gross amount ({currency})</Label>
+                <Input id="dep-amount" type="number" step="0.01" min="0.01"
+                  value={amount} onChange={(e) => setAmount(e.target.value)} required />
+              </div>
+            </div>
             <div className="space-y-2">
-              <Label htmlFor="dep-amount">Amount (USD)</Label>
-              <Input
-                id="dep-amount"
-                type="number"
-                step="0.01"
-                min="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-              />
+              <Label htmlFor="dep-fee">Bank fee ({currency}, optional)</Label>
+              <Input id="dep-fee" type="number" step="0.01" min="0"
+                value={fee} onChange={(e) => setFee(e.target.value)} placeholder="0" />
+            </div>
+            <div className="rounded-lg bg-muted/60 px-3 py-2 text-xs">
+              Net to member: <span className="font-mono font-semibold">{fmtUsd(netUsd)}</span>
+              {feeUsd > 0 && <> · fee {fmtUsd(feeUsd)}</>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="dep-note">Note (optional)</Label>

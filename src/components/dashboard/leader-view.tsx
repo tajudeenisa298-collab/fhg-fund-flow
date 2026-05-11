@@ -505,29 +505,46 @@ function DepositDialog({
   leaderId: string;
   onDone: () => void;
 }) {
+  const { fxRates } = useAuth();
   const [open, setOpen] = useState(false);
+  const [currency, setCurrency] = useState<Currency>("NGN");
   const [amount, setAmount] = useState("");
+  const [fee, setFee] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const rate = fxRates[currency] ?? 1;
+  const grossUsd = Number(amount) > 0 ? Number(amount) / rate : 0;
+  const feeUsd = Number(fee) > 0 ? Number(fee) / rate : 0;
+  const netUsd = Math.max(0, grossUsd - feeUsd);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = depositSchema.safeParse({ amount: Number(amount), note: note || undefined });
-    if (!parsed.success) return toast.error(parsed.error.issues[0].message);
+    if (!(grossUsd > 0)) return toast.error("Enter a valid amount");
     setBusy(true);
-    const { error } = await supabase.from("transactions").insert({
+    const { data: dep, error } = await supabase.from("transactions").insert({
       member_id: member.id,
       leader_id: leaderId,
       type: "deposit",
-      amount_usd: parsed.data.amount,
-      note: parsed.data.note ?? null,
-    });
+      amount_usd: Number(grossUsd.toFixed(2)),
+      currency,
+      note: note.trim() || null,
+    }).select("id").single();
+    if (error) { setBusy(false); return toast.error(error.message); }
+    if (feeUsd > 0 && dep) {
+      await supabase.from("transactions").insert({
+        member_id: member.id,
+        leader_id: leaderId,
+        type: "bank_fee",
+        amount_usd: Number(feeUsd.toFixed(2)),
+        currency,
+        note: `Bank fee on ${currency} ${amount}`,
+        parent_txn_id: dep.id,
+      });
+    }
     setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Deposit recorded");
-    setOpen(false);
-    setAmount("");
-    setNote("");
+    toast.success(`Deposit recorded · net ${fmtUsd(netUsd)}`);
+    setOpen(false); setAmount(""); setFee(""); setNote("");
     onDone();
   };
 

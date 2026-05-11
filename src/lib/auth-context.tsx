@@ -103,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         activeRole,
         setActiveRole,
         ngnRate,
+        fxRates,
         loading,
         refresh,
         signOut: async () => {

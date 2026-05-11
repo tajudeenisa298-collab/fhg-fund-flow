@@ -21,6 +21,8 @@ import { fmtUsd, fmtNgn, fmtDate, fmtMoney } from "@/lib/format";
 import { Money } from "@/components/money";
 import type { Transaction, WithdrawalRequest } from "@/lib/types";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { DownlineSection } from "@/components/dashboard/downline-section";
+import { TeamFundRulesReadonly } from "@/components/dashboard/team-fund-rules-readonly";
 
 const requestSchema = z.object({
   amount: z.number().positive().max(1_000_000),

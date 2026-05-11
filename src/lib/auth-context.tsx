@@ -28,6 +28,8 @@ interface AuthContextValue {
   setActiveRole: (r: AppRole) => void;
   /** USD → NGN rate, app-wide setting */
   ngnRate: number;
+  /** Multi-currency rates (per 1 USD) */
+  fxRates: Record<string, number>;
   loading: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;

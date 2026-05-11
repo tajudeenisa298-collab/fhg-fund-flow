@@ -64,18 +64,25 @@ export function LeaderView({ profile }: { profile: Profile }) {
   const [plans, setPlans] = useState<UpkeepPlan[]>([]);
   const [tick, setTick] = useState(0); // periodic re-render to drop expired codes
   const [detailMember, setDetailMember] = useState<Profile | null>(null);
+  const [office, setOffice] = useState<OfficeLedgerEntry[]>([]);
+  const [purse, setPurse] = useState<LeaderPurseEntry[]>([]);
 
   const load = useCallback(async () => {
-    const [{ data: t }, { data: c }, { data: r }, { data: p }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
-      supabase.from("invite_codes").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
-      supabase.from("withdrawal_requests").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
-      supabase.from("upkeep_plans").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
-    ]);
+    const [{ data: t }, { data: c }, { data: r }, { data: p }, { data: o }, { data: pu }] =
+      await Promise.all([
+        supabase.from("profiles").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
+        supabase.from("invite_codes").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
+        supabase.from("withdrawal_requests").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
+        supabase.from("upkeep_plans").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
+        supabase.from("office_ledger").select("*").eq("leader_id", profile.id),
+        supabase.from("leader_purse_ledger").select("*").eq("leader_id", profile.id),
+      ]);
     setTeam((t as Profile[]) ?? []);
     setCodes((c as InviteCodeRowData[]) ?? []);
     setRequests((r as WithdrawalRequest[]) ?? []);
     setPlans((p as UpkeepPlan[]) ?? []);
+    setOffice((o as OfficeLedgerEntry[]) ?? []);
+    setPurse((pu as LeaderPurseEntry[]) ?? []);
   }, [profile.id]);
 
   useEffect(() => {
@@ -83,6 +90,14 @@ export function LeaderView({ profile }: { profile: Profile }) {
   }, [load]);
 
   const totalManaged = team.reduce((s, m) => s + Number(m.balance_usd), 0);
+  const totalDebts = team.reduce((s, m) => (Number(m.balance_usd) < 0 ? s + Math.abs(Number(m.balance_usd)) : s), 0);
+  const totalCredits = team.reduce((s, m) => (Number(m.balance_usd) > 0 ? s + Number(m.balance_usd) : s), 0);
+  const officeIn = office.filter((r) => r.kind === "support_in").reduce((s, r) => s + Number(r.amount_ngn), 0);
+  const officeOut = office.filter((r) => r.kind === "expense_out").reduce((s, r) => s + Number(r.amount_ngn), 0);
+  const officeBalNgn = officeIn - officeOut;
+  const purseCredit = purse.filter((r) => r.kind === "credit").reduce((s, r) => s + Number(r.amount_usd), 0);
+  const purseDebit = purse.filter((r) => r.kind === "debit").reduce((s, r) => s + Number(r.amount_usd), 0);
+  const purseBal = purseCredit - purseDebit;
   const visibleCodes = useMemo(
     () =>
       codes.filter(

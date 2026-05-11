@@ -488,6 +488,7 @@ export type Database = {
         | "monthly"
         | "custom_days"
       fund_kind: "per_usd" | "fixed"
+      gender_kind: "male" | "female" | "other" | "prefer_not_to_say"
       notification_kind:
         | "request_new"
         | "request_resolved"
@@ -496,12 +497,18 @@ export type Database = {
         | "bank_updated"
         | "upkeep"
         | "generic"
+        | "office"
       txn_type:
         | "deposit"
         | "withdrawal"
         | "release"
         | "adjustment"
         | "fund_deduction"
+        | "bank_fee"
+        | "office_credit"
+        | "office_expense"
+        | "leader_credit"
+        | "leader_debit"
       upkeep_frequency:
         | "every_3_days"
         | "weekly"
@@ -645,6 +652,7 @@ export const Constants = {
         "custom_days",
       ],
       fund_kind: ["per_usd", "fixed"],
+      gender_kind: ["male", "female", "other", "prefer_not_to_say"],
       notification_kind: [
         "request_new",
         "request_resolved",
@@ -653,6 +661,7 @@ export const Constants = {
         "bank_updated",
         "upkeep",
         "generic",
+        "office",
       ],
       txn_type: [
         "deposit",
@@ -660,6 +669,11 @@ export const Constants = {
         "release",
         "adjustment",
         "fund_deduction",
+        "bank_fee",
+        "office_credit",
+        "office_expense",
+        "leader_credit",
+        "leader_debit",
       ],
       upkeep_frequency: [
         "every_3_days",

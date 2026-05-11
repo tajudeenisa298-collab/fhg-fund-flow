@@ -405,7 +405,16 @@ export function LeaderView({ profile }: { profile: Profile }) {
         </div>
       </section>
 
-      {/* Flexible fund rules (per-USD deductions, fixed recurring stipends, etc.) */}
+      {/* Office support ledger */}
+      <OfficeSection leaderId={profile.id} />
+
+      {/* Team leader's personal purse */}
+      <LeaderPurseSection leaderId={profile.id} />
+
+      {/* Pyramid downline */}
+      <DownlineSection rootId={profile.id} />
+
+      {/* Flexible fund rules */}
       <FundRulesSection leaderId={profile.id} />
 
       <MemberDetailDialog

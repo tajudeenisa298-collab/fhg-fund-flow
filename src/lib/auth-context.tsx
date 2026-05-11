@@ -43,18 +43,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [activeRole, setActiveRoleState] = useState<AppRole>("member");
   const [ngnRate, setNgnRate] = useState<number>(1600);
+  const [fxRates, setFxRates] = useState<Record<string, number>>({
+    USD: 1, NGN: 1600, GBP: 1.27, EUR: 1.08,
+  });
   const [loading, setLoading] = useState(true);
 
   const loadProfile = async (userId: string) => {
     const [{ data: p }, { data: r }, { data: s }] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId),
-      supabase.from("app_settings").select("usd_to_ngn").eq("id", 1).maybeSingle(),
+      supabase.from("app_settings").select("usd_to_ngn, fx_rates").eq("id", 1).maybeSingle(),
     ]);
     setProfile((p as Profile) ?? null);
     const list = ((r as { role: AppRole }[]) ?? []).map((x) => x.role);
     setRoles(list);
     if (s?.usd_to_ngn) setNgnRate(Number(s.usd_to_ngn));
+    if (s?.fx_rates && typeof s.fx_rates === "object")
+      setFxRates({ ...(s.fx_rates as Record<string, number>) });
     setActiveRoleState((prev) => {
       if (list.includes(prev)) return prev;
       return list.includes("leader") ? "leader" : "member";

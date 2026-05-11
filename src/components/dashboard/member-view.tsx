@@ -188,6 +188,12 @@ export function MemberView({ profile }: { profile: Profile }) {
         </div>
       </section>
 
+      {/* Team fund rules — what your leader auto-deducts */}
+      <TeamFundRulesReadonly leaderId={profile.leader_id} />
+
+      {/* Pyramid: people you've sponsored, directly or indirectly */}
+      <DownlineSection rootId={profile.id} />
+
       <section className="rounded-2xl border bg-card p-6 shadow-card">
         <h2 className="text-base font-semibold">Transaction history</h2>
         <div className="mt-4 overflow-x-auto rounded-xl border">

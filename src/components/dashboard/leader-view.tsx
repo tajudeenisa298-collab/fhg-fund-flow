@@ -39,15 +39,22 @@ import { fmtUsd, fmtNgn, fmtDate } from "@/lib/format";
 import { Money } from "@/components/money";
 import {
   FREQ_LABEL,
+  SUPPORTED_CURRENCIES,
+  type Currency,
   type UpkeepFrequency,
   type UpkeepPlan,
   type WithdrawalRequest,
+  type OfficeLedgerEntry,
+  type LeaderPurseEntry,
 } from "@/lib/types";
 import { RANKS, isDirectorOrAbove, rankIndex } from "@/lib/ranks";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { InviteCodeRow, type InviteCodeRowData } from "@/components/dashboard/invite-code-row";
 import { MemberDetailDialog } from "@/components/dashboard/member-detail-dialog";
 import { FundRulesSection } from "@/components/dashboard/fund-rules-section";
+import { OfficeSection } from "@/components/dashboard/office-section";
+import { LeaderPurseSection } from "@/components/dashboard/leader-purse-section";
+import { DownlineSection } from "@/components/dashboard/downline-section";
 
 export function LeaderView({ profile }: { profile: Profile }) {
   const { refresh, ngnRate } = useAuth();

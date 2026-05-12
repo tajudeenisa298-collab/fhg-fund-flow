@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Wallet, TrendingUp, Clock, Plus } from "lucide-react";
 import { z } from "zod";
@@ -23,6 +23,7 @@ import type { Transaction, WithdrawalRequest } from "@/lib/types";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { DownlineSection } from "@/components/dashboard/downline-section";
 import { TeamFundRulesReadonly } from "@/components/dashboard/team-fund-rules-readonly";
+import { InviteCodeRow, type InviteCodeRowData } from "@/components/dashboard/invite-code-row";
 
 const requestSchema = z.object({
   amount: z.number().positive().max(1_000_000),
@@ -37,14 +38,18 @@ export function MemberView({ profile }: { profile: Profile }) {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [codes, setCodes] = useState<InviteCodeRowData[]>([]);
+  const [tick, setTick] = useState(0);
 
   const load = async () => {
-    const [{ data: t }, { data: r }] = await Promise.all([
+    const [{ data: t }, { data: r }, { data: c }] = await Promise.all([
       supabase.from("transactions").select("*").eq("member_id", profile.id).order("created_at", { ascending: false }),
       supabase.from("withdrawal_requests").select("*").eq("member_id", profile.id).order("created_at", { ascending: false }),
+      supabase.from("invite_codes").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
     ]);
     setTxns((t as Transaction[]) ?? []);
     setRequests((r as WithdrawalRequest[]) ?? []);
+    setCodes((c as InviteCodeRowData[]) ?? []);
   };
 
   useEffect(() => {
@@ -52,6 +57,18 @@ export function MemberView({ profile }: { profile: Profile }) {
   }, [profile.id]);
 
   const pending = requests.filter((r) => r.status === "pending").length;
+  const visibleCodes = useMemo(
+    () => codes.filter((c) => !c.used_by && !c.revoked && new Date(c.expires_at).getTime() > Date.now()),
+    [codes, tick],
+  );
+
+  const generateCode = async () => {
+    const code = `FHG-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    const { error } = await supabase.from("invite_codes").insert({ code, leader_id: profile.id });
+    if (error) return toast.error(error.message);
+    toast.success("Invite code created");
+    load();
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,6 +175,26 @@ export function MemberView({ profile }: { profile: Profile }) {
         <StatCard label="Current rank" value={profile.rank} icon={TrendingUp} hint="Reach Director to unlock" />
         <StatCard label="Pending requests" value={String(pending)} icon={Clock} />
       </div>
+
+      <section className="rounded-2xl border bg-card p-6 shadow-card">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold">Invite codes</h2>
+            <p className="text-sm text-muted-foreground">Generate codes for people you personally sponsor.</p>
+          </div>
+          <Button onClick={generateCode}>
+            <Plus className="mr-1 size-4" /> Generate code
+          </Button>
+        </div>
+        <div className="mt-4 divide-y rounded-xl border">
+          {visibleCodes.length === 0 && (
+            <p className="px-4 py-10 text-center text-sm text-muted-foreground">No active codes.</p>
+          )}
+          {visibleCodes.map((c) => (
+            <InviteCodeRow key={c.id} code={c} onExpired={() => setTick((t) => t + 1)} />
+          ))}
+        </div>
+      </section>
 
       <section className="rounded-2xl border bg-card p-6 shadow-card">
         <h2 className="text-base font-semibold">Withdrawal requests</h2>

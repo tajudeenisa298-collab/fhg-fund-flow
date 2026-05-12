@@ -1,0 +1,1 @@
+ALTER TYPE public.fund_destination ADD VALUE IF NOT EXISTS 'member_upkeep';

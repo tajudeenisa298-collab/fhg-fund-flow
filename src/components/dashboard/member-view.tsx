@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Wallet, TrendingUp, Clock, Plus } from "lucide-react";
 import { z } from "zod";
@@ -57,7 +57,10 @@ export function MemberView({ profile }: { profile: Profile }) {
   }, [profile.id]);
 
   const pending = requests.filter((r) => r.status === "pending").length;
-  const visibleCodes = codes.filter((c) => !c.used_by && !c.revoked && new Date(c.expires_at).getTime() > Date.now());
+  const visibleCodes = useMemo(
+    () => codes.filter((c) => !c.used_by && !c.revoked && new Date(c.expires_at).getTime() > Date.now()),
+    [codes, tick],
+  );
 
   const generateCode = async () => {
     const code = `FHG-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;

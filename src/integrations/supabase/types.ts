@@ -75,12 +75,14 @@ export type Database = {
           created_at: string
           custom_days: number | null
           description: string | null
+          destination: Database["public"]["Enums"]["fund_destination"]
           frequency: Database["public"]["Enums"]["fund_frequency"] | null
           id: string
           kind: Database["public"]["Enums"]["fund_kind"]
           leader_id: string
           name: string
           next_run_at: string | null
+          target_rank: string | null
           updated_at: string
         }
         Insert: {
@@ -89,12 +91,14 @@ export type Database = {
           created_at?: string
           custom_days?: number | null
           description?: string | null
+          destination?: Database["public"]["Enums"]["fund_destination"]
           frequency?: Database["public"]["Enums"]["fund_frequency"] | null
           id?: string
           kind: Database["public"]["Enums"]["fund_kind"]
           leader_id: string
           name: string
           next_run_at?: string | null
+          target_rank?: string | null
           updated_at?: string
         }
         Update: {
@@ -103,12 +107,14 @@ export type Database = {
           created_at?: string
           custom_days?: number | null
           description?: string | null
+          destination?: Database["public"]["Enums"]["fund_destination"]
           frequency?: Database["public"]["Enums"]["fund_frequency"] | null
           id?: string
           kind?: Database["public"]["Enums"]["fund_kind"]
           leader_id?: string
           name?: string
           next_run_at?: string | null
+          target_rank?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -526,6 +532,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_downline: {
+        Args: { _root: string }
+        Returns: {
+          balance_usd: number
+          can_handle_funds: boolean
+          created_at: string
+          depth: number
+          email: string
+          full_name: string
+          gender: Database["public"]["Enums"]["gender_kind"]
+          id: string
+          leader_id: string
+          rank: string
+          sponsor_id: string
+          updated_at: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -537,6 +560,7 @@ export type Database = {
         Args: { _ancestor: string; _descendant: string }
         Returns: boolean
       }
+      is_valid_rank: { Args: { _rank: string }; Returns: boolean }
       nearest_fund_handler: { Args: { _start: string }; Returns: string }
       notify_user: {
         Args: {
@@ -561,6 +585,7 @@ export type Database = {
         Args: { _member_id: string; _note?: string }
         Returns: undefined
       }
+      recompute_fund_handlers: { Args: { _root: string }; Returns: undefined }
       run_due_fund_rules: { Args: never; Returns: number }
       run_due_upkeep: { Args: never; Returns: number }
       validate_invite_code: {
@@ -573,6 +598,11 @@ export type Database = {
     }
     Enums: {
       app_role: "member" | "leader"
+      fund_destination:
+        | "office_support"
+        | "team_leader"
+        | "custom"
+        | "member_upkeep"
       fund_frequency:
         | "one_time"
         | "weekly"
@@ -736,6 +766,12 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["member", "leader"],
+      fund_destination: [
+        "office_support",
+        "team_leader",
+        "custom",
+        "member_upkeep",
+      ],
       fund_frequency: [
         "one_time",
         "weekly",

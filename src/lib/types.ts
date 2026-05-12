@@ -110,12 +110,15 @@ export const FREQ_LABEL: Record<UpkeepFrequency, string> = {
 
 export type FundKind = "per_usd" | "fixed";
 export type FundFrequency = "one_time" | "weekly" | "biweekly" | "monthly" | "custom_days";
+export type FundDestination = "office_support" | "team_leader" | "custom" | "member_upkeep";
 
 export interface FundRule {
   id: string;
   leader_id: string;
   name: string;
   kind: FundKind;
+  destination: FundDestination;
+  target_rank: string | null;
   amount_ngn: number;
   frequency: FundFrequency | null;
   custom_days: number | null;

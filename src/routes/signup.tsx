@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -11,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { BankVerifier, type VerifiedBank } from "@/components/bank-verifier";
 import { GENDER_LABEL, type Gender } from "@/lib/types";
+import { validateInviteCode } from "@/lib/team.functions";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -41,6 +43,7 @@ function SignupPage() {
   const [validating, setValidating] = useState(false);
   const [loading, setLoading] = useState(false);
   const [verifiedBank, setVerifiedBank] = useState<VerifiedBank | null>(null);
+  const validateCode = useServerFn(validateInviteCode);
 
   useEffect(() => {
     if (!authLoading && session) nav({ to: "/dashboard" });
@@ -54,21 +57,21 @@ function SignupPage() {
     }
     setValidating(true);
     const t = setTimeout(async () => {
-      const { data, error } = await supabase.rpc("validate_invite_code", { _code: code });
+      const result = await validateCode({ data: { code } });
       setValidating(false);
-      if (error || !data || data.length === 0) setSponsorName(null);
-      else setSponsorName(data[0].leader_name);
+      if (!result.valid) setSponsorName(null);
+      else setSponsorName(result.sponsor_name);
     }, 350);
     return () => clearTimeout(t);
-  }, [inviteCode]);
+  }, [inviteCode, validateCode]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!gender) return toast.error("Please select your gender");
     const parsed = baseSchema.safeParse({ full_name, email, password, gender });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
-    if (inviteCode.trim() && !sponsorName)
-      return toast.error("Invite code is invalid or expired");
+    if (!inviteCode.trim()) return toast.error("Invite code is required");
+    if (!sponsorName) return toast.error("Invite code is invalid or expired");
 
     setLoading(true);
     const { data: authData, error } = await supabase.auth.signUp({
@@ -115,7 +118,7 @@ function SignupPage() {
         <div className="rounded-2xl border bg-card p-8 shadow-card">
           <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Use a sponsor's invite code to join their team — or skip it to start your own.
+            Use your sponsor's invite code to join the correct hierarchy.
           </p>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
@@ -152,12 +155,13 @@ function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="invite">Invite code (optional)</Label>
+              <Label htmlFor="invite">Invite code</Label>
               <Input
                 id="invite"
                 value={inviteCode}
                 onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
                 placeholder="e.g. FHG-AB12CD"
+                required
               />
               {validating && <p className="text-xs text-muted-foreground">Checking code…</p>}
               {!validating && sponsorName && (

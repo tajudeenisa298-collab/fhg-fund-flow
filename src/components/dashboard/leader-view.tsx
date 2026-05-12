@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
@@ -55,6 +56,7 @@ import { FundRulesSection } from "@/components/dashboard/fund-rules-section";
 import { OfficeSection } from "@/components/dashboard/office-section";
 import { LeaderPurseSection } from "@/components/dashboard/leader-purse-section";
 import { DownlineSection } from "@/components/dashboard/downline-section";
+import { promoteManagedMember } from "@/lib/team.functions";
 
 export function LeaderView({ profile }: { profile: Profile }) {
   const { refresh, ngnRate } = useAuth();
@@ -722,19 +724,17 @@ function PromoteDialog({ member, onDone }: { member: Profile; onDone: () => void
   const [grant, setGrant] = useState(false);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const promote = useServerFn(promoteManagedMember);
 
   const willBecomeDirector = isDirectorOrAbove(newRank);
 
   const submit = async () => {
     setBusy(true);
-    const { error } = await supabase.rpc("promote_member", {
-      _member_id: member.id,
-      _new_rank: newRank,
-      _grant_fund_handler: grant,
-      _note: note || undefined,
-    });
+    const { error } = await promote({ data: { memberId: member.id, newRank, grantFundHandler: grant, note } })
+      .then(() => ({ error: null as string | null }))
+      .catch((e) => ({ error: e instanceof Error ? e.message : "Could not update rank" }));
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(error);
     toast.success(`${member.full_name} → ${newRank}`);
     setOpen(false);
     onDone();

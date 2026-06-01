@@ -711,6 +711,11 @@ function UpkeepDialog({
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">
+            {rankDefault && (
+              <Button type="button" variant="outline" size="sm" onClick={applyRankDefault}>
+                Prefill from {member.rank} default
+              </Button>
+            )}
             <div className="space-y-2">
               <Label htmlFor="up-amount">Amount per cycle (USD)</Label>
               <Input

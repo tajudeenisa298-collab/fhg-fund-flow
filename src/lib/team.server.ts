@@ -7,7 +7,7 @@ export async function validateInviteCodeServer(code: string) {
 
   const { data, error } = await supabaseAdmin
     .from("invite_codes")
-    .select("leader_id, profiles!inner(full_name)")
+    .select("leader_id")
     .eq("code", clean)
     .is("used_by", null)
     .eq("revoked", false)
@@ -15,8 +15,14 @@ export async function validateInviteCodeServer(code: string) {
     .maybeSingle();
 
   if (error || !data) return { valid: false, sponsor_name: null as string | null };
-  const profile = data.profiles as unknown as { full_name?: string };
-  return { valid: true, sponsor_name: profile.full_name ?? "Sponsor" };
+
+  const { data: sponsor } = await supabaseAdmin
+    .from("profiles")
+    .select("full_name")
+    .eq("id", data.leader_id)
+    .maybeSingle();
+
+  return { valid: true, sponsor_name: sponsor?.full_name ?? "Sponsor" };
 }
 
 export async function promoteManagedMemberServer(input: {

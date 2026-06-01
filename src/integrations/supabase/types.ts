@@ -342,6 +342,39 @@ export type Database = {
           },
         ]
       }
+      rank_upkeep_defaults: {
+        Row: {
+          amount_usd: number
+          created_at: string
+          custom_days: number | null
+          frequency: Database["public"]["Enums"]["upkeep_frequency"]
+          id: string
+          leader_id: string
+          rank: string
+          updated_at: string
+        }
+        Insert: {
+          amount_usd: number
+          created_at?: string
+          custom_days?: number | null
+          frequency?: Database["public"]["Enums"]["upkeep_frequency"]
+          id?: string
+          leader_id: string
+          rank: string
+          updated_at?: string
+        }
+        Update: {
+          amount_usd?: number
+          created_at?: string
+          custom_days?: number | null
+          frequency?: Database["public"]["Enums"]["upkeep_frequency"]
+          id?: string
+          leader_id?: string
+          rank?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount_usd: number

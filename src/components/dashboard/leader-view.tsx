@@ -47,6 +47,7 @@ import {
   type WithdrawalRequest,
   type OfficeLedgerEntry,
   type LeaderPurseEntry,
+  type RankUpkeepDefault,
 } from "@/lib/types";
 import { RANKS, isDirectorOrAbove, rankIndex } from "@/lib/ranks";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -56,6 +57,7 @@ import { FundRulesSection } from "@/components/dashboard/fund-rules-section";
 import { OfficeSection } from "@/components/dashboard/office-section";
 import { LeaderPurseSection } from "@/components/dashboard/leader-purse-section";
 import { DownlineSection } from "@/components/dashboard/downline-section";
+import { RankUpkeepDefaultsSection } from "@/components/dashboard/rank-upkeep-defaults-section";
 import { promoteManagedMember } from "@/lib/team.functions";
 
 export function LeaderView({ profile }: { profile: Profile }) {
@@ -68,9 +70,10 @@ export function LeaderView({ profile }: { profile: Profile }) {
   const [detailMember, setDetailMember] = useState<Profile | null>(null);
   const [office, setOffice] = useState<OfficeLedgerEntry[]>([]);
   const [purse, setPurse] = useState<LeaderPurseEntry[]>([]);
+  const [rankDefaults, setRankDefaults] = useState<RankUpkeepDefault[]>([]);
 
   const load = useCallback(async () => {
-    const [{ data: t }, { data: c }, { data: r }, { data: p }, { data: o }, { data: pu }] =
+    const [{ data: t }, { data: c }, { data: r }, { data: p }, { data: o }, { data: pu }, { data: rd }] =
       await Promise.all([
         supabase.from("profiles").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
         supabase.from("invite_codes").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
@@ -78,6 +81,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
         supabase.from("upkeep_plans").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
         supabase.from("office_ledger").select("*").eq("leader_id", profile.id),
         supabase.from("leader_purse_ledger").select("*").eq("leader_id", profile.id),
+        supabase.from("rank_upkeep_defaults").select("*").eq("leader_id", profile.id).order("rank"),
       ]);
     setTeam((t as Profile[]) ?? []);
     setCodes((c as InviteCodeRowData[]) ?? []);
@@ -85,11 +89,30 @@ export function LeaderView({ profile }: { profile: Profile }) {
     setPlans((p as UpkeepPlan[]) ?? []);
     setOffice((o as OfficeLedgerEntry[]) ?? []);
     setPurse((pu as LeaderPurseEntry[]) ?? []);
+    setRankDefaults((rd as RankUpkeepDefault[]) ?? []);
   }, [profile.id]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  // Live updates: refresh dashboard when any related row changes
+  useEffect(() => {
+    const ch = supabase
+      .channel(`leader-dash:${profile.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `leader_id=eq.${profile.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "withdrawal_requests", filter: `leader_id=eq.${profile.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "invite_codes", filter: `leader_id=eq.${profile.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "upkeep_plans", filter: `leader_id=eq.${profile.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "transactions", filter: `leader_id=eq.${profile.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "office_ledger", filter: `leader_id=eq.${profile.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "leader_purse_ledger", filter: `leader_id=eq.${profile.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "rank_upkeep_defaults", filter: `leader_id=eq.${profile.id}` }, () => load())
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [profile.id, load]);
 
   const totalManaged = team.reduce((s, m) => s + Number(m.balance_usd), 0);
   const totalDebts = team.reduce((s, m) => (Number(m.balance_usd) < 0 ? s + Math.abs(Number(m.balance_usd)) : s), 0);
@@ -311,6 +334,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
                           member={m}
                           leaderId={profile.id}
                           existing={plans.find((p) => p.member_id === m.id) ?? null}
+                          rankDefault={rankDefaults.find((rd) => rd.rank === m.rank) ?? null}
                           onDone={load}
                         />
                         <PromoteDialog member={m} onDone={load} />
@@ -419,6 +443,13 @@ export function LeaderView({ profile }: { profile: Profile }) {
 
       {/* Flexible fund rules */}
       <FundRulesSection leaderId={profile.id} />
+
+      {/* Rank-based upkeep defaults */}
+      <RankUpkeepDefaultsSection
+        leaderId={profile.id}
+        defaults={rankDefaults}
+        onChanged={load}
+      />
 
       <MemberDetailDialog
         member={detailMember}
@@ -612,20 +643,40 @@ function UpkeepDialog({
   member,
   leaderId,
   existing,
+  rankDefault,
   onDone,
 }: {
   member: Profile;
   leaderId: string;
   existing: UpkeepPlan | null;
+  rankDefault: RankUpkeepDefault | null;
   onDone: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [amount, setAmount] = useState(existing ? String(existing.amount_usd) : "");
-  const [freq, setFreq] = useState<UpkeepFrequency>(existing?.frequency ?? "weekly");
-  const [customDays, setCustomDays] = useState(
-    existing?.custom_days ? String(existing.custom_days) : "5",
-  );
+  const initialAmount = existing
+    ? String(existing.amount_usd)
+    : rankDefault
+      ? String(rankDefault.amount_usd)
+      : "";
+  const initialFreq: UpkeepFrequency =
+    existing?.frequency ?? rankDefault?.frequency ?? "weekly";
+  const initialDays = existing?.custom_days
+    ? String(existing.custom_days)
+    : rankDefault?.custom_days
+      ? String(rankDefault.custom_days)
+      : "5";
+  const [amount, setAmount] = useState(initialAmount);
+  const [freq, setFreq] = useState<UpkeepFrequency>(initialFreq);
+  const [customDays, setCustomDays] = useState(initialDays);
   const [busy, setBusy] = useState(false);
+
+  const applyRankDefault = () => {
+    if (!rankDefault) return;
+    setAmount(String(rankDefault.amount_usd));
+    setFreq(rankDefault.frequency);
+    if (rankDefault.custom_days) setCustomDays(String(rankDefault.custom_days));
+    toast.success(`Prefilled from ${member.rank} default`);
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -662,9 +713,17 @@ function UpkeepDialog({
             <DialogTitle>Upkeep for {member.full_name}</DialogTitle>
             <DialogDescription>
               Recurring stipend deposited to their managed balance.
+              {rankDefault && (
+                <> Defaults for <b>{member.rank}</b>: {fmtUsd(rankDefault.amount_usd)} · {FREQ_LABEL[rankDefault.frequency]}.</>
+              )}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">
+            {rankDefault && (
+              <Button type="button" variant="outline" size="sm" onClick={applyRankDefault}>
+                Prefill from {member.rank} default
+              </Button>
+            )}
             <div className="space-y-2">
               <Label htmlFor="up-amount">Amount per cycle (USD)</Label>
               <Input

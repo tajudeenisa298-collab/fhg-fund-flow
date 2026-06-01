@@ -56,6 +56,21 @@ export function MemberView({ profile }: { profile: Profile }) {
     load();
   }, [profile.id]);
 
+  // Live updates so downline, balance and history refresh instantly
+  useEffect(() => {
+    const ch = supabase
+      .channel(`member-dash:${profile.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "transactions", filter: `member_id=eq.${profile.id}` }, () => { load(); refresh(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "withdrawal_requests", filter: `member_id=eq.${profile.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "invite_codes", filter: `leader_id=eq.${profile.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => refresh())
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile.id]);
+
   const pending = requests.filter((r) => r.status === "pending").length;
   const visibleCodes = useMemo(
     () => codes.filter((c) => !c.used_by && !c.revoked && new Date(c.expires_at).getTime() > Date.now()),

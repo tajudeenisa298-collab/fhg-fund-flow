@@ -89,6 +89,17 @@ export interface UpkeepPlan {
   updated_at: string;
 }
 
+export interface RankUpkeepDefault {
+  id: string;
+  leader_id: string;
+  rank: string;
+  amount_usd: number;
+  frequency: UpkeepFrequency;
+  custom_days: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface BankAccount {
   user_id: string;
   bank_name: string;

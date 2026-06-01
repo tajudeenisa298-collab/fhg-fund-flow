@@ -57,6 +57,7 @@ import { FundRulesSection } from "@/components/dashboard/fund-rules-section";
 import { OfficeSection } from "@/components/dashboard/office-section";
 import { LeaderPurseSection } from "@/components/dashboard/leader-purse-section";
 import { DownlineSection } from "@/components/dashboard/downline-section";
+import { RankUpkeepDefaultsSection } from "@/components/dashboard/rank-upkeep-defaults-section";
 import { promoteManagedMember } from "@/lib/team.functions";
 
 export function LeaderView({ profile }: { profile: Profile }) {

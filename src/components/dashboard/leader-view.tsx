@@ -69,9 +69,10 @@ export function LeaderView({ profile }: { profile: Profile }) {
   const [detailMember, setDetailMember] = useState<Profile | null>(null);
   const [office, setOffice] = useState<OfficeLedgerEntry[]>([]);
   const [purse, setPurse] = useState<LeaderPurseEntry[]>([]);
+  const [rankDefaults, setRankDefaults] = useState<RankUpkeepDefault[]>([]);
 
   const load = useCallback(async () => {
-    const [{ data: t }, { data: c }, { data: r }, { data: p }, { data: o }, { data: pu }] =
+    const [{ data: t }, { data: c }, { data: r }, { data: p }, { data: o }, { data: pu }, { data: rd }] =
       await Promise.all([
         supabase.from("profiles").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
         supabase.from("invite_codes").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
@@ -79,6 +80,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
         supabase.from("upkeep_plans").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
         supabase.from("office_ledger").select("*").eq("leader_id", profile.id),
         supabase.from("leader_purse_ledger").select("*").eq("leader_id", profile.id),
+        supabase.from("rank_upkeep_defaults").select("*").eq("leader_id", profile.id).order("rank"),
       ]);
     setTeam((t as Profile[]) ?? []);
     setCodes((c as InviteCodeRowData[]) ?? []);
@@ -86,11 +88,30 @@ export function LeaderView({ profile }: { profile: Profile }) {
     setPlans((p as UpkeepPlan[]) ?? []);
     setOffice((o as OfficeLedgerEntry[]) ?? []);
     setPurse((pu as LeaderPurseEntry[]) ?? []);
+    setRankDefaults((rd as RankUpkeepDefault[]) ?? []);
   }, [profile.id]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  // Live updates: refresh dashboard when any related row changes
+  useEffect(() => {
+    const ch = supabase
+      .channel(`leader-dash:${profile.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `leader_id=eq.${profile.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "withdrawal_requests", filter: `leader_id=eq.${profile.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "invite_codes", filter: `leader_id=eq.${profile.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "upkeep_plans", filter: `leader_id=eq.${profile.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "transactions", filter: `leader_id=eq.${profile.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "office_ledger", filter: `leader_id=eq.${profile.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "leader_purse_ledger", filter: `leader_id=eq.${profile.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "rank_upkeep_defaults", filter: `leader_id=eq.${profile.id}` }, () => load())
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [profile.id, load]);
 
   const totalManaged = team.reduce((s, m) => s + Number(m.balance_usd), 0);
   const totalDebts = team.reduce((s, m) => (Number(m.balance_usd) < 0 ? s + Math.abs(Number(m.balance_usd)) : s), 0);

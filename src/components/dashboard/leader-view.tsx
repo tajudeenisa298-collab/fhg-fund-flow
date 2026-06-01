@@ -333,6 +333,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
                           member={m}
                           leaderId={profile.id}
                           existing={plans.find((p) => p.member_id === m.id) ?? null}
+                          rankDefault={rankDefaults.find((rd) => rd.rank === m.rank) ?? null}
                           onDone={load}
                         />
                         <PromoteDialog member={m} onDone={load} />

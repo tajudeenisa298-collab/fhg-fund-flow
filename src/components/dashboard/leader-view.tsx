@@ -47,6 +47,7 @@ import {
   type WithdrawalRequest,
   type OfficeLedgerEntry,
   type LeaderPurseEntry,
+  type RankUpkeepDefault,
 } from "@/lib/types";
 import { RANKS, isDirectorOrAbove, rankIndex } from "@/lib/ranks";
 import { StatCard } from "@/components/dashboard/stat-card";

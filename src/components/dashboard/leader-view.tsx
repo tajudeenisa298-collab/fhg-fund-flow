@@ -635,20 +635,40 @@ function UpkeepDialog({
   member,
   leaderId,
   existing,
+  rankDefault,
   onDone,
 }: {
   member: Profile;
   leaderId: string;
   existing: UpkeepPlan | null;
+  rankDefault: RankUpkeepDefault | null;
   onDone: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [amount, setAmount] = useState(existing ? String(existing.amount_usd) : "");
-  const [freq, setFreq] = useState<UpkeepFrequency>(existing?.frequency ?? "weekly");
-  const [customDays, setCustomDays] = useState(
-    existing?.custom_days ? String(existing.custom_days) : "5",
-  );
+  const initialAmount = existing
+    ? String(existing.amount_usd)
+    : rankDefault
+      ? String(rankDefault.amount_usd)
+      : "";
+  const initialFreq: UpkeepFrequency =
+    existing?.frequency ?? rankDefault?.frequency ?? "weekly";
+  const initialDays = existing?.custom_days
+    ? String(existing.custom_days)
+    : rankDefault?.custom_days
+      ? String(rankDefault.custom_days)
+      : "5";
+  const [amount, setAmount] = useState(initialAmount);
+  const [freq, setFreq] = useState<UpkeepFrequency>(initialFreq);
+  const [customDays, setCustomDays] = useState(initialDays);
   const [busy, setBusy] = useState(false);
+
+  const applyRankDefault = () => {
+    if (!rankDefault) return;
+    setAmount(String(rankDefault.amount_usd));
+    setFreq(rankDefault.frequency);
+    if (rankDefault.custom_days) setCustomDays(String(rankDefault.custom_days));
+    toast.success(`Prefilled from ${member.rank} default`);
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -685,6 +705,9 @@ function UpkeepDialog({
             <DialogTitle>Upkeep for {member.full_name}</DialogTitle>
             <DialogDescription>
               Recurring stipend deposited to their managed balance.
+              {rankDefault && (
+                <> Defaults for <b>{member.rank}</b>: {fmtUsd(rankDefault.amount_usd)} · {FREQ_LABEL[rankDefault.frequency]}.</>
+              )}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">

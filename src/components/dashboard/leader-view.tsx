@@ -443,6 +443,13 @@ export function LeaderView({ profile }: { profile: Profile }) {
       {/* Flexible fund rules */}
       <FundRulesSection leaderId={profile.id} />
 
+      {/* Rank-based upkeep defaults */}
+      <RankUpkeepDefaultsSection
+        leaderId={profile.id}
+        defaults={rankDefaults}
+        onChanged={load}
+      />
+
       <MemberDetailDialog
         member={detailMember}
         open={!!detailMember}

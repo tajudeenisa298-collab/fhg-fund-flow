@@ -541,7 +541,6 @@ function DepositDialog({
   leaderId: string;
   onDone: () => void;
 }) {
-  const { fxRates } = useAuth();
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [fee, setFee] = useState("");

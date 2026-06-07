@@ -62,6 +62,7 @@ import { generateInviteCode, promoteManagedMember } from "@/lib/team.functions";
 
 export function LeaderView({ profile }: { profile: Profile }) {
   const { refresh, ngnRate } = useAuth();
+  const createInviteCode = useServerFn(generateInviteCode);
   const [team, setTeam] = useState<Profile[]>([]);
   const [codes, setCodes] = useState<InviteCodeRowData[]>([]);
   const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
@@ -134,7 +135,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
 
   const generateCode = async () => {
     try {
-      await generateInviteCode();
+      await createInviteCode();
       toast.success("Invite code created — valid for 2 minutes");
       load();
     } catch (e) {
@@ -416,7 +417,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
           <div>
             <h2 className="text-base font-semibold">Invite codes</h2>
             <p className="text-sm text-muted-foreground">
-              Each code expires in 20 minutes — share quickly!
+              Each code expires in 2 minutes — share quickly!
             </p>
           </div>
           <Button onClick={generateCode}>

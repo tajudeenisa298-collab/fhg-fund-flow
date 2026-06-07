@@ -14,11 +14,24 @@ export function DownlineSection({ rootId }: { rootId: string }) {
   const [people, setPeople] = useState<Profile[]>([]);
   const [detail, setDetail] = useState<Profile | null>(null);
 
-  useEffect(() => {
+  const load = () => {
     // Fetch everyone visible (RLS already restricts to downline + self)
     supabase
       .from("profiles").select("*").neq("id", rootId)
       .then(({ data }) => setPeople((data as Profile[]) ?? []));
+  };
+
+  useEffect(() => {
+    load();
+    const ch = supabase
+      .channel(`downline:${rootId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "transactions" }, () => load())
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rootId]);
 
   // Build sponsor → children index for pyramid rendering

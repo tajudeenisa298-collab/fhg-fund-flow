@@ -27,6 +27,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import {
   type FundFrequency,
+  type FundDestination,
   type FundKind,
   type FundRule,
   FUND_FREQ_LABEL,
@@ -38,6 +39,13 @@ const ngn = (n: number) =>
     currency: "NGN",
     maximumFractionDigits: 0,
   }).format(n);
+
+const FUND_DEST_LABEL: Record<FundDestination, string> = {
+  office_support: "Office support",
+  team_leader: "Team leader",
+  custom: "Custom fund",
+  member_upkeep: "Member upkeep",
+};
 
 export function FundRulesSection({ leaderId }: { leaderId: string }) {
   const [rules, setRules] = useState<FundRule[]>([]);
@@ -100,7 +108,7 @@ export function FundRulesSection({ leaderId }: { leaderId: string }) {
                 )}
               </p>
               <p className="text-xs text-muted-foreground">
-                {r.kind === "per_usd"
+                {FUND_DEST_LABEL[r.destination]} · {r.kind === "per_usd"
                   ? `${ngn(Number(r.amount_ngn))} per $1 deposit`
                   : `${ngn(Number(r.amount_ngn))} ${r.frequency ? FUND_FREQ_LABEL[r.frequency].toLowerCase() : ""}`}
                 {r.frequency === "custom_days" && r.custom_days
@@ -161,6 +169,7 @@ function RuleDialog({
 }) {
   const [name, setName] = useState("");
   const [kind, setKind] = useState<FundKind>("per_usd");
+  const [destination, setDestination] = useState<FundDestination>("office_support");
   const [amount, setAmount] = useState("");
   const [freq, setFreq] = useState<FundFrequency>("monthly");
   const [customDays, setCustomDays] = useState("7");
@@ -171,6 +180,7 @@ function RuleDialog({
     if (existing) {
       setName(existing.name);
       setKind(existing.kind);
+      setDestination(existing.destination);
       setAmount(String(existing.amount_ngn));
       setFreq(existing.frequency ?? "monthly");
       setCustomDays(existing.custom_days ? String(existing.custom_days) : "7");
@@ -178,6 +188,7 @@ function RuleDialog({
     } else {
       setName("");
       setKind("per_usd");
+      setDestination("office_support");
       setAmount("");
       setFreq("monthly");
       setCustomDays("7");
@@ -195,6 +206,7 @@ function RuleDialog({
       leader_id: leaderId,
       name: name.trim(),
       kind,
+      destination,
       amount_ngn: n,
       frequency: kind === "fixed" ? freq : null,
       custom_days: kind === "fixed" && freq === "custom_days" ? Number(customDays) : null,
@@ -265,6 +277,22 @@ function RuleDialog({
               onChange={(e) => setAmount(e.target.value)}
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Destination</Label>
+            <Select value={destination} onValueChange={(v) => setDestination(v as FundDestination)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.keys(FUND_DEST_LABEL) as FundDestination[]).map((k) => (
+                  <SelectItem key={k} value={k}>
+                    {FUND_DEST_LABEL[k]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {kind === "fixed" && (

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Wallet, TrendingUp, Clock, Plus } from "lucide-react";
 import { z } from "zod";
@@ -33,6 +34,7 @@ const requestSchema = z.object({
 
 export function MemberView({ profile }: { profile: Profile }) {
   const { refresh, ngnRate } = useAuth();
+  const createInviteCode = useServerFn(generateInviteCode);
   const [txns, setTxns] = useState<Transaction[]>([]);
   const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
   const [open, setOpen] = useState(false);
@@ -80,7 +82,7 @@ export function MemberView({ profile }: { profile: Profile }) {
 
   const generateCode = async () => {
     try {
-      await generateInviteCode();
+      await createInviteCode();
       toast.success("Invite code created — valid for 2 minutes");
       load();
     } catch (e) {

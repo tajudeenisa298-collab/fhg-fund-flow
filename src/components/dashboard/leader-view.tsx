@@ -40,8 +40,6 @@ import { fmtUsd, fmtNgn, fmtDate } from "@/lib/format";
 import { Money } from "@/components/money";
 import {
   FREQ_LABEL,
-  SUPPORTED_CURRENCIES,
-  type Currency,
   type UpkeepFrequency,
   type UpkeepPlan,
   type WithdrawalRequest,
@@ -62,6 +60,7 @@ import { generateInviteCode, promoteManagedMember } from "@/lib/team.functions";
 
 export function LeaderView({ profile }: { profile: Profile }) {
   const { refresh, ngnRate } = useAuth();
+  const createInviteCode = useServerFn(generateInviteCode);
   const [team, setTeam] = useState<Profile[]>([]);
   const [codes, setCodes] = useState<InviteCodeRowData[]>([]);
   const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
@@ -134,7 +133,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
 
   const generateCode = async () => {
     try {
-      await generateInviteCode();
+      await createInviteCode();
       toast.success("Invite code created — valid for 2 minutes");
       load();
     } catch (e) {
@@ -416,7 +415,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
           <div>
             <h2 className="text-base font-semibold">Invite codes</h2>
             <p className="text-sm text-muted-foreground">
-              Each code expires in 20 minutes — share quickly!
+              Each code expires in 2 minutes — share quickly!
             </p>
           </div>
           <Button onClick={generateCode}>
@@ -542,17 +541,14 @@ function DepositDialog({
   leaderId: string;
   onDone: () => void;
 }) {
-  const { fxRates } = useAuth();
   const [open, setOpen] = useState(false);
-  const [currency, setCurrency] = useState<Currency>("NGN");
   const [amount, setAmount] = useState("");
   const [fee, setFee] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const rate = fxRates[currency] ?? 1;
-  const grossUsd = Number(amount) > 0 ? Number(amount) / rate : 0;
-  const feeUsd = Number(fee) > 0 ? Number(fee) / rate : 0;
+  const grossUsd = Number(amount) > 0 ? Number(amount) : 0;
+  const feeUsd = Number(fee) > 0 ? Number(fee) : 0;
   const netUsd = Math.max(0, grossUsd - feeUsd);
 
   const submit = async (e: React.FormEvent) => {
@@ -564,7 +560,7 @@ function DepositDialog({
       leader_id: leaderId,
       type: "deposit",
       amount_usd: Number(grossUsd.toFixed(2)),
-      currency,
+      currency: "USD",
       note: note.trim() || null,
     }).select("id").single();
     if (error) { setBusy(false); return toast.error(error.message); }
@@ -574,8 +570,8 @@ function DepositDialog({
         leader_id: leaderId,
         type: "bank_fee",
         amount_usd: Number(feeUsd.toFixed(2)),
-        currency,
-        note: `Bank fee on ${currency} ${amount}`,
+        currency: "USD",
+        note: `Bank fee on $${amount}`,
         parent_txn_id: dep.id,
       });
     }
@@ -597,26 +593,13 @@ function DepositDialog({
             <DialogDescription>This adds to their managed balance.</DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="dep-ccy">Currency</Label>
-                <Select value={currency} onValueChange={(v) => setCurrency(v as Currency)}>
-                  <SelectTrigger id="dep-ccy"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {SUPPORTED_CURRENCIES.map((c) => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="col-span-2 space-y-2">
-                <Label htmlFor="dep-amount">Gross amount ({currency})</Label>
-                <Input id="dep-amount" type="number" step="0.01" min="0.01"
-                  value={amount} onChange={(e) => setAmount(e.target.value)} required />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="dep-amount">Gross deposit (USD)</Label>
+              <Input id="dep-amount" type="number" step="0.01" min="0.01"
+                value={amount} onChange={(e) => setAmount(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dep-fee">Bank fee ({currency}, optional)</Label>
+              <Label htmlFor="dep-fee">Bank fee (USD, optional)</Label>
               <Input id="dep-fee" type="number" step="0.01" min="0"
                 value={fee} onChange={(e) => setFee(e.target.value)} placeholder="0" />
             </div>

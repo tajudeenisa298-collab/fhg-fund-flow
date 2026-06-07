@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Plus, Wallet } from "lucide-react";
+import { Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,12 +38,12 @@ export function LeaderPurseSection({ leaderId }: { leaderId: string }) {
             <Wallet className="size-4 text-primary" /> Team leader balance
           </h2>
           <p className="text-sm text-muted-foreground">
-            Your personal purse — credit it manually, withdraw whenever you like.
+            Your personal purse — credits come from fund rules, withdrawals are recorded here.
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-            <Plus className="mr-1 size-4" /> Entry
+            Withdraw
           </Button>
         </div>
       </div>
@@ -81,7 +81,6 @@ export function LeaderPurseSection({ leaderId }: { leaderId: string }) {
 function PurseDialog({
   open, onOpenChange, leaderId, onDone,
 }: { open: boolean; onOpenChange: (v: boolean) => void; leaderId: string; onDone: () => void }) {
-  const [kind, setKind] = useState<"credit" | "debit">("debit");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
@@ -92,11 +91,11 @@ function PurseDialog({
     if (!(n > 0)) return toast.error("Enter a valid amount");
     setBusy(true);
     const { error } = await supabase.from("leader_purse_ledger").insert({
-      leader_id: leaderId, kind, amount_usd: n, note: note.trim() || null,
+      leader_id: leaderId, kind: "debit", amount_usd: n, note: note.trim() || null,
     });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success(kind === "credit" ? "Credit recorded" : "Withdrawal recorded");
+    toast.success("Withdrawal recorded");
     setAmount(""); setNote(""); onOpenChange(false); onDone();
   };
 
@@ -105,25 +104,9 @@ function PurseDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Leader purse entry</DialogTitle>
-          <DialogDescription>Credit (add) or debit (withdraw) from your personal balance.</DialogDescription>
+          <DialogDescription>Withdraw from your team leader balance. Credits are added by fund rules.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              type="button"
-              variant={kind === "debit" ? "default" : "outline"}
-              onClick={() => setKind("debit")}
-            >
-              Withdraw
-            </Button>
-            <Button
-              type="button"
-              variant={kind === "credit" ? "default" : "outline"}
-              onClick={() => setKind("credit")}
-            >
-              Credit
-            </Button>
-          </div>
           <div className="space-y-2">
             <Label htmlFor="amt">Amount (USD)</Label>
             <Input id="amt" type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required />

@@ -1,6 +1,26 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { RANKS, isDirectorOrAbove } from "@/lib/ranks";
 
+export async function generateInviteCodeServer(leaderId: string) {
+  // Cryptographically secure random suffix (6 base36 chars)
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  const suffix = Array.from(bytes)
+    .map((b) => b.toString(36).padStart(2, "0"))
+    .join("")
+    .toUpperCase()
+    .slice(0, 6);
+  const code = `FHG-${suffix}`;
+  const expires_at = new Date(Date.now() + 2 * 60 * 1000).toISOString();
+
+  const { error } = await supabaseAdmin
+    .from("invite_codes")
+    .insert({ code, leader_id: leaderId, expires_at });
+  if (error) throw new Error("Could not create invite code");
+  return { code, expires_at };
+}
+
+
 export async function validateInviteCodeServer(code: string) {
   const clean = code.trim().toUpperCase();
   if (!clean) return { valid: false, sponsor_name: null as string | null };

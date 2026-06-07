@@ -24,6 +24,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { DownlineSection } from "@/components/dashboard/downline-section";
 import { TeamFundRulesReadonly } from "@/components/dashboard/team-fund-rules-readonly";
 import { InviteCodeRow, type InviteCodeRowData } from "@/components/dashboard/invite-code-row";
+import { generateInviteCode } from "@/lib/team.functions";
 
 const requestSchema = z.object({
   amount: z.number().positive().max(1_000_000),

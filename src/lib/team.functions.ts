@@ -1,19 +1,20 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import {
-  generateInviteCodeServer,
-  promoteManagedMemberServer,
-  validateInviteCodeServer,
-} from "@/lib/team.server";
 
 export const generateInviteCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => generateInviteCodeServer(context.userId));
+  .handler(async ({ context }) => {
+    const { generateInviteCodeServer } = await import("@/lib/team.server");
+    return generateInviteCodeServer(context.userId);
+  });
 
 export const validateInviteCode = createServerFn({ method: "GET" })
   .inputValidator((data) => z.object({ code: z.string().min(1).max(40) }).parse(data))
-  .handler(async ({ data }) => validateInviteCodeServer(data.code));
+  .handler(async ({ data }) => {
+    const { validateInviteCodeServer } = await import("@/lib/team.server");
+    return validateInviteCodeServer(data.code);
+  });
 
 export const promoteManagedMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -27,12 +28,13 @@ export const promoteManagedMember = createServerFn({ method: "POST" })
       })
       .parse(data),
   )
-  .handler(async ({ data, context }) =>
-    promoteManagedMemberServer({
+  .handler(async ({ data, context }) => {
+    const { promoteManagedMemberServer } = await import("@/lib/team.server");
+    return promoteManagedMemberServer({
       callerId: context.userId,
       memberId: data.memberId,
       newRank: data.newRank,
       grantFundHandler: data.grantFundHandler,
       note: data.note,
-    }),
-  );
+    });
+  });

@@ -1,7 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { promoteManagedMemberServer, validateInviteCodeServer } from "@/lib/team.server";
+import {
+  generateInviteCodeServer,
+  promoteManagedMemberServer,
+  validateInviteCodeServer,
+} from "@/lib/team.server";
+
+export const generateInviteCode = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => generateInviteCodeServer(context.userId));
 
 export const validateInviteCode = createServerFn({ method: "GET" })
   .inputValidator((data) => z.object({ code: z.string().min(1).max(40) }).parse(data))

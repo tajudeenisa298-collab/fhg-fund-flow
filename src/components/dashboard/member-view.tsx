@@ -24,6 +24,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { DownlineSection } from "@/components/dashboard/downline-section";
 import { TeamFundRulesReadonly } from "@/components/dashboard/team-fund-rules-readonly";
 import { InviteCodeRow, type InviteCodeRowData } from "@/components/dashboard/invite-code-row";
+import { generateInviteCode } from "@/lib/team.functions";
 
 const requestSchema = z.object({
   amount: z.number().positive().max(1_000_000),
@@ -78,13 +79,15 @@ export function MemberView({ profile }: { profile: Profile }) {
   );
 
   const generateCode = async () => {
-    const code = `FHG-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-    const expires_at = new Date(Date.now() + 2 * 60 * 1000).toISOString();
-    const { error } = await supabase.from("invite_codes").insert({ code, leader_id: profile.id, expires_at });
-    if (error) return toast.error(error.message);
-    toast.success("Invite code created — valid for 2 minutes");
-    load();
+    try {
+      await generateInviteCode();
+      toast.success("Invite code created — valid for 2 minutes");
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not create invite code");
+    }
   };
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

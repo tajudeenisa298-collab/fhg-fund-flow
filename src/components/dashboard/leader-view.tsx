@@ -134,7 +134,6 @@ export function LeaderView({ profile }: { profile: Profile }) {
 
   const generateCode = async () => {
     try {
-      const { generateInviteCode } = await import("@/lib/team.functions");
       await generateInviteCode();
       toast.success("Invite code created — valid for 2 minutes");
       load();
@@ -142,6 +141,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
       toast.error(e instanceof Error ? e.message : "Could not create invite code");
     }
   };
+
 
 
   const memberById = (id: string) => team.find((m) => m.id === id);

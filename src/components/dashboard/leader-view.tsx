@@ -133,13 +133,16 @@ export function LeaderView({ profile }: { profile: Profile }) {
   const pendingRequests = requests.filter((r) => r.status === "pending");
 
   const generateCode = async () => {
-    const code = `FHG-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-    const expires_at = new Date(Date.now() + 2 * 60 * 1000).toISOString();
-    const { error } = await supabase.from("invite_codes").insert({ code, leader_id: profile.id, expires_at });
-    if (error) return toast.error(error.message);
-    toast.success("Invite code created — valid for 2 minutes");
-    load();
+    try {
+      const { generateInviteCode } = await import("@/lib/team.functions");
+      await generateInviteCode();
+      toast.success("Invite code created — valid for 2 minutes");
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not create invite code");
+    }
   };
+
 
   const memberById = (id: string) => team.find((m) => m.id === id);
 

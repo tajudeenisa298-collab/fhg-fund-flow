@@ -565,6 +565,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_managed_transaction: {
+        Args: {
+          _amount_usd: number
+          _currency?: string
+          _exchange_rate?: number
+          _local_amount?: number
+          _member_id: string
+          _note?: string
+          _parent_txn_id?: string
+          _type: string
+        }
+        Returns: string
+      }
       get_downline: {
         Args: { _root: string }
         Returns: {
@@ -594,6 +607,10 @@ export type Database = {
         Returns: boolean
       }
       is_valid_rank: { Args: { _rank: string }; Returns: boolean }
+      leader_purse_withdraw: {
+        Args: { _amount_usd: number; _note?: string }
+        Returns: string
+      }
       nearest_fund_handler: { Args: { _start: string }; Returns: string }
       notify_user: {
         Args: {
@@ -619,6 +636,21 @@ export type Database = {
         Returns: undefined
       }
       recompute_fund_handlers: { Args: { _root: string }; Returns: undefined }
+      record_office_expense: {
+        Args: { _amount_ngn: number; _category: string; _note?: string }
+        Returns: string
+      }
+      resolve_withdrawal_request: {
+        Args: {
+          _currency?: string
+          _exchange_rate?: number
+          _id: string
+          _local_amount?: number
+          _note?: string
+          _status: string
+        }
+        Returns: undefined
+      }
       run_due_fund_rules: { Args: never; Returns: number }
       run_due_upkeep: { Args: never; Returns: number }
       validate_invite_code: {

@@ -555,24 +555,23 @@ function DepositDialog({
     e.preventDefault();
     if (!(grossUsd > 0)) return toast.error("Enter a valid amount");
     setBusy(true);
-    const { data: dep, error } = await supabase.from("transactions").insert({
-      member_id: member.id,
-      leader_id: leaderId,
-      type: "deposit",
-      amount_usd: Number(grossUsd.toFixed(2)),
-      currency: "USD",
-      note: note.trim() || null,
-    }).select("id").single();
+    void leaderId;
+    const { data: depId, error } = await supabase.rpc("create_managed_transaction", {
+      _member_id: member.id,
+      _type: "deposit",
+      _amount_usd: Number(grossUsd.toFixed(2)),
+      _currency: "USD",
+      _note: note.trim() || undefined,
+    });
     if (error) { setBusy(false); return toast.error(error.message); }
-    if (feeUsd > 0 && dep) {
-      await supabase.from("transactions").insert({
-        member_id: member.id,
-        leader_id: leaderId,
-        type: "bank_fee",
-        amount_usd: Number(feeUsd.toFixed(2)),
-        currency: "USD",
-        note: `Bank fee on $${amount}`,
-        parent_txn_id: dep.id,
+    if (feeUsd > 0 && depId) {
+      await supabase.rpc("create_managed_transaction", {
+        _member_id: member.id,
+        _type: "bank_fee",
+        _amount_usd: Number(feeUsd.toFixed(2)),
+        _currency: "USD",
+        _note: `Bank fee on $${amount}`,
+        _parent_txn_id: depId as unknown as string,
       });
     }
     setBusy(false);
@@ -898,32 +897,16 @@ function ApproveDialog({
     }
     setBusy(true);
 
-    const { error: updErr } = await supabase
-      .from("withdrawal_requests")
-      .update({
-        status: "approved",
-        leader_note: parsed.data.note ?? undefined,
-        resolved_at: new Date().toISOString(),
-      })
-      .eq("id", request.id);
-    if (updErr) {
-      setBusy(false);
-      return toast.error(updErr.message);
-    }
-
-    const { error: txnErr } = await supabase.from("transactions").insert({
-      member_id: request.member_id,
-      leader_id: request.leader_id,
-      type: "withdrawal",
-      amount_usd: request.amount_usd,
-      currency: parsed.data.currency,
-      exchange_rate: parsed.data.exchange_rate,
-      local_amount: parsed.data.local_amount ?? null,
-      note: parsed.data.note ?? null,
-      request_id: request.id,
+    const { error: rpcErr } = await supabase.rpc("resolve_withdrawal_request", {
+      _id: request.id,
+      _status: "approved",
+      _note: parsed.data.note ?? undefined,
+      _currency: parsed.data.currency,
+      _exchange_rate: parsed.data.exchange_rate,
+      _local_amount: parsed.data.local_amount ?? undefined,
     });
     setBusy(false);
-    if (txnErr) return toast.error(txnErr.message);
+    if (rpcErr) return toast.error(rpcErr.message);
 
     toast.success("Withdrawal approved & recorded");
     setOpen(false);
@@ -932,14 +915,11 @@ function ApproveDialog({
 
   const decline = async () => {
     setBusy(true);
-    const { error } = await supabase
-      .from("withdrawal_requests")
-      .update({
-        status: "declined",
-        leader_note: note || null,
-        resolved_at: new Date().toISOString(),
-      })
-      .eq("id", request.id);
+    const { error } = await supabase.rpc("resolve_withdrawal_request", {
+      _id: request.id,
+      _status: "declined",
+      _note: note || undefined,
+    });
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Request declined");
@@ -1042,12 +1022,12 @@ function DeductDialog({
       return toast.error("Amount exceeds member's balance.");
     }
     setBusy(true);
-    const { error } = await supabase.from("transactions").insert({
-      member_id: member.id,
-      leader_id: leaderId,
-      type: "fund_deduction",
-      amount_usd: parsed.data.amount,
-      note: parsed.data.reason,
+    void leaderId;
+    const { error } = await supabase.rpc("create_managed_transaction", {
+      _member_id: member.id,
+      _type: "fund_deduction",
+      _amount_usd: parsed.data.amount,
+      _note: parsed.data.reason,
     });
     setBusy(false);
     if (error) return toast.error(error.message);

@@ -90,8 +90,10 @@ function PurseDialog({
     const n = Number(amount);
     if (!(n > 0)) return toast.error("Enter a valid amount");
     setBusy(true);
-    const { error } = await supabase.from("leader_purse_ledger").insert({
-      leader_id: leaderId, kind: "debit", amount_usd: n, note: note.trim() || null,
+    void leaderId;
+    const { error } = await supabase.rpc("leader_purse_withdraw", {
+      _amount_usd: n,
+      _note: note.trim() || undefined,
     });
     setBusy(false);
     if (error) return toast.error(error.message);

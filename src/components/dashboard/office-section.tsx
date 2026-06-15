@@ -102,9 +102,11 @@ function ExpenseDialog({
     if (!(n > 0)) return toast.error("Enter a valid amount");
     if (!category.trim()) return toast.error("Category is required");
     setBusy(true);
-    const { error } = await supabase.from("office_ledger").insert({
-      leader_id: leaderId, kind: "expense_out", amount_ngn: n,
-      category: category.trim(), note: note.trim() || null,
+    void leaderId;
+    const { error } = await supabase.rpc("record_office_expense", {
+      _amount_ngn: n,
+      _category: category.trim(),
+      _note: note.trim() || undefined,
     });
     setBusy(false);
     if (error) return toast.error(error.message);

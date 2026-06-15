@@ -1008,13 +1008,13 @@ function DeductDialog({
   onDone: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [amount, setAmount] = useState("");
+  const [amountUsd, setAmountUsd] = useState<number>(0);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = deductSchema.safeParse({ amount: Number(amount), reason });
+    const parsed = deductSchema.safeParse({ amount: amountUsd, reason });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     if (parsed.data.amount > Number(member.balance_usd)) {
       return toast.error("Amount exceeds member's balance.");
@@ -1024,14 +1024,14 @@ function DeductDialog({
     const { error } = await supabase.rpc("create_managed_transaction", {
       _member_id: member.id,
       _type: "fund_deduction",
-      _amount_usd: parsed.data.amount,
+      _amount_usd: Number(parsed.data.amount.toFixed(4)),
       _note: parsed.data.reason,
     });
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Deduction recorded — member notified");
     setOpen(false);
-    setAmount("");
+    setAmountUsd(0);
     setReason("");
     onDone();
   };
@@ -1051,21 +1051,17 @@ function DeductDialog({
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="ded-amount">Amount (USD)</Label>
-              <Input
+              <Label htmlFor="ded-amount">Amount</Label>
+              <CurrencyAmountInput
                 id="ded-amount"
-                type="number"
-                step="0.01"
-                min="0.01"
-                max={Number(member.balance_usd)}
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
+                valueUsd={amountUsd}
+                onUsdChange={setAmountUsd}
               />
               <p className="text-xs text-muted-foreground">
                 Available: {fmtUsd(member.balance_usd)}
               </p>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="ded-reason">Reason</Label>
               <Textarea

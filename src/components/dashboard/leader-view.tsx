@@ -897,32 +897,16 @@ function ApproveDialog({
     }
     setBusy(true);
 
-    const { error: updErr } = await supabase
-      .from("withdrawal_requests")
-      .update({
-        status: "approved",
-        leader_note: parsed.data.note ?? undefined,
-        resolved_at: new Date().toISOString(),
-      })
-      .eq("id", request.id);
-    if (updErr) {
-      setBusy(false);
-      return toast.error(updErr.message);
-    }
-
-    const { error: txnErr } = await supabase.from("transactions").insert({
-      member_id: request.member_id,
-      leader_id: request.leader_id,
-      type: "withdrawal",
-      amount_usd: request.amount_usd,
-      currency: parsed.data.currency,
-      exchange_rate: parsed.data.exchange_rate,
-      local_amount: parsed.data.local_amount ?? null,
-      note: parsed.data.note ?? null,
-      request_id: request.id,
+    const { error: rpcErr } = await supabase.rpc("resolve_withdrawal_request", {
+      _id: request.id,
+      _status: "approved",
+      _note: parsed.data.note ?? undefined,
+      _currency: parsed.data.currency,
+      _exchange_rate: parsed.data.exchange_rate,
+      _local_amount: parsed.data.local_amount ?? undefined,
     });
     setBusy(false);
-    if (txnErr) return toast.error(txnErr.message);
+    if (rpcErr) return toast.error(rpcErr.message);
 
     toast.success("Withdrawal approved & recorded");
     setOpen(false);

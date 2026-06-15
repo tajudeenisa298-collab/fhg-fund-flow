@@ -915,14 +915,11 @@ function ApproveDialog({
 
   const decline = async () => {
     setBusy(true);
-    const { error } = await supabase
-      .from("withdrawal_requests")
-      .update({
-        status: "declined",
-        leader_note: note || null,
-        resolved_at: new Date().toISOString(),
-      })
-      .eq("id", request.id);
+    const { error } = await supabase.rpc("resolve_withdrawal_request", {
+      _id: request.id,
+      _status: "declined",
+      _note: note || undefined,
+    });
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Request declined");

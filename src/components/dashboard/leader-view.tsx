@@ -48,6 +48,7 @@ import {
   type RankUpkeepDefault,
 } from "@/lib/types";
 import { RANKS, isDirectorOrAbove, rankIndex } from "@/lib/ranks";
+import { CurrencyAmountInput } from "@/components/currency-amount-input";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { InviteCodeRow, type InviteCodeRowData } from "@/components/dashboard/invite-code-row";
 import { MemberDetailDialog } from "@/components/dashboard/member-detail-dialog";
@@ -638,11 +639,11 @@ function UpkeepDialog({
   onDone: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const initialAmount = existing
-    ? String(existing.amount_usd)
+  const initialAmountUsd = existing
+    ? Number(existing.amount_usd)
     : rankDefault
-      ? String(rankDefault.amount_usd)
-      : "";
+      ? Number(rankDefault.amount_usd)
+      : 0;
   const initialFreq: UpkeepFrequency =
     existing?.frequency ?? rankDefault?.frequency ?? "weekly";
   const initialDays = existing?.custom_days
@@ -650,14 +651,14 @@ function UpkeepDialog({
     : rankDefault?.custom_days
       ? String(rankDefault.custom_days)
       : "5";
-  const [amount, setAmount] = useState(initialAmount);
+  const [amountUsd, setAmountUsd] = useState<number>(initialAmountUsd);
   const [freq, setFreq] = useState<UpkeepFrequency>(initialFreq);
   const [customDays, setCustomDays] = useState(initialDays);
   const [busy, setBusy] = useState(false);
 
   const applyRankDefault = () => {
     if (!rankDefault) return;
-    setAmount(String(rankDefault.amount_usd));
+    setAmountUsd(Number(rankDefault.amount_usd));
     setFreq(rankDefault.frequency);
     if (rankDefault.custom_days) setCustomDays(String(rankDefault.custom_days));
     toast.success(`Prefilled from ${member.rank} default`);
@@ -665,15 +666,14 @@ function UpkeepDialog({
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const n = Number(amount);
-    if (!(n > 0)) return toast.error("Enter a valid amount");
+    if (!(amountUsd > 0)) return toast.error("Enter a valid amount");
     if (freq === "custom_days" && !(Number(customDays) > 0))
       return toast.error("Enter a valid day count");
     setBusy(true);
     const payload = {
       leader_id: leaderId,
       member_id: member.id,
-      amount_usd: n,
+      amount_usd: Number(amountUsd.toFixed(4)),
       frequency: freq,
       custom_days: freq === "custom_days" ? Number(customDays) : null,
     };
@@ -686,6 +686,7 @@ function UpkeepDialog({
     setOpen(false);
     onDone();
   };
+
 
   return (
     <>
@@ -710,17 +711,14 @@ function UpkeepDialog({
               </Button>
             )}
             <div className="space-y-2">
-              <Label htmlFor="up-amount">Amount per cycle (USD)</Label>
-              <Input
+              <Label htmlFor="up-amount">Amount per cycle</Label>
+              <CurrencyAmountInput
                 id="up-amount"
-                type="number"
-                step="0.01"
-                min="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
+                valueUsd={amountUsd}
+                onUsdChange={setAmountUsd}
               />
             </div>
+
             <div className="space-y-2">
               <Label>Frequency</Label>
               <Select value={freq} onValueChange={(v) => setFreq(v as UpkeepFrequency)}>

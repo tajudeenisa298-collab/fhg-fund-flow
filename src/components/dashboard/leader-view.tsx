@@ -1022,12 +1022,12 @@ function DeductDialog({
       return toast.error("Amount exceeds member's balance.");
     }
     setBusy(true);
-    const { error } = await supabase.from("transactions").insert({
-      member_id: member.id,
-      leader_id: leaderId,
-      type: "fund_deduction",
-      amount_usd: parsed.data.amount,
-      note: parsed.data.reason,
+    void leaderId;
+    const { error } = await supabase.rpc("create_managed_transaction", {
+      _member_id: member.id,
+      _type: "fund_deduction",
+      _amount_usd: parsed.data.amount,
+      _note: parsed.data.reason,
     });
     setBusy(false);
     if (error) return toast.error(error.message);

@@ -26,6 +26,7 @@ import { DownlineSection } from "@/components/dashboard/downline-section";
 import { TeamFundRulesReadonly } from "@/components/dashboard/team-fund-rules-readonly";
 import { InviteCodeRow, type InviteCodeRowData } from "@/components/dashboard/invite-code-row";
 import { generateInviteCode } from "@/lib/team.functions";
+import { CurrencyAmountInput } from "@/components/currency-amount-input";
 
 const requestSchema = z.object({
   amount: z.number().positive().max(1_000_000),
@@ -38,7 +39,7 @@ export function MemberView({ profile }: { profile: Profile }) {
   const [txns, setTxns] = useState<Transaction[]>([]);
   const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
   const [open, setOpen] = useState(false);
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState<number>(0);
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [codes, setCodes] = useState<InviteCodeRowData[]>([]);
@@ -93,7 +94,7 @@ export function MemberView({ profile }: { profile: Profile }) {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = requestSchema.safeParse({ amount: Number(amount), description });
+    const parsed = requestSchema.safeParse({ amount, description });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0].message);
       return;
@@ -120,7 +121,7 @@ export function MemberView({ profile }: { profile: Profile }) {
     }
     toast.success("Withdrawal request submitted");
     setOpen(false);
-    setAmount("");
+    setAmount(0);
     setDescription("");
     await load();
     await refresh();
@@ -150,17 +151,13 @@ export function MemberView({ profile }: { profile: Profile }) {
             </DialogHeader>
             <form onSubmit={submit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount (USD)</Label>
-                <Input
+                <Label htmlFor="amount">Amount</Label>
+                <CurrencyAmountInput
                   id="amount"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  max={profile.balance_usd}
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  required
+                  valueUsd={amount}
+                  onUsdChange={setAmount}
                 />
+
                 <p className="text-xs text-muted-foreground">
                   Available: {fmtUsd(profile.balance_usd)}
                 </p>

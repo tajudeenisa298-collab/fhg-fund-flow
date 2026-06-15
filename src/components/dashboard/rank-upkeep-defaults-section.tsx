@@ -12,7 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { fmtUsd } from "@/lib/format";
+import { fmtNgn, fmtUsd } from "@/lib/format";
+import { useAuth } from "@/lib/auth-context";
 import { FREQ_LABEL, type RankUpkeepDefault, type UpkeepFrequency } from "@/lib/types";
 import { RANKS } from "@/lib/ranks";
 
@@ -25,18 +26,21 @@ export function RankUpkeepDefaultsSection({
   defaults: RankUpkeepDefault[];
   onChanged: () => void;
 }) {
+  const { ngnRate } = useAuth();
+  const rate = ngnRate ?? 1600;
   const [rank, setRank] = useState<string>("Member");
-  const [amount, setAmount] = useState("");
+  const [amountNgn, setAmountNgn] = useState("");
   const [freq, setFreq] = useState<UpkeepFrequency>("weekly");
   const [customDays, setCustomDays] = useState("5");
   const [busy, setBusy] = useState(false);
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    const n = Number(amount);
-    if (!(n > 0)) return toast.error("Enter a valid amount");
+    const ngn = Number(amountNgn);
+    if (!(ngn > 0)) return toast.error("Enter a valid Naira amount");
     if (freq === "custom_days" && !(Number(customDays) > 0))
       return toast.error("Enter a valid day count");
+    const usd = Number((ngn / rate).toFixed(4));
     setBusy(true);
     const { error } = await supabase
       .from("rank_upkeep_defaults")
@@ -44,7 +48,7 @@ export function RankUpkeepDefaultsSection({
         {
           leader_id: leaderId,
           rank,
-          amount_usd: n,
+          amount_usd: usd,
           frequency: freq,
           custom_days: freq === "custom_days" ? Number(customDays) : null,
         },
@@ -53,7 +57,7 @@ export function RankUpkeepDefaultsSection({
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success(`${rank} default saved`);
-    setAmount("");
+    setAmountNgn("");
     onChanged();
   };
 
@@ -68,7 +72,7 @@ export function RankUpkeepDefaultsSection({
     <section className="rounded-2xl border bg-card p-6 shadow-card">
       <h2 className="text-base font-semibold">Rank upkeep defaults</h2>
       <p className="text-sm text-muted-foreground">
-        Set a default stipend per rank. When you schedule upkeep for a member, it pre-fills from
+        Set a default stipend per rank in Naira. When you schedule upkeep for a member, it pre-fills from
         their rank.
       </p>
 
@@ -85,15 +89,18 @@ export function RankUpkeepDefaultsSection({
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Amount (USD)</Label>
+          <Label>Amount (NGN)</Label>
           <Input
             type="number"
-            step="0.01"
-            min="0.01"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            step="1"
+            min="1"
+            value={amountNgn}
+            onChange={(e) => setAmountNgn(e.target.value)}
             required
           />
+          {Number(amountNgn) > 0 && (
+            <p className="text-[10px] text-muted-foreground">≈ {fmtUsd(Number(amountNgn) / rate)}</p>
+          )}
         </div>
         <div className="space-y-1.5">
           <Label>Frequency</Label>
@@ -130,7 +137,7 @@ export function RankUpkeepDefaultsSection({
               <div>
                 <p className="font-medium">{d.rank}</p>
                 <p className="text-xs text-muted-foreground">
-                  {fmtUsd(d.amount_usd)} · {FREQ_LABEL[d.frequency]}
+                  {fmtNgn(d.amount_usd, rate)} <span className="opacity-60">({fmtUsd(d.amount_usd)})</span> · {FREQ_LABEL[d.frequency]}
                   {d.frequency === "custom_days" && d.custom_days ? ` (${d.custom_days} days)` : ""}
                 </p>
               </div>

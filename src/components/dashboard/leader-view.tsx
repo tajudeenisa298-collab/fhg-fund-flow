@@ -555,24 +555,23 @@ function DepositDialog({
     e.preventDefault();
     if (!(grossUsd > 0)) return toast.error("Enter a valid amount");
     setBusy(true);
-    const { data: dep, error } = await supabase.from("transactions").insert({
-      member_id: member.id,
-      leader_id: leaderId,
-      type: "deposit",
-      amount_usd: Number(grossUsd.toFixed(2)),
-      currency: "USD",
-      note: note.trim() || null,
-    }).select("id").single();
+    void leaderId;
+    const { data: depId, error } = await supabase.rpc("create_managed_transaction", {
+      _member_id: member.id,
+      _type: "deposit",
+      _amount_usd: Number(grossUsd.toFixed(2)),
+      _currency: "USD",
+      _note: note.trim() || undefined,
+    });
     if (error) { setBusy(false); return toast.error(error.message); }
-    if (feeUsd > 0 && dep) {
-      await supabase.from("transactions").insert({
-        member_id: member.id,
-        leader_id: leaderId,
-        type: "bank_fee",
-        amount_usd: Number(feeUsd.toFixed(2)),
-        currency: "USD",
-        note: `Bank fee on $${amount}`,
-        parent_txn_id: dep.id,
+    if (feeUsd > 0 && depId) {
+      await supabase.rpc("create_managed_transaction", {
+        _member_id: member.id,
+        _type: "bank_fee",
+        _amount_usd: Number(feeUsd.toFixed(2)),
+        _currency: "USD",
+        _note: `Bank fee on $${amount}`,
+        _parent_txn_id: depId as unknown as string,
       });
     }
     setBusy(false);

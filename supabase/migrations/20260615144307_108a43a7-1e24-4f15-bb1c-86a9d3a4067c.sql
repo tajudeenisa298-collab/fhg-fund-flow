@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.is_descendant_of(uuid, uuid) TO authenticated;

@@ -93,7 +93,7 @@ function PurseDialog({
     void leaderId;
     const { error } = await supabase.rpc("leader_purse_withdraw", {
       _amount_usd: n,
-      _note: note.trim() || null,
+      _note: note.trim() || undefined,
     });
     setBusy(false);
     if (error) return toast.error(error.message);

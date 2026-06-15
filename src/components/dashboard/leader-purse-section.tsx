@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -12,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { LeaderPurseEntry } from "@/lib/types";
 import { fmtUsd, fmtDate } from "@/lib/format";
 import { Money } from "@/components/money";
+import { CurrencyAmountInput } from "@/components/currency-amount-input";
+
 
 export function LeaderPurseSection({ leaderId }: { leaderId: string }) {
   const [rows, setRows] = useState<LeaderPurseEntry[]>([]);
@@ -81,24 +82,23 @@ export function LeaderPurseSection({ leaderId }: { leaderId: string }) {
 function PurseDialog({
   open, onOpenChange, leaderId, onDone,
 }: { open: boolean; onOpenChange: (v: boolean) => void; leaderId: string; onDone: () => void }) {
-  const [amount, setAmount] = useState("");
+  const [amountUsd, setAmountUsd] = useState(0);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const n = Number(amount);
-    if (!(n > 0)) return toast.error("Enter a valid amount");
+    if (!(amountUsd > 0)) return toast.error("Enter a valid amount");
     setBusy(true);
     void leaderId;
     const { error } = await supabase.rpc("leader_purse_withdraw", {
-      _amount_usd: n,
+      _amount_usd: Number(amountUsd.toFixed(2)),
       _note: note.trim() || undefined,
     });
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Withdrawal recorded");
-    setAmount(""); setNote(""); onOpenChange(false); onDone();
+    setAmountUsd(0); setNote(""); onOpenChange(false); onDone();
   };
 
   return (
@@ -110,8 +110,8 @@ function PurseDialog({
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="amt">Amount (USD)</Label>
-            <Input id="amt" type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+            <Label htmlFor="amt">Amount</Label>
+            <CurrencyAmountInput id="amt" valueUsd={amountUsd} onUsdChange={setAmountUsd} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="nt">Note (optional)</Label>
@@ -125,3 +125,4 @@ function PurseDialog({
     </Dialog>
   );
 }
+

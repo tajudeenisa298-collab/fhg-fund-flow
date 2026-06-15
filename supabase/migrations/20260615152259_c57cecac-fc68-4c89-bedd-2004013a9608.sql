@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS rank_upkeep_defaults_validate_rank ON public.rank_upkeep_defaults;

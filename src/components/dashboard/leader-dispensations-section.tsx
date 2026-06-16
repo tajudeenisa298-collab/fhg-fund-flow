@@ -230,6 +230,11 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
                         </Button>
                       )}
                     </div>
+                    {d.status === "disputed" && (
+                      <div className="w-full">
+                        <DisputeThread dispensationId={d.id} currentUserId={leaderId} canPost={!d.resolved_at} />
+                      </div>
+                    )}
                   </div>
                 );
               })

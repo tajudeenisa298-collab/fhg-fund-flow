@@ -34,7 +34,9 @@ import { ResourceLibrarySection } from "@/components/dashboard/resource-library-
 import { MemberStatusSelfSection } from "@/components/dashboard/member-status-self-section";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 import { toCsv, downloadCsv } from "@/lib/csv";
-import { X as XIcon } from "lucide-react";
+import { X as XIcon, Printer } from "lucide-react";
+import { DateRangeFilter, EMPTY_RANGE, inRange, type DateRange } from "@/components/date-range-filter";
+import { printWithdrawalReceipt } from "@/lib/withdrawal-receipt";
 
 
 

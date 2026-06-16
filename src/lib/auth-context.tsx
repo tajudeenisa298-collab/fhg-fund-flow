@@ -17,6 +17,10 @@ export interface Profile {
   whatsapp_number: string | null;
   payout_method: "bank_transfer" | "neolife_pv";
   avatar_url: string | null;
+  suspended_until: string | null;
+  suspended_reason: string | null;
+  terminated_at: string | null;
+  terminated_reason: string | null;
 }
 
 interface AuthContextValue {

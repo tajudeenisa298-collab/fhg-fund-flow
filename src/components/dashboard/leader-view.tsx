@@ -59,6 +59,8 @@ import { OfficeSection } from "@/components/dashboard/office-section";
 import { LeaderPurseSection } from "@/components/dashboard/leader-purse-section";
 import { DownlineSection } from "@/components/dashboard/downline-section";
 import { RankUpkeepDefaultsSection } from "@/components/dashboard/rank-upkeep-defaults-section";
+import { OrganisationSection } from "@/components/dashboard/organisation-section";
+
 import { generateInviteCode, promoteManagedMember } from "@/lib/team.functions";
 
 export function LeaderView({ profile }: { profile: Profile }) {
@@ -445,8 +447,12 @@ export function LeaderView({ profile }: { profile: Profile }) {
       {/* Team leader's personal purse */}
       <LeaderPurseSection leaderId={profile.id} />
 
+      {/* Cross-team oversight: visible only when there are sub-leaders in the downline */}
+      <OrganisationSection leaderId={profile.id} />
+
       {/* Pyramid downline */}
       <DownlineSection rootId={profile.id} />
+
 
       {/* Flexible fund rules */}
       <FundRulesSection leaderId={profile.id} />

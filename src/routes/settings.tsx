@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth-context";
 import { BankVerifier, type VerifiedBank } from "@/components/bank-verifier";
 import { AvatarUpload } from "@/components/avatar-upload";
 import { SecuritySection } from "@/components/settings/security-section";
+import { SUPPORTED_LOCALES } from "@/lib/format";
 import type { BankAccount } from "@/lib/types";
 
 export const Route = createFileRoute("/settings")({
@@ -42,6 +43,7 @@ function SettingsPage() {
 
   const [whatsapp, setWhatsapp] = useState("");
   const [payoutMethod, setPayoutMethod] = useState<"bank_transfer" | "neolife_pv">("bank_transfer");
+  const [locale, setLocale] = useState<string>("en-US");
   const [savingPrefs, setSavingPrefs] = useState(false);
 
   useEffect(() => {
@@ -53,6 +55,7 @@ function SettingsPage() {
       setFullName(profile.full_name);
       setWhatsapp(profile.whatsapp_number ?? "");
       setPayoutMethod(profile.payout_method ?? "bank_transfer");
+      setLocale(profile.locale ?? "en-US");
     }
   }, [profile]);
 
@@ -153,6 +156,7 @@ function SettingsPage() {
       .update({
         whatsapp_number: trimmed || null,
         payout_method: payoutMethod,
+        locale,
       })
       .eq("id", session.user.id);
     setSavingPrefs(false);

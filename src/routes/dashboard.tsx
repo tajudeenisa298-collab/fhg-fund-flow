@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { MemberView } from "@/components/dashboard/member-view";
 import { LeaderView } from "@/components/dashboard/leader-view";
 import { NotificationBell } from "@/components/notification-bell";
+import { UserAvatar } from "@/components/user-avatar";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({

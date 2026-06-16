@@ -11,6 +11,7 @@ import {
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 
 function NotFoundComponent() {
   return (
@@ -119,7 +120,10 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Outlet />
+        <div className="pb-16 md:pb-0">
+          <Outlet />
+        </div>
+        <MobileBottomNav />
         <Toaster richColors position="top-right" />
       </AuthProvider>
     </QueryClientProvider>

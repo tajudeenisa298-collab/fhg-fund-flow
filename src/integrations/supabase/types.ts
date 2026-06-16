@@ -489,6 +489,7 @@ export type Database = {
           gender: Database["public"]["Enums"]["gender_kind"] | null
           id: string
           leader_id: string | null
+          locale: string
           payout_method: Database["public"]["Enums"]["payout_method_kind"]
           rank: string
           sponsor_id: string | null
@@ -510,6 +511,7 @@ export type Database = {
           gender?: Database["public"]["Enums"]["gender_kind"] | null
           id: string
           leader_id?: string | null
+          locale?: string
           payout_method?: Database["public"]["Enums"]["payout_method_kind"]
           rank?: string
           sponsor_id?: string | null
@@ -531,6 +533,7 @@ export type Database = {
           gender?: Database["public"]["Enums"]["gender_kind"] | null
           id?: string
           leader_id?: string | null
+          locale?: string
           payout_method?: Database["public"]["Enums"]["payout_method_kind"]
           rank?: string
           sponsor_id?: string | null

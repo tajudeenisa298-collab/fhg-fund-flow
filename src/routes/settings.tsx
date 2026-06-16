@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth-context";
 import { BankVerifier, type VerifiedBank } from "@/components/bank-verifier";
 import { AvatarUpload } from "@/components/avatar-upload";
 import { SecuritySection } from "@/components/settings/security-section";
+import { SUPPORTED_LOCALES } from "@/lib/format";
 import type { BankAccount } from "@/lib/types";
 
 export const Route = createFileRoute("/settings")({
@@ -42,6 +43,7 @@ function SettingsPage() {
 
   const [whatsapp, setWhatsapp] = useState("");
   const [payoutMethod, setPayoutMethod] = useState<"bank_transfer" | "neolife_pv">("bank_transfer");
+  const [locale, setLocale] = useState<string>("en-US");
   const [savingPrefs, setSavingPrefs] = useState(false);
 
   useEffect(() => {
@@ -53,6 +55,7 @@ function SettingsPage() {
       setFullName(profile.full_name);
       setWhatsapp(profile.whatsapp_number ?? "");
       setPayoutMethod(profile.payout_method ?? "bank_transfer");
+      setLocale(profile.locale ?? "en-US");
     }
   }, [profile]);
 
@@ -153,6 +156,7 @@ function SettingsPage() {
       .update({
         whatsapp_number: trimmed || null,
         payout_method: payoutMethod,
+        locale,
       })
       .eq("id", session.user.id);
     setSavingPrefs(false);
@@ -416,6 +420,24 @@ function SettingsPage() {
                 <option value="neolife_pv">NeoLife PV credit</option>
               </select>
             </div>
+            <div className="sm:col-span-2">
+              <label className="text-xs uppercase tracking-wide text-muted-foreground" htmlFor="locale">
+                Language & region
+              </label>
+              <select
+                id="locale"
+                value={locale}
+                onChange={(e) => setLocale(e.target.value)}
+                className="mt-1 h-10 w-full rounded-md border bg-background px-3 text-sm"
+              >
+                {SUPPORTED_LOCALES.map((l) => (
+                  <option key={l.value} value={l.value}>{l.label}</option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Controls how numbers, currencies, and dates are formatted across the app.
+              </p>
+            </div>
           </div>
           <div className="mt-4 flex justify-end">
             <Button
@@ -423,7 +445,8 @@ function SettingsPage() {
               disabled={
                 savingPrefs ||
                 (whatsapp.trim() === (profile.whatsapp_number ?? "") &&
-                  payoutMethod === (profile.payout_method ?? "bank_transfer"))
+                  payoutMethod === (profile.payout_method ?? "bank_transfer") &&
+                  locale === (profile.locale ?? "en-US"))
               }
             >
               {savingPrefs ? "Saving…" : "Save preferences"}

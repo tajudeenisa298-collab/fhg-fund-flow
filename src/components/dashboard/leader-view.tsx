@@ -48,6 +48,8 @@ import {
   type RankUpkeepDefault,
 } from "@/lib/types";
 import { RANKS, isDirectorOrAbove, rankIndex } from "@/lib/ranks";
+import { DispenseUpkeepDialog } from "@/components/dashboard/dispense-upkeep-dialog";
+
 import { CurrencyAmountInput } from "@/components/currency-amount-input";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { InviteCodeRow, type InviteCodeRowData } from "@/components/dashboard/invite-code-row";
@@ -333,7 +335,9 @@ export function LeaderView({ profile }: { profile: Profile }) {
                       <div className="flex flex-wrap justify-end gap-2">
                         <DepositDialog member={m} leaderId={profile.id} onDone={load} />
                         <DeductDialog member={m} leaderId={profile.id} onDone={load} />
+                        <DispenseUpkeepDialog member={m} leaderId={profile.id} onDone={load} />
                         <UpkeepDialog
+
                           member={m}
                           leaderId={profile.id}
                           existing={plans.find((p) => p.member_id === m.id) ?? null}

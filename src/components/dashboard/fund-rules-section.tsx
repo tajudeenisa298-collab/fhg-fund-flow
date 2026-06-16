@@ -25,6 +25,7 @@ import {
   RadioGroupItem,
 } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
+import type { Profile } from "@/lib/auth-context";
 import {
   type FundFrequency,
   type FundDestination,

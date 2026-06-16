@@ -107,6 +107,9 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
 
   const filtered = rows.filter((r) => r.status === tab);
   const counts: Record<Status, number> = {
+  const filtered = rows.filter((r) => r.status === tab);
+  const page = usePagedList(filtered, 8);
+  const counts: Record<Status, number> = {
     pending: rows.filter((r) => r.status === "pending").length,
     acknowledged: rows.filter((r) => r.status === "acknowledged").length,
     disputed: rows.filter((r) => r.status === "disputed").length,

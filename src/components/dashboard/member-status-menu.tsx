@@ -40,7 +40,12 @@ const DURATIONS: { value: string; label: string; days: number }[] = [
   { value: "30", label: "30 days", days: 30 },
   { value: "90", label: "90 days", days: 90 },
   { value: "custom", label: "Custom…", days: 0 },
+  { value: "indefinite", label: "Indefinite (until pardoned)", days: 0 },
 ];
+
+// Sentinel for indefinite suspension — far enough in the future that we
+// treat anything past it as "no end date set".
+const INDEFINITE_UNTIL = "9999-12-31T00:00:00.000Z";
 
 export function MemberStatusMenu({
   member,

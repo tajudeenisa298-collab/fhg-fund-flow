@@ -45,7 +45,8 @@ export const Route = createFileRoute("/api/public/hooks/weekly-digest")({
               .gte("created_at", since),
             supabaseAdmin
               .from("member_status_log")
-              .select("new_status, created_at, member_id")
+              .select("action, created_at, member_id, leader_id")
+              .eq("leader_id", leaderId)
               .gte("created_at", since),
           ]);
 
@@ -60,7 +61,7 @@ export const Route = createFileRoute("/api/public/hooks/weekly-digest")({
           const req = (requests ?? []) as { status: string }[];
           const pending = req.filter((r) => r.status === "pending").length;
           const approved = req.filter((r) => r.status === "approved").length;
-          const suspended = ((statusLog ?? []) as { new_status: string }[]).filter((l) => l.new_status === "suspended").length;
+          const suspended = ((statusLog ?? []) as { action: string }[]).filter((l) => l.action === "suspend").length;
 
           const html = renderDigest({
             name: leader.full_name,

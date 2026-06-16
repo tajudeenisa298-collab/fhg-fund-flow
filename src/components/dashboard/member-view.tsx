@@ -288,6 +288,8 @@ export function MemberView({ profile }: { profile: Profile }) {
 
       <PendingUpkeepSection memberId={profile.id} onChanged={() => { load(); refresh(); }} />
 
+      <MemberStatusSelfSection memberId={profile.id} />
+
       <PvLogSection ownerId={profile.id} scope="self" />
 
 

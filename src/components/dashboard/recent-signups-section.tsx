@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtDate } from "@/lib/format";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Row {
   id: string;

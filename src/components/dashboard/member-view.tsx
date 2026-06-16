@@ -29,6 +29,8 @@ import { generateInviteCode } from "@/lib/team.functions";
 import { CurrencyAmountInput } from "@/components/currency-amount-input";
 import { PendingUpkeepSection } from "@/components/dashboard/pending-upkeep-section";
 import { PvLogSection } from "@/components/dashboard/pv-log-section";
+import { AnnouncementsSection } from "@/components/dashboard/announcements-section";
+import { ResourceLibrarySection } from "@/components/dashboard/resource-library-section";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 
 

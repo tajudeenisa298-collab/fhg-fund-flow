@@ -264,11 +264,22 @@ export function MemberView({ profile }: { profile: Profile }) {
         </div>
       </section>
 
+      {/* Announcements from leader */}
+      {profile.leader_id && (
+        <AnnouncementsSection leaderId={profile.leader_id} canManage={false} />
+      )}
+
+      {/* Resource library from leader */}
+      {profile.leader_id && (
+        <ResourceLibrarySection leaderId={profile.leader_id} canManage={false} />
+      )}
+
       {/* Team fund rules — what your leader auto-deducts */}
       <TeamFundRulesReadonly leaderId={profile.leader_id} />
 
       {/* Pyramid: people you've sponsored, directly or indirectly */}
       <DownlineSection rootId={profile.id} />
+
 
       <section className="rounded-2xl border bg-card p-6 shadow-card">
         <h2 className="text-base font-semibold">Transaction history</h2>

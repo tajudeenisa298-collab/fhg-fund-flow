@@ -131,6 +131,20 @@ export function LeaderView({ profile }: { profile: Profile }) {
     load();
   }, [load]);
 
+  // Track which team members have a bank account on file (for the "No bank" saved view)
+  useEffect(() => {
+    if (team.length === 0) {
+      setBankIds(new Set());
+      return;
+    }
+    const ids = team.map((m) => m.id);
+    supabase
+      .from("bank_accounts")
+      .select("user_id")
+      .in("user_id", ids)
+      .then(({ data }) => setBankIds(new Set(((data as { user_id: string }[]) ?? []).map((r) => r.user_id))));
+  }, [team]);
+
   // Live updates: refresh dashboard when any related row changes
   useEffect(() => {
     const ch = supabase

@@ -189,6 +189,13 @@ export function LeaderView({ profile }: { profile: Profile }) {
         <NgnRateButton currentRate={ngnRate} onSaved={refresh} />
       </div>
 
+      <PendingActionsChips
+        leaderId={profile.id}
+        pendingRequests={pendingRequests.length}
+        teamIds={team.map((m) => m.id)}
+      />
+
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total members" value={String(team.length)} icon={Users} />
         <StatCard

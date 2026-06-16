@@ -50,22 +50,33 @@ const FUND_DEST_LABEL: Record<FundDestination, string> = {
 
 export function FundRulesSection({ leaderId }: { leaderId: string }) {
   const [rules, setRules] = useState<FundRule[]>([]);
+  const [team, setTeam] = useState<Profile[]>([]);
   const [editing, setEditing] = useState<FundRule | null>(null);
   const [creating, setCreating] = useState(false);
 
   const load = async () => {
-    const { data } = await supabase
-      .from("fund_rules")
-      .select("*")
-      .eq("leader_id", leaderId)
-      .order("created_at", { ascending: false });
-    setRules((data as FundRule[]) ?? []);
+    const [{ data: r }, { data: t }] = await Promise.all([
+      supabase
+        .from("fund_rules")
+        .select("*")
+        .eq("leader_id", leaderId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("profiles")
+        .select("id, full_name, email, rank, balance_usd, can_handle_funds, leader_id, sponsor_id, gender, avatar_url, whatsapp_number, payout_method, created_at, updated_at")
+        .eq("leader_id", leaderId)
+        .order("full_name"),
+    ]);
+    setRules((r as FundRule[]) ?? []);
+    setTeam((t as Profile[]) ?? []);
   };
 
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leaderId]);
+  const memberName = (id: string | null) =>
+    id ? team.find((m) => m.id === id)?.full_name ?? "Unknown member" : null;
 
   const toggle = async (r: FundRule) => {
     await supabase.from("fund_rules").update({ active: !r.active }).eq("id", r.id);

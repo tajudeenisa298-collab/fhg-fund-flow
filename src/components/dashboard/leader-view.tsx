@@ -180,7 +180,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
       ),
     [codes, tick],
   );
-  const pendingRequests = requests.filter((r) => r.status === "pending");
+  const pendingRequests = requests.filter((r) => r.status === "pending" || r.status === "awaiting_second_approval");
   const resolvedRequests = useMemo(
     () => requests.filter((r) => r.status !== "pending"),
     [requests],

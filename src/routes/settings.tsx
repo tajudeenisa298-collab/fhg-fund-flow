@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { BankVerifier, type VerifiedBank } from "@/components/bank-verifier";
 import { AvatarUpload } from "@/components/avatar-upload";
+import { SecuritySection } from "@/components/settings/security-section";
 import type { BankAccount } from "@/lib/types";
 
 export const Route = createFileRoute("/settings")({
@@ -427,6 +428,8 @@ function SettingsPage() {
 
 
 
+
+        <SecuritySection />
 
         <p className="text-center text-xs text-muted-foreground">
           <Link to="/dashboard" className="text-primary hover:underline">

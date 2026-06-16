@@ -126,6 +126,7 @@ export type FundDestination = "office_support" | "team_leader" | "custom" | "mem
 export interface FundRule {
   id: string;
   leader_id: string;
+  member_id: string | null;
   name: string;
   kind: FundKind;
   destination: FundDestination;
@@ -136,6 +137,30 @@ export interface FundRule {
   active: boolean;
   description: string | null;
   next_run_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Announcement {
+  id: string;
+  leader_id: string;
+  title: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ResourceKind = "link" | "file" | "note";
+
+export interface Resource {
+  id: string;
+  leader_id: string;
+  title: string;
+  kind: ResourceKind;
+  category: string | null;
+  url: string | null;
+  storage_path: string | null;
+  body: string | null;
   created_at: string;
   updated_at: string;
 }

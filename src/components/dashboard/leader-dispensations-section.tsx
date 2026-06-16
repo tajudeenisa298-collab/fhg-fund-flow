@@ -52,12 +52,16 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [tab, setTab] = useState<Status>("pending");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [resolving, setResolving] = useState<Row | null>(null);
+  const [resolveNote, setResolveNote] = useState("");
+  const [resolveCredit, setResolveCredit] = useState<boolean>(true);
+  const [busy, setBusy] = useState(false);
 
   const load = async () => {
     const { data, error } = await supabase
       .from("upkeep_dispensations")
       .select(
-        "id, member_id, amount_usd, screenshot_path, note, status, dispute_note, acknowledged_at, created_at",
+        "id, member_id, amount_usd, screenshot_path, note, status, dispute_note, acknowledged_at, created_at, resolved_at, resolution_note, resolution_credit",
       )
       .eq("leader_id", leaderId)
       .order("created_at", { ascending: false })

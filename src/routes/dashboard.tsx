@@ -3,11 +3,12 @@ import { useEffect } from "react";
 import { Wallet, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth, isAccountBlocked } from "@/lib/auth-context";
 import { MemberView } from "@/components/dashboard/member-view";
 import { LeaderView } from "@/components/dashboard/leader-view";
 import { NotificationBell } from "@/components/notification-bell";
 import { UserAvatar } from "@/components/user-avatar";
+import { AccountStatusScreen } from "@/components/account-status-screen";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -33,6 +34,10 @@ function DashboardPage() {
         <p className="text-muted-foreground">Loading…</p>
       </div>
     );
+  }
+
+  if (isAccountBlocked(profile)) {
+    return <AccountStatusScreen profile={profile} />;
   }
 
   const showSwitcher = roles.length > 1;

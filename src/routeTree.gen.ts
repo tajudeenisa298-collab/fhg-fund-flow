@@ -17,6 +17,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicHooksRunUpkeepRouteImport } from './routes/api/public/hooks/run-upkeep'
+import { Route as ApiPublicHooksFinalizeTerminationsRouteImport } from './routes/api/public/hooks/finalize-terminations'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -58,6 +59,12 @@ const ApiPublicHooksRunUpkeepRoute = ApiPublicHooksRunUpkeepRouteImport.update({
   path: '/api/public/hooks/run-upkeep',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksFinalizeTerminationsRoute =
+  ApiPublicHooksFinalizeTerminationsRouteImport.update({
+    id: '/api/public/hooks/finalize-terminations',
+    path: '/api/public/hooks/finalize-terminations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
   '/api/public/hooks/run-upkeep': typeof ApiPublicHooksRunUpkeepRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +85,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
   '/api/public/hooks/run-upkeep': typeof ApiPublicHooksRunUpkeepRoute
 }
 export interface FileRoutesById {
@@ -88,6 +97,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
   '/api/public/hooks/run-upkeep': typeof ApiPublicHooksRunUpkeepRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +110,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/api/public/hooks/finalize-terminations'
     | '/api/public/hooks/run-upkeep'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +121,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/api/public/hooks/finalize-terminations'
     | '/api/public/hooks/run-upkeep'
   id:
     | '__root__'
@@ -120,6 +132,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/api/public/hooks/finalize-terminations'
     | '/api/public/hooks/run-upkeep'
   fileRoutesById: FileRoutesById
 }
@@ -131,6 +144,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
+  ApiPublicHooksFinalizeTerminationsRoute: typeof ApiPublicHooksFinalizeTerminationsRoute
   ApiPublicHooksRunUpkeepRoute: typeof ApiPublicHooksRunUpkeepRoute
 }
 
@@ -192,6 +206,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksRunUpkeepRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/finalize-terminations': {
+      id: '/api/public/hooks/finalize-terminations'
+      path: '/api/public/hooks/finalize-terminations'
+      fullPath: '/api/public/hooks/finalize-terminations'
+      preLoaderRoute: typeof ApiPublicHooksFinalizeTerminationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -203,6 +224,8 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
+  ApiPublicHooksFinalizeTerminationsRoute:
+    ApiPublicHooksFinalizeTerminationsRoute,
   ApiPublicHooksRunUpkeepRoute: ApiPublicHooksRunUpkeepRoute,
 }
 export const routeTree = rootRouteImport

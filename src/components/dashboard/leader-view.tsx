@@ -65,6 +65,7 @@ import { LeaderDispensationsSection } from "@/components/dashboard/leader-dispen
 import { AnnouncementsSection } from "@/components/dashboard/announcements-section";
 import { ResourceLibrarySection } from "@/components/dashboard/resource-library-section";
 import { MemberStatusMenu, MemberStatusBadge } from "@/components/dashboard/member-status-menu";
+import { MemberStatusAuditSection } from "@/components/dashboard/member-status-audit-section";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 
 
@@ -473,6 +474,14 @@ export function LeaderView({ profile }: { profile: Profile }) {
 
       {/* Upkeep dispensations tracker */}
       <LeaderDispensationsSection leaderId={profile.id} />
+
+      {/* Suspend / terminate / pardon audit log */}
+      <MemberStatusAuditSection
+        leaderId={profile.id}
+        memberNames={Object.fromEntries(team.map((m) => [m.id, m.full_name]))}
+      />
+
+
 
       {/* Broadcast announcements */}
       <AnnouncementsSection leaderId={profile.id} canManage />

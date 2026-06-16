@@ -240,6 +240,61 @@ export type Database = {
         }
         Relationships: []
       }
+      member_status_log: {
+        Row: {
+          action: Database["public"]["Enums"]["member_status_action"]
+          actor_id: string | null
+          created_at: string
+          effective_until: string | null
+          id: string
+          leader_id: string
+          member_id: string
+          reason: string | null
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["member_status_action"]
+          actor_id?: string | null
+          created_at?: string
+          effective_until?: string | null
+          id?: string
+          leader_id: string
+          member_id: string
+          reason?: string | null
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["member_status_action"]
+          actor_id?: string | null
+          created_at?: string
+          effective_until?: string | null
+          id?: string
+          leader_id?: string
+          member_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_status_log_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_status_log_leader_id_fkey"
+            columns: ["leader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_status_log_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -345,6 +400,7 @@ export type Database = {
           can_handle_funds: boolean
           created_at: string
           email: string | null
+          finalized_at: string | null
           full_name: string
           gender: Database["public"]["Enums"]["gender_kind"] | null
           id: string
@@ -365,6 +421,7 @@ export type Database = {
           can_handle_funds?: boolean
           created_at?: string
           email?: string | null
+          finalized_at?: string | null
           full_name: string
           gender?: Database["public"]["Enums"]["gender_kind"] | null
           id: string
@@ -385,6 +442,7 @@ export type Database = {
           can_handle_funds?: boolean
           created_at?: string
           email?: string | null
+          finalized_at?: string | null
           full_name?: string
           gender?: Database["public"]["Enums"]["gender_kind"] | null
           id?: string
@@ -814,6 +872,7 @@ export type Database = {
         Args: { _dispensation_id: string; _reason: string }
         Returns: undefined
       }
+      finalize_terminated_members: { Args: never; Returns: number }
       get_downline: {
         Args: { _root: string }
         Returns: {
@@ -937,6 +996,11 @@ export type Database = {
         | "custom_days"
       fund_kind: "per_usd" | "fixed"
       gender_kind: "male" | "female" | "other" | "prefer_not_to_say"
+      member_status_action:
+        | "suspended"
+        | "terminated"
+        | "pardoned"
+        | "finalized"
       notification_kind:
         | "request_new"
         | "request_resolved"
@@ -1109,6 +1173,12 @@ export const Constants = {
       ],
       fund_kind: ["per_usd", "fixed"],
       gender_kind: ["male", "female", "other", "prefer_not_to_say"],
+      member_status_action: [
+        "suspended",
+        "terminated",
+        "pardoned",
+        "finalized",
+      ],
       notification_kind: [
         "request_new",
         "request_resolved",

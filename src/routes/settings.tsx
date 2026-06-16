@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { BankVerifier, type VerifiedBank } from "@/components/bank-verifier";
@@ -167,11 +169,42 @@ function SettingsPage() {
         </section>
 
         <section className="rounded-2xl border bg-card p-6 shadow-card">
-          <h2 className="text-lg font-semibold">Account</h2>
+          <div className="flex items-start justify-between gap-3">
+            <h2 className="text-lg font-semibold">Account</h2>
+            {!editingName && (
+              <Button variant="outline" size="sm" onClick={() => setEditingName(true)}>
+                Edit name
+              </Button>
+            )}
+          </div>
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <dt className="text-xs uppercase tracking-wide text-muted-foreground">Name</dt>
-              <dd className="mt-1 font-medium">{profile.full_name}</dd>
+              {editingName ? (
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <Input
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    maxLength={100}
+                    className="max-w-xs"
+                  />
+                  <Button size="sm" onClick={saveName} disabled={savingName}>
+                    {savingName ? "Saving…" : "Save"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setFullName(profile.full_name);
+                      setEditingName(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <dd className="mt-1 font-medium">{profile.full_name}</dd>
+              )}
             </div>
             <div>
               <dt className="text-xs uppercase tracking-wide text-muted-foreground">Email</dt>
@@ -183,6 +216,7 @@ function SettingsPage() {
             </div>
           </dl>
         </section>
+
 
         <p className="text-center text-xs text-muted-foreground">
           <Link to="/dashboard" className="text-primary hover:underline">

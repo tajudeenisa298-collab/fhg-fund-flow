@@ -74,10 +74,15 @@ export function MemberDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{member.full_name}</DialogTitle>
-          <DialogDescription>
-            {member.rank} · {member.email}
-          </DialogDescription>
+          <div className="flex items-center gap-3">
+            <UserAvatar name={member.full_name} avatarPath={member.avatar_url} className="size-12" />
+            <div className="min-w-0">
+              <DialogTitle>{member.full_name}</DialogTitle>
+              <DialogDescription>
+                {member.rank} · {member.email}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <ScrollArea className="max-h-[70vh] pr-2">

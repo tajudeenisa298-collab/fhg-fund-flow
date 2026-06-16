@@ -905,6 +905,16 @@ function ApproveDialog({
   const [platformFee, setPlatformFee] = useState("");
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    if (!open || !member) return;
+    supabase
+      .from("bank_accounts")
+      .select("bank_name, account_number, account_owner_name")
+      .eq("user_id", member.id)
+      .maybeSingle()
+      .then(({ data }) => setBank(data ?? null));
+  }, [open, member]);
+
   const feeUsd = Number(platformFee) > 0 ? Number(platformFee) : 0;
   const netUsd = Math.max(0, Number(request.amount_usd) - feeUsd);
   const localAmount = Number(rate) > 0 ? netUsd * Number(rate) : 0;

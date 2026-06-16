@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ImageIcon, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { ImageIcon, Clock, CheckCircle2, AlertTriangle, Gavel } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -31,6 +35,9 @@ interface Row {
   dispute_note: string | null;
   acknowledged_at: string | null;
   created_at: string;
+  resolved_at: string | null;
+  resolution_note: string | null;
+  resolution_credit: boolean | null;
   member_name?: string;
   member_avatar?: string | null;
 }
@@ -45,12 +52,16 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [tab, setTab] = useState<Status>("pending");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [resolving, setResolving] = useState<Row | null>(null);
+  const [resolveNote, setResolveNote] = useState("");
+  const [resolveCredit, setResolveCredit] = useState<boolean>(true);
+  const [busy, setBusy] = useState(false);
 
   const load = async () => {
     const { data, error } = await supabase
       .from("upkeep_dispensations")
       .select(
-        "id, member_id, amount_usd, screenshot_path, note, status, dispute_note, acknowledged_at, created_at",
+        "id, member_id, amount_usd, screenshot_path, note, status, dispute_note, acknowledged_at, created_at, resolved_at, resolution_note, resolution_credit",
       )
       .eq("leader_id", leaderId)
       .order("created_at", { ascending: false })
@@ -172,6 +183,12 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
                             Dispute: {d.dispute_note}
                           </p>
                         )}
+                        {d.resolved_at && d.resolution_note && (
+                          <p className="mt-1 text-xs italic text-muted-foreground">
+                            Resolved {fmtDate(d.resolved_at)}
+                            {d.resolution_credit ? " (credited)" : " (no credit)"}: {d.resolution_note}
+                          </p>
+                        )}
                         <p className="mt-1 text-xs text-muted-foreground">
                           {fmtDate(d.created_at)}
                           {d.status === "acknowledged" && d.acknowledged_at && (
@@ -193,6 +210,19 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
                           onClick={() => viewProof(d.screenshot_path!)}
                         >
                           <ImageIcon className="mr-1 size-3.5" /> Proof
+                        </Button>
+                      )}
+                      {d.status === "disputed" && !d.resolved_at && (
+                        <Button
+                          size="sm"
+                          className="h-7 px-2"
+                          onClick={() => {
+                            setResolving(d);
+                            setResolveNote("");
+                            setResolveCredit(true);
+                          }}
+                        >
+                          <Gavel className="mr-1 size-3.5" /> Resolve
                         </Button>
                       )}
                     </div>
@@ -224,6 +254,86 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
               className="max-h-[70vh] w-full rounded-lg object-contain"
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!resolving} onOpenChange={(v) => !v && setResolving(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Resolve dispute</DialogTitle>
+            <DialogDescription>
+              Close this disputed upkeep. Crediting will add the amount to the member's balance.
+            </DialogDescription>
+          </DialogHeader>
+          {resolving && (
+            <div className="space-y-4">
+              <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+                <p className="font-medium">
+                  {fmtUsd(resolving.amount_usd)} to {resolving.member_name ?? "member"}
+                </p>
+                {resolving.dispute_note && (
+                  <p className="mt-1 text-xs text-destructive">
+                    Member said: {resolving.dispute_note}
+                  </p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={resolveCredit ? "default" : "outline"}
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => setResolveCredit(true)}
+                >
+                  Credit member
+                </Button>
+                <Button
+                  type="button"
+                  variant={!resolveCredit ? "default" : "outline"}
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => setResolveCredit(false)}
+                >
+                  Close without credit
+                </Button>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="rn">Resolution note</Label>
+                <Textarea
+                  id="rn"
+                  rows={3}
+                  value={resolveNote}
+                  onChange={(e) => setResolveNote(e.target.value)}
+                  maxLength={400}
+                  placeholder="Explain what was done (the member is notified)."
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResolving(null)} disabled={busy}>
+              Cancel
+            </Button>
+            <Button
+              disabled={busy || resolveNote.trim().length < 3}
+              onClick={async () => {
+                if (!resolving) return;
+                setBusy(true);
+                const { error } = await supabase.rpc("resolve_dispute", {
+                  _dispensation_id: resolving.id,
+                  _credit: resolveCredit,
+                  _note: resolveNote.trim(),
+                });
+                setBusy(false);
+                if (error) return toast.error(error.message);
+                toast.success("Dispute resolved");
+                setResolving(null);
+                load();
+              }}
+            >
+              {busy ? "Saving…" : "Confirm"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </section>

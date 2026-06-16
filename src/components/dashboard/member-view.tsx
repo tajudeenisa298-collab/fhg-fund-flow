@@ -31,8 +31,10 @@ import { PendingUpkeepSection } from "@/components/dashboard/pending-upkeep-sect
 import { PvLogSection } from "@/components/dashboard/pv-log-section";
 import { AnnouncementsSection } from "@/components/dashboard/announcements-section";
 import { ResourceLibrarySection } from "@/components/dashboard/resource-library-section";
+import { MemberStatusSelfSection } from "@/components/dashboard/member-status-self-section";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 import { toCsv, downloadCsv } from "@/lib/csv";
+import { X as XIcon } from "lucide-react";
 
 
 
@@ -286,6 +288,8 @@ export function MemberView({ profile }: { profile: Profile }) {
 
       <PendingUpkeepSection memberId={profile.id} onChanged={() => { load(); refresh(); }} />
 
+      <MemberStatusSelfSection memberId={profile.id} />
+
       <PvLogSection ownerId={profile.id} scope="self" />
 
 
@@ -316,7 +320,9 @@ export function MemberView({ profile }: { profile: Profile }) {
           {requests.length === 0 && (
             <p className="px-4 py-10 text-center text-sm text-muted-foreground">No requests yet.</p>
           )}
-          {requestsPage.slice.map((r) => (
+          {requestsPage.slice.map((r) => {
+            const cancelled = (r as WithdrawalRequest & { cancelled_by_member?: boolean }).cancelled_by_member;
+            return (
             <div key={r.id} className="flex items-start justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
                 <p className="font-medium">
@@ -333,16 +339,33 @@ export function MemberView({ profile }: { profile: Profile }) {
                   </p>
                 )}
                 <p className="truncate text-xs text-muted-foreground">{r.description}</p>
-                {r.leader_note && (
+                {r.leader_note && !cancelled && (
                   <p className="mt-1 text-xs italic text-muted-foreground">
                     Leader: "{r.leader_note}"
                   </p>
                 )}
                 <p className="mt-1 text-xs text-muted-foreground">{fmtDate(r.created_at)}</p>
+                {r.status === "pending" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-1 h-7 px-2 text-xs text-destructive hover:text-destructive"
+                    onClick={async () => {
+                      if (!confirm("Cancel this withdrawal request?")) return;
+                      const { error } = await supabase.rpc("cancel_withdrawal_request", { _id: r.id });
+                      if (error) return toast.error(error.message);
+                      toast.success("Request cancelled");
+                      load();
+                    }}
+                  >
+                    <XIcon className="mr-1 size-3" /> Cancel request
+                  </Button>
+                )}
               </div>
-              <StatusPill status={r.status} />
+              <StatusPill status={r.status} cancelled={cancelled} />
             </div>
-          ))}
+          );
+          })}
           <ShowMoreButton
             hasMore={requestsPage.hasMore}
             onClick={requestsPage.showMore}
@@ -421,16 +444,19 @@ export function MemberView({ profile }: { profile: Profile }) {
   );
 }
 
-function StatusPill({ status }: { status: WithdrawalRequest["status"] }) {
+function StatusPill({ status, cancelled }: { status: WithdrawalRequest["status"]; cancelled?: boolean }) {
+  const label = cancelled ? "cancelled" : status;
   const styles =
     status === "pending"
       ? "bg-warning/15 text-warning"
       : status === "approved"
         ? "bg-success/15 text-success"
-        : "bg-destructive/15 text-destructive";
+        : cancelled
+          ? "bg-muted text-muted-foreground"
+          : "bg-destructive/15 text-destructive";
   return (
     <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium capitalize ${styles}`}>
-      {status}
+      {label}
     </span>
   );
 }

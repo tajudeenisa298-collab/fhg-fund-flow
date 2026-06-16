@@ -669,6 +669,9 @@ export type Database = {
           leader_id: string
           member_id: string
           note: string | null
+          resolution_credit: boolean | null
+          resolution_note: string | null
+          resolved_at: string | null
           screenshot_path: string | null
           status: Database["public"]["Enums"]["upkeep_ack_status"]
           txn_id: string | null
@@ -683,6 +686,9 @@ export type Database = {
           leader_id: string
           member_id: string
           note?: string | null
+          resolution_credit?: boolean | null
+          resolution_note?: string | null
+          resolved_at?: string | null
           screenshot_path?: string | null
           status?: Database["public"]["Enums"]["upkeep_ack_status"]
           txn_id?: string | null
@@ -697,6 +703,9 @@ export type Database = {
           leader_id?: string
           member_id?: string
           note?: string | null
+          resolution_credit?: boolean | null
+          resolution_note?: string | null
+          resolved_at?: string | null
           screenshot_path?: string | null
           status?: Database["public"]["Enums"]["upkeep_ack_status"]
           txn_id?: string | null
@@ -789,6 +798,7 @@ export type Database = {
       withdrawal_requests: {
         Row: {
           amount_usd: number
+          cancelled_by_member: boolean
           created_at: string
           description: string
           id: string
@@ -803,6 +813,7 @@ export type Database = {
         }
         Insert: {
           amount_usd: number
+          cancelled_by_member?: boolean
           created_at?: string
           description: string
           id?: string
@@ -817,6 +828,7 @@ export type Database = {
         }
         Update: {
           amount_usd?: number
+          cancelled_by_member?: boolean
           created_at?: string
           description?: string
           id?: string
@@ -855,6 +867,7 @@ export type Database = {
         Args: { _dispensation_id: string }
         Returns: string
       }
+      cancel_withdrawal_request: { Args: { _id: string }; Returns: undefined }
       create_managed_transaction: {
         Args: {
           _amount_usd: number
@@ -979,6 +992,10 @@ export type Database = {
       record_office_expense: {
         Args: { _amount_ngn: number; _category: string; _note?: string }
         Returns: string
+      }
+      resolve_dispute: {
+        Args: { _credit: boolean; _dispensation_id: string; _note: string }
+        Returns: undefined
       }
       resolve_withdrawal_request:
         | {

@@ -886,15 +886,18 @@ const approveSchema = z.object({
 
 function ApproveDialog({
   request,
+  member,
   memberBalance,
   defaultRate,
   onDone,
 }: {
   request: WithdrawalRequest;
+  member: Profile | null;
   memberBalance: number;
   defaultRate: number;
   onDone: () => void;
 }) {
+  const [bank, setBank] = useState<{ bank_name: string; account_number: string; account_owner_name: string } | null>(null);
   const [open, setOpen] = useState(false);
   const [currency, setCurrency] = useState("NGN");
   const [rate, setRate] = useState(String(defaultRate));

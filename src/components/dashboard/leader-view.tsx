@@ -497,6 +497,12 @@ export function LeaderView({ profile }: { profile: Profile }) {
         <CronHealthSection />
       </MobileCollapsible>
 
+      {/* Monthly reconciliation */}
+      <MobileCollapsible title="Monthly reconciliation">
+        <ReconciliationSection />
+      </MobileCollapsible>
+
+
       {/* Broadcast announcements */}
       <MobileCollapsible title="Announcements">
         <AnnouncementsSection leaderId={profile.id} canManage />

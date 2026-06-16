@@ -401,7 +401,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
                 return Number(b.balance_usd) - Number(a.balance_usd);
               if (teamSort === "balance_asc")
                 return Number(a.balance_usd) - Number(b.balance_usd);
-              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+              return new Date((b as Profile & { created_at?: string }).created_at ?? 0).getTime() - new Date((a as Profile & { created_at?: string }).created_at ?? 0).getTime();
             });
             const allChecked = sorted.length > 0 && sorted.every((m) => selectedIds.has(m.id));
             const someChecked = sorted.some((m) => selectedIds.has(m.id));

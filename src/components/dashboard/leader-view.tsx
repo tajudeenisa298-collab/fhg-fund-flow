@@ -924,22 +924,9 @@ function ApproveDialog({
       _currency: parsed.data.currency,
       _exchange_rate: parsed.data.exchange_rate,
       _local_amount: parsed.data.local_amount ?? undefined,
+      _platform_fee_usd: feeUsd > 0 ? Number(feeUsd.toFixed(2)) : 0,
     });
     if (rpcErr) { setBusy(false); return toast.error(rpcErr.message); }
-
-    if (feeUsd > 0) {
-      const { error: feeErr } = await supabase.rpc("create_managed_transaction", {
-        _member_id: request.member_id,
-        _type: "bank_fee",
-        _amount_usd: Number(feeUsd.toFixed(2)),
-        _currency: "USD",
-        _note: `Platform fee on withdrawal of ${fmtUsd(request.amount_usd)}`,
-      });
-      if (feeErr) {
-        setBusy(false);
-        return toast.error(`Approved, but fee failed: ${feeErr.message}`);
-      }
-    }
 
     setBusy(false);
     toast.success("Withdrawal approved & recorded");

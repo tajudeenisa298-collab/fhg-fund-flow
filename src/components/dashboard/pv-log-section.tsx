@@ -13,6 +13,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PvRow {
@@ -25,6 +32,11 @@ interface PvRow {
   member_name?: string;
 }
 
+interface TeamMember {
+  id: string;
+  full_name: string;
+}
+
 function monthLabel(iso: string) {
   const d = new Date(iso);
   return d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
@@ -34,7 +46,6 @@ function thisMonthValue() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 function monthInputToDate(v: string) {
-  // "YYYY-MM" → "YYYY-MM-01"
   return `${v}-01`;
 }
 
@@ -43,12 +54,14 @@ export function PvLogSection({
   scope,
 }: {
   ownerId: string;
-  /** "self" = current member's own log; "team" = read-only team view (leader) */
+  /** "self" = current member's own log; "team" = leader-side, can edit members' entries */
   scope: "self" | "team";
 }) {
   const [rows, setRows] = useState<PvRow[]>([]);
+  const [team, setTeam] = useState<TeamMember[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<PvRow | null>(null);
+  const [targetMemberId, setTargetMemberId] = useState<string>("");
   const [month, setMonth] = useState(thisMonthValue());
   const [pv, setPv] = useState("");
   const [note, setNote] = useState("");
@@ -64,12 +77,14 @@ export function PvLogSection({
       setRows((data as PvRow[]) ?? []);
       return;
     }
-    // Team scope: gather direct managed members, then their PV
-    const { data: team } = await supabase
+    const { data: teamRows } = await supabase
       .from("profiles")
       .select("id, full_name")
-      .eq("leader_id", ownerId);
-    const ids = (team ?? []).map((m) => m.id as string);
+      .eq("leader_id", ownerId)
+      .order("full_name");
+    const list = (teamRows ?? []) as TeamMember[];
+    setTeam(list);
+    const ids = list.map((m) => m.id);
     if (ids.length === 0) {
       setRows([]);
       return;
@@ -79,7 +94,7 @@ export function PvLogSection({
       .select("*")
       .in("member_id", ids)
       .order("period_month", { ascending: false });
-    const nameMap = new Map((team ?? []).map((m) => [m.id as string, m.full_name as string]));
+    const nameMap = new Map(list.map((m) => [m.id, m.full_name]));
     const enriched = ((data as PvRow[]) ?? []).map((r) => ({
       ...r,
       member_name: nameMap.get(r.member_id),
@@ -105,10 +120,17 @@ export function PvLogSection({
     setPv("");
     setNote("");
     setEditing(null);
+    setTargetMemberId(scope === "self" ? ownerId : "");
+  };
+
+  const startAdd = () => {
+    reset();
+    setOpen(true);
   };
 
   const startEdit = (r: PvRow) => {
     setEditing(r);
+    setTargetMemberId(r.member_id);
     const d = new Date(r.period_month);
     setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
     setPv(String(r.pv));
@@ -118,12 +140,14 @@ export function PvLogSection({
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const memberId = scope === "self" ? ownerId : targetMemberId;
+    if (!memberId) return toast.error("Pick a member");
     const pvNum = Number(pv);
     if (!Number.isFinite(pvNum) || pvNum < 0) return toast.error("PV must be 0 or more");
     if (!/^\d{4}-\d{2}$/.test(month)) return toast.error("Pick a month");
     setBusy(true);
     const payload = {
-      member_id: ownerId,
+      member_id: memberId,
       period_month: monthInputToDate(month),
       pv: pvNum,
       note: note.trim() || null,
@@ -146,6 +170,8 @@ export function PvLogSection({
     load();
   };
 
+  const canManage = scope === "self" || team.length > 0;
+
   return (
     <section className="rounded-2xl border bg-card p-6 shadow-card">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -160,7 +186,7 @@ export function PvLogSection({
             <p className="text-sm text-muted-foreground">
               {scope === "self"
                 ? "Log your monthly Point Value to track sales activity."
-                : "Monthly PV submitted by members you manage."}
+                : "Monthly PV for members you manage. You can add or correct entries on their behalf."}
             </p>
           </div>
         </div>
@@ -173,14 +199,9 @@ export function PvLogSection({
             <p className="text-xs uppercase tracking-wide text-muted-foreground">YTD</p>
             <p className="text-lg font-semibold">{totals.ytd.toLocaleString()}</p>
           </div>
-          {scope === "self" && (
-            <Button
-              onClick={() => {
-                reset();
-                setOpen(true);
-              }}
-            >
-              <Plus className="mr-1 size-4" /> Log PV
+          {canManage && (
+            <Button onClick={startAdd}>
+              <Plus className="mr-1 size-4" /> {scope === "self" ? "Log PV" : "Add for member"}
             </Button>
           )}
         </div>
@@ -208,16 +229,12 @@ export function PvLogSection({
               <span className="text-base font-semibold tabular-nums">
                 {Number(r.pv).toLocaleString()} PV
               </span>
-              {scope === "self" && (
-                <>
-                  <Button variant="ghost" size="icon" onClick={() => startEdit(r)}>
-                    <Pencil className="size-3.5" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => remove(r.id)}>
-                    <Trash2 className="size-3.5 text-destructive" />
-                  </Button>
-                </>
-              )}
+              <Button variant="ghost" size="icon" onClick={() => startEdit(r)}>
+                <Pencil className="size-3.5" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => remove(r.id)}>
+                <Trash2 className="size-3.5 text-destructive" />
+              </Button>
             </div>
           </div>
         ))}
@@ -227,9 +244,30 @@ export function PvLogSection({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editing ? "Edit PV entry" : "Log monthly PV"}</DialogTitle>
-            <DialogDescription>One entry per month. New entries overwrite the existing one.</DialogDescription>
+            <DialogDescription>One entry per member per month. New entries overwrite the existing one.</DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">
+            {scope === "team" && (
+              <div className="space-y-2">
+                <Label htmlFor="pv-member">Member</Label>
+                <Select
+                  value={targetMemberId}
+                  onValueChange={setTargetMemberId}
+                  disabled={!!editing}
+                >
+                  <SelectTrigger id="pv-member">
+                    <SelectValue placeholder="Choose a member" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {team.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="pv-month">Month</Label>
               <Input

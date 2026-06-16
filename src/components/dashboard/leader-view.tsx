@@ -957,11 +957,16 @@ function ApproveDialog({
 }) {
   const [bank, setBank] = useState<{ bank_name: string; account_number: string; account_owner_name: string } | null>(null);
   const [open, setOpen] = useState(false);
-  const [currency, setCurrency] = useState("NGN");
-  const [rate, setRate] = useState(String(defaultRate));
+  const [currency, setCurrency] = useState(request.snapshot_currency ?? "NGN");
+  const snapshotRate = request.snapshot_rate ?? null;
+  const [rate, setRate] = useState(String(snapshotRate ?? defaultRate));
   const [note, setNote] = useState("");
   const [platformFee, setPlatformFee] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const rateNum = Number(rate);
+  const drift =
+    snapshotRate && rateNum > 0 ? Math.abs(rateNum - snapshotRate) / snapshotRate : 0;
 
   useEffect(() => {
     if (!open || !member) return;

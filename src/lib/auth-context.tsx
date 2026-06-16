@@ -22,6 +22,7 @@ export interface Profile {
   terminated_at: string | null;
   terminated_reason: string | null;
   finalized_at: string | null;
+  locale: string;
 }
 
 export function isAccountBlocked(p: Profile | null): boolean {

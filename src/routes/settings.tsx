@@ -21,7 +21,7 @@ export const Route = createFileRoute("/settings")({
 });
 
 function SettingsPage() {
-  const { session, profile, loading } = useAuth();
+  const { session, profile, loading, refresh } = useAuth();
   const nav = useNavigate();
 
   const [bank, setBank] = useState<BankAccount | null>(null);
@@ -29,9 +29,17 @@ function SettingsPage() {
   const [verified, setVerified] = useState<VerifiedBank | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const [editingName, setEditingName] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+
   useEffect(() => {
     if (!loading && !session) nav({ to: "/login" });
   }, [loading, session, nav]);
+
+  useEffect(() => {
+    if (profile) setFullName(profile.full_name);
+  }, [profile]);
 
   useEffect(() => {
     if (!session?.user) return;
@@ -68,6 +76,25 @@ function SettingsPage() {
     setEditing(false);
     setVerified(null);
   };
+
+  const saveName = async () => {
+    if (!session?.user) return;
+    const trimmed = fullName.trim();
+    if (trimmed.length < 2 || trimmed.length > 100) {
+      return toast.error("Name must be 2–100 characters");
+    }
+    setSavingName(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ full_name: trimmed })
+      .eq("id", session.user.id);
+    setSavingName(false);
+    if (error) return toast.error(error.message);
+    toast.success("Name updated");
+    setEditingName(false);
+    await refresh();
+  };
+
 
   if (loading || !profile) {
     return (

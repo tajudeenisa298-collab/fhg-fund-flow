@@ -62,6 +62,8 @@ import { RankUpkeepDefaultsSection } from "@/components/dashboard/rank-upkeep-de
 import { OrganisationSection } from "@/components/dashboard/organisation-section";
 import { PvLogSection } from "@/components/dashboard/pv-log-section";
 import { LeaderDispensationsSection } from "@/components/dashboard/leader-dispensations-section";
+import { AnnouncementsSection } from "@/components/dashboard/announcements-section";
+import { ResourceLibrarySection } from "@/components/dashboard/resource-library-section";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 
 

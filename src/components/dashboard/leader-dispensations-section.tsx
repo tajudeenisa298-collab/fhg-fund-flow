@@ -151,9 +151,9 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
                   >
                     <div className="flex min-w-0 flex-1 items-start gap-3">
                       <UserAvatar
-                        path={d.member_avatar ?? null}
+                        avatarPath={d.member_avatar ?? null}
                         name={d.member_name ?? "?"}
-                        size={36}
+                        className="size-9"
                       />
                       <div className="min-w-0 flex-1">
                         <p className="font-medium">

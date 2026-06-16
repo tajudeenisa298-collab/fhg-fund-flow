@@ -25,7 +25,6 @@ const DEPOSIT_TYPES = new Set(["deposit"]);
 const WITHDRAWAL_TYPES = new Set(["withdrawal"]);
 
 export function AnomalyFlagsSection({ leaderId, team }: { leaderId: string; team: Profile[] }) {
-  const { profile } = useAuth();
   const [txns, setTxns] = useState<Txn[]>([]);
   const memberMap = useMemo(() => new Map(team.map((m) => [m.id, m])), [team]);
 
@@ -37,7 +36,7 @@ export function AnomalyFlagsSection({ leaderId, team }: { leaderId: string; team
       .order("created_at", { ascending: false })
       .limit(500)
       .then(({ data }) => setTxns((data as Txn[]) ?? []));
-  }, [leaderId, profile?.updated_at]);
+  }, [leaderId]);
 
   const flags = useMemo<Flag[]>(() => {
     // group historical txns per member per kind

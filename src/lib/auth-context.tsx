@@ -21,6 +21,14 @@ export interface Profile {
   suspended_reason: string | null;
   terminated_at: string | null;
   terminated_reason: string | null;
+  finalized_at: string | null;
+}
+
+export function isAccountBlocked(p: Profile | null): boolean {
+  if (!p) return false;
+  if (p.terminated_at) return true;
+  if (p.suspended_until && new Date(p.suspended_until) > new Date()) return true;
+  return false;
 }
 
 interface AuthContextValue {

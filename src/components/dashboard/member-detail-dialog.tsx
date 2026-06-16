@@ -234,21 +234,48 @@ export function MemberDetailDialog({
                         <th className="px-3 py-2 font-medium">Type</th>
                         <th className="px-3 py-2 font-medium">Note</th>
                         <th className="px-3 py-2 text-right font-medium">Amount</th>
+                        <th className="px-3 py-2 text-right font-medium"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {txns.map((t) => (
-                        <tr key={t.id}>
-                          <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
-                            {fmtDate(t.created_at)}
-                          </td>
-                          <td className="px-3 py-2 capitalize">{t.type.replace("_", " ")}</td>
-                          <td className="px-3 py-2 text-muted-foreground">{t.note ?? "—"}</td>
-                          <td className="px-3 py-2 text-right">
-                            <Money usd={t.amount_usd} rate={t.exchange_rate ?? undefined} size="sm" inline />
-                          </td>
-                        </tr>
-                      ))}
+                      {txns.map((t) => {
+                        const isReversed = reversedIds.has(t.id);
+                        const isReversal = !!t.note?.startsWith("Reversal of");
+                        const canReverse =
+                          REVERSIBLE_TYPES.has(t.type) && !isReversed && !isReversal;
+                        return (
+                          <tr key={t.id} className={isReversed ? "opacity-60" : ""}>
+                            <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
+                              {fmtDate(t.created_at)}
+                            </td>
+                            <td className="px-3 py-2 capitalize">
+                              {t.type.replace("_", " ")}
+                              {isReversed && (
+                                <span className="ml-1 text-[10px] uppercase text-muted-foreground">
+                                  · reversed
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 text-muted-foreground">{t.note ?? "—"}</td>
+                            <td className="px-3 py-2 text-right">
+                              <Money usd={t.amount_usd} rate={t.exchange_rate ?? undefined} size="sm" inline />
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              {canReverse && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-2"
+                                  onClick={() => setReverseTarget(t)}
+                                  title="Reverse this transaction"
+                                >
+                                  <Undo2 className="size-3.5" />
+                                </Button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 )}

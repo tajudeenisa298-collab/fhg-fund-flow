@@ -475,6 +475,14 @@ export function LeaderView({ profile }: { profile: Profile }) {
       {/* Upkeep dispensations tracker */}
       <LeaderDispensationsSection leaderId={profile.id} />
 
+      {/* Suspend / terminate / pardon audit log */}
+      <MemberStatusAuditSection
+        leaderId={profile.id}
+        memberNames={Object.fromEntries(team.map((m) => [m.id, m.full_name]))}
+      />
+
+
+
       {/* Broadcast announcements */}
       <AnnouncementsSection leaderId={profile.id} canManage />
 

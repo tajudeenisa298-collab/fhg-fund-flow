@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fmtUsd, fmtDate } from "@/lib/format";
 import { UserAvatar } from "@/components/user-avatar";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
+import { DateRangeFilter, EMPTY_RANGE, inRange, type DateRange } from "@/components/date-range-filter";
 
 type Status = "pending" | "acknowledged" | "disputed";
 

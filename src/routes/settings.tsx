@@ -350,6 +350,61 @@ function SettingsPage() {
           </dl>
         </section>
 
+        <section className="rounded-2xl border bg-card p-6 shadow-card">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold">Contact & payouts</h2>
+              <p className="text-sm text-muted-foreground">
+                How we reach you and how you'd like to receive your share.
+              </p>
+            </div>
+          </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="text-xs uppercase tracking-wide text-muted-foreground" htmlFor="whatsapp">
+                WhatsApp number
+              </label>
+              <Input
+                id="whatsapp"
+                inputMode="tel"
+                placeholder="+2348012345678"
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value)}
+                className="mt-1"
+                maxLength={20}
+              />
+            </div>
+            <div>
+              <label className="text-xs uppercase tracking-wide text-muted-foreground" htmlFor="payout">
+                Preferred payout method
+              </label>
+              <select
+                id="payout"
+                value={payoutMethod}
+                onChange={(e) => setPayoutMethod(e.target.value as "bank_transfer" | "neolife_pv")}
+                className="mt-1 h-10 w-full rounded-md border bg-background px-3 text-sm"
+              >
+                <option value="bank_transfer">Bank transfer (NGN)</option>
+                <option value="neolife_pv">NeoLife PV credit</option>
+              </select>
+            </div>
+          </div>
+          <div className="mt-4 flex justify-end">
+            <Button
+              onClick={savePrefs}
+              disabled={
+                savingPrefs ||
+                (whatsapp.trim() === (profile.whatsapp_number ?? "") &&
+                  payoutMethod === (profile.payout_method ?? "bank_transfer"))
+              }
+            >
+              {savingPrefs ? "Saving…" : "Save preferences"}
+            </Button>
+          </div>
+        </section>
+
+
+
 
         <p className="text-center text-xs text-muted-foreground">
           <Link to="/dashboard" className="text-primary hover:underline">

@@ -67,6 +67,7 @@ import { ResourceLibrarySection } from "@/components/dashboard/resource-library-
 import { MemberStatusMenu, MemberStatusBadge } from "@/components/dashboard/member-status-menu";
 import { MemberStatusAuditSection } from "@/components/dashboard/member-status-audit-section";
 import { CronHealthSection } from "@/components/dashboard/cron-health-section";
+import { MobileCollapsible } from "@/components/dashboard/mobile-collapsible";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 
 

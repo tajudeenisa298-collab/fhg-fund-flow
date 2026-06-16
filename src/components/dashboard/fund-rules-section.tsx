@@ -25,6 +25,7 @@ import {
   RadioGroupItem,
 } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
+import type { Profile } from "@/lib/auth-context";
 import {
   type FundFrequency,
   type FundDestination,
@@ -49,22 +50,33 @@ const FUND_DEST_LABEL: Record<FundDestination, string> = {
 
 export function FundRulesSection({ leaderId }: { leaderId: string }) {
   const [rules, setRules] = useState<FundRule[]>([]);
+  const [team, setTeam] = useState<Profile[]>([]);
   const [editing, setEditing] = useState<FundRule | null>(null);
   const [creating, setCreating] = useState(false);
 
   const load = async () => {
-    const { data } = await supabase
-      .from("fund_rules")
-      .select("*")
-      .eq("leader_id", leaderId)
-      .order("created_at", { ascending: false });
-    setRules((data as FundRule[]) ?? []);
+    const [{ data: r }, { data: t }] = await Promise.all([
+      supabase
+        .from("fund_rules")
+        .select("*")
+        .eq("leader_id", leaderId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("profiles")
+        .select("*")
+        .eq("leader_id", leaderId)
+        .order("full_name"),
+    ]);
+    setRules((r as FundRule[]) ?? []);
+    setTeam((t as Profile[]) ?? []);
   };
 
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leaderId]);
+  const memberName = (id: string | null) =>
+    id ? team.find((m) => m.id === id)?.full_name ?? "Unknown member" : null;
 
   const toggle = async (r: FundRule) => {
     await supabase.from("fund_rules").update({ active: !r.active }).eq("id", r.id);
@@ -83,6 +95,7 @@ export function FundRulesSection({ leaderId }: { leaderId: string }) {
           <h2 className="text-base font-semibold">Team fund rules</h2>
           <p className="text-sm text-muted-foreground">
             Office support, TV fund, etc. — choose per-USD or fixed deductions.
+            Override any rule for a specific member to handle different branch costs.
           </p>
         </div>
         <Button onClick={() => setCreating(true)}>
@@ -101,6 +114,11 @@ export function FundRulesSection({ leaderId }: { leaderId: string }) {
             <div className="min-w-0">
               <p className="font-medium">
                 {r.name}{" "}
+                {r.member_id && (
+                  <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-primary">
+                    override · {memberName(r.member_id)}
+                  </span>
+                )}
                 {!r.active && (
                   <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
                     paused
@@ -143,6 +161,7 @@ export function FundRulesSection({ leaderId }: { leaderId: string }) {
           }
         }}
         leaderId={leaderId}
+        team={team}
         existing={editing}
         onDone={() => {
           setCreating(false);
@@ -158,12 +177,14 @@ function RuleDialog({
   open,
   onOpenChange,
   leaderId,
+  team,
   existing,
   onDone,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   leaderId: string;
+  team: Profile[];
   existing: FundRule | null;
   onDone: () => void;
 }) {
@@ -174,6 +195,7 @@ function RuleDialog({
   const [freq, setFreq] = useState<FundFrequency>("monthly");
   const [customDays, setCustomDays] = useState("7");
   const [desc, setDesc] = useState("");
+  const [memberId, setMemberId] = useState<string>("__all__");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -185,6 +207,7 @@ function RuleDialog({
       setFreq(existing.frequency ?? "monthly");
       setCustomDays(existing.custom_days ? String(existing.custom_days) : "7");
       setDesc(existing.description ?? "");
+      setMemberId(existing.member_id ?? "__all__");
     } else {
       setName("");
       setKind("per_usd");
@@ -193,6 +216,7 @@ function RuleDialog({
       setFreq("monthly");
       setCustomDays("7");
       setDesc("");
+      setMemberId("__all__");
     }
   }, [existing, open]);
 
@@ -204,6 +228,7 @@ function RuleDialog({
     setBusy(true);
     const payload = {
       leader_id: leaderId,
+      member_id: memberId === "__all__" ? null : memberId,
       name: name.trim(),
       kind,
       destination,
@@ -242,6 +267,26 @@ function RuleDialog({
               onChange={(e) => setName(e.target.value)}
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Applies to</Label>
+            <Select value={memberId} onValueChange={setMemberId}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">All team members (default)</SelectItem>
+                {team.filter((m) => !m.can_handle_funds).map((m) => (
+                  <SelectItem key={m.id} value={m.id}>
+                    Override for {m.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              An override with the same name as a team-wide rule replaces it for that one member.
+            </p>
           </div>
 
           <div className="space-y-2">

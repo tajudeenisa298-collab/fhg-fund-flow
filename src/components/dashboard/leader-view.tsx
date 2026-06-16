@@ -62,6 +62,8 @@ import { RankUpkeepDefaultsSection } from "@/components/dashboard/rank-upkeep-de
 import { OrganisationSection } from "@/components/dashboard/organisation-section";
 import { PvLogSection } from "@/components/dashboard/pv-log-section";
 import { LeaderDispensationsSection } from "@/components/dashboard/leader-dispensations-section";
+import { AnnouncementsSection } from "@/components/dashboard/announcements-section";
+import { ResourceLibrarySection } from "@/components/dashboard/resource-library-section";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 
 
@@ -466,6 +468,14 @@ export function LeaderView({ profile }: { profile: Profile }) {
 
       {/* Upkeep dispensations tracker */}
       <LeaderDispensationsSection leaderId={profile.id} />
+
+      {/* Broadcast announcements */}
+      <AnnouncementsSection leaderId={profile.id} canManage />
+
+      {/* Resource library */}
+      <ResourceLibrarySection leaderId={profile.id} canManage />
+
+
 
 
       {/* Cross-team oversight: visible only when there are sub-leaders in the downline */}

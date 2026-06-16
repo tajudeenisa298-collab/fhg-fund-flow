@@ -118,7 +118,7 @@ export function PendingUpkeepSection({
         <div>
           <h2 className="text-base font-semibold">Upkeep awaiting your approval</h2>
           <p className="text-sm text-muted-foreground">
-            Confirm receipt to credit your balance, or dispute if something's off.
+            Confirm receipt to credit your balance, dispute if something's off, or continue an open dispute below.
           </p>
         </div>
       </div>

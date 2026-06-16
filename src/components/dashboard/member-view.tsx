@@ -210,6 +210,31 @@ export function MemberView({ profile }: { profile: Profile }) {
         </Dialog>
       </div>
 
+      {(!profile.leader_id || bankNeedsAttention) && (
+        <div className="space-y-2">
+          {!profile.leader_id && (
+            <div className="rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning-foreground">
+              <strong className="font-semibold">No team leader assigned.</strong> You can't request a
+              withdrawal until a leader is attached to your account. Reach out to your sponsor or wait
+              for reassignment.
+            </div>
+          )}
+          {bankNeedsAttention && (
+            <div className="rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning-foreground flex flex-wrap items-center justify-between gap-2">
+              <span>
+                <strong className="font-semibold">
+                  {bankVerifiedAt === null ? "Bank account not verified." : "Bank details haven't been re-verified in over 6 months."}
+                </strong>{" "}
+                Verify now to avoid payout delays.
+              </span>
+              <a href="/settings" className="text-xs font-medium underline underline-offset-2">
+                Go to settings →
+              </a>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           label="Managed balance"

@@ -13,6 +13,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { fmtDate } from "@/lib/format";
 import type { Profile } from "@/lib/auth-context";
 import type { Transaction, WithdrawalRequest, BankAccount } from "@/lib/types";
+import { MemberStatusBadge } from "@/components/dashboard/member-status-menu";
 
 export function MemberDetailDialog({
   member,

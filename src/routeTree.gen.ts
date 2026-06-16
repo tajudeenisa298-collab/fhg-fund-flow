@@ -19,6 +19,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DevComponentsRouteImport } from './routes/dev.components'
+import { Route as ApiPublicHooksWeeklyDigestRouteImport } from './routes/api/public/hooks/weekly-digest'
 import { Route as ApiPublicHooksRunUpkeepRouteImport } from './routes/api/public/hooks/run-upkeep'
 import { Route as ApiPublicHooksFinalizeTerminationsRouteImport } from './routes/api/public/hooks/finalize-terminations'
 
@@ -72,6 +73,12 @@ const DevComponentsRoute = DevComponentsRouteImport.update({
   path: '/dev/components',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksWeeklyDigestRoute =
+  ApiPublicHooksWeeklyDigestRouteImport.update({
+    id: '/api/public/hooks/weekly-digest',
+    path: '/api/public/hooks/weekly-digest',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksRunUpkeepRoute = ApiPublicHooksRunUpkeepRouteImport.update({
   id: '/api/public/hooks/run-upkeep',
   path: '/api/public/hooks/run-upkeep',
@@ -97,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/dev/components': typeof DevComponentsRoute
   '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
   '/api/public/hooks/run-upkeep': typeof ApiPublicHooksRunUpkeepRoute
+  '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -111,6 +119,7 @@ export interface FileRoutesByTo {
   '/dev/components': typeof DevComponentsRoute
   '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
   '/api/public/hooks/run-upkeep': typeof ApiPublicHooksRunUpkeepRoute
+  '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -126,6 +135,7 @@ export interface FileRoutesById {
   '/dev/components': typeof DevComponentsRoute
   '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
   '/api/public/hooks/run-upkeep': typeof ApiPublicHooksRunUpkeepRoute
+  '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/dev/components'
     | '/api/public/hooks/finalize-terminations'
     | '/api/public/hooks/run-upkeep'
+    | '/api/public/hooks/weekly-digest'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/dev/components'
     | '/api/public/hooks/finalize-terminations'
     | '/api/public/hooks/run-upkeep'
+    | '/api/public/hooks/weekly-digest'
   id:
     | '__root__'
     | '/'
@@ -170,6 +182,7 @@ export interface FileRouteTypes {
     | '/dev/components'
     | '/api/public/hooks/finalize-terminations'
     | '/api/public/hooks/run-upkeep'
+    | '/api/public/hooks/weekly-digest'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -185,6 +198,7 @@ export interface RootRouteChildren {
   DevComponentsRoute: typeof DevComponentsRoute
   ApiPublicHooksFinalizeTerminationsRoute: typeof ApiPublicHooksFinalizeTerminationsRoute
   ApiPublicHooksRunUpkeepRoute: typeof ApiPublicHooksRunUpkeepRoute
+  ApiPublicHooksWeeklyDigestRoute: typeof ApiPublicHooksWeeklyDigestRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -259,6 +273,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevComponentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/weekly-digest': {
+      id: '/api/public/hooks/weekly-digest'
+      path: '/api/public/hooks/weekly-digest'
+      fullPath: '/api/public/hooks/weekly-digest'
+      preLoaderRoute: typeof ApiPublicHooksWeeklyDigestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/run-upkeep': {
       id: '/api/public/hooks/run-upkeep'
       path: '/api/public/hooks/run-upkeep'
@@ -290,6 +311,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksFinalizeTerminationsRoute:
     ApiPublicHooksFinalizeTerminationsRoute,
   ApiPublicHooksRunUpkeepRoute: ApiPublicHooksRunUpkeepRoute,
+  ApiPublicHooksWeeklyDigestRoute: ApiPublicHooksWeeklyDigestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

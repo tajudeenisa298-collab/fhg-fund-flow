@@ -14,6 +14,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import "@/lib/i18n";
 import { initObservability } from "@/lib/observability";
+import { setupPwa } from "@/lib/pwa";
 import { useEffect } from "react";
 
 function NotFoundComponent() {
@@ -95,6 +96,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/png", href: "/favicon.png" },
       { rel: "apple-touch-icon", href: "/favicon.png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   shellComponent: RootShell,
@@ -119,7 +121,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  useEffect(() => { initObservability(); }, []);
+  useEffect(() => { initObservability(); setupPwa(); }, []);
 
 
   return (

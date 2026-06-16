@@ -58,7 +58,12 @@ export function MemberStatusMenu({
   const [durKey, setDurKey] = useState("7");
   const [customDays, setCustomDays] = useState(7);
   const [reason, setReason] = useState("");
+  const [confirmName, setConfirmName] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const expectedName = member.full_name.trim();
+  const nameMatches =
+    confirmName.trim().toLowerCase() === expectedName.toLowerCase();
 
   const isSuspended =
     !!member.suspended_until && new Date(member.suspended_until) > new Date();
@@ -72,6 +77,7 @@ export function MemberStatusMenu({
     setReason("");
     setDurKey("7");
     setCustomDays(7);
+    setConfirmName("");
   };
 
   const submitSuspend = async () => {
@@ -226,13 +232,27 @@ export function MemberStatusMenu({
               pardon them — after that the termination is permanent.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label>Reason (optional)</Label>
-            <Textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              rows={3}
-            />
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label>Reason (optional)</Label>
+              <Textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-name">
+                Type <span className="font-mono text-foreground">{expectedName}</span> to confirm
+              </Label>
+              <Input
+                id="confirm-name"
+                value={confirmName}
+                onChange={(e) => setConfirmName(e.target.value)}
+                placeholder={expectedName}
+                autoComplete="off"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={close} disabled={busy}>
@@ -241,7 +261,7 @@ export function MemberStatusMenu({
             <Button
               variant="destructive"
               onClick={submitTerminate}
-              disabled={busy}
+              disabled={busy || !nameMatches}
             >
               {busy ? "Terminating…" : "Terminate"}
             </Button>

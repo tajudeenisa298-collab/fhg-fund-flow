@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Wallet, TrendingUp, Clock, Plus } from "lucide-react";
+import { Wallet, TrendingUp, Clock, Plus, Download } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,7 @@ import { PvLogSection } from "@/components/dashboard/pv-log-section";
 import { AnnouncementsSection } from "@/components/dashboard/announcements-section";
 import { ResourceLibrarySection } from "@/components/dashboard/resource-library-section";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
+import { toCsv, downloadCsv } from "@/lib/csv";
 
 
 
@@ -163,12 +164,47 @@ export function MemberView({ profile }: { profile: Profile }) {
           </h1>
           <p className="text-sm text-muted-foreground">Your managed funds and activity.</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button disabled={!profile.leader_id || Number(profile.balance_usd) <= 0}>
-              <Plus className="mr-1 size-4" /> Request withdrawal
-            </Button>
-          </DialogTrigger>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              const txnsCsv = toCsv(
+                txns.map((t) => ({
+                  date: t.created_at,
+                  type: t.type,
+                  amount_usd: t.amount_usd,
+                  currency: t.currency,
+                  local_amount: t.local_amount,
+                  exchange_rate: t.exchange_rate,
+                  note: t.note,
+                })),
+              );
+              const reqCsv = toCsv(
+                requests.map((r) => ({
+                  date: r.created_at,
+                  amount_usd: r.amount_usd,
+                  status: r.status,
+                  description: r.description,
+                  leader_note: r.leader_note,
+                  resolved_at: r.resolved_at,
+                })),
+              );
+              const stamp = new Date().toISOString().slice(0, 10);
+              const safeName = profile.full_name.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
+              downloadCsv(`${safeName}_transactions_${stamp}.csv`, txnsCsv);
+              if (reqCsv) downloadCsv(`${safeName}_withdrawals_${stamp}.csv`, reqCsv);
+              toast.success("Your data export has started downloading");
+            }}
+            disabled={txns.length === 0 && requests.length === 0}
+          >
+            <Download className="mr-1 size-4" /> Export my data
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button disabled={!profile.leader_id || Number(profile.balance_usd) <= 0}>
+                <Plus className="mr-1 size-4" /> Request withdrawal
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Request a withdrawal</DialogTitle>
@@ -208,7 +244,9 @@ export function MemberView({ profile }: { profile: Profile }) {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
 
       {(!profile.leader_id || bankNeedsAttention) && (
         <div className="space-y-2">

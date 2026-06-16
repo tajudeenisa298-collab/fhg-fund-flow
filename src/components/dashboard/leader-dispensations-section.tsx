@@ -17,6 +17,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { fmtUsd, fmtDate } from "@/lib/format";
 import { UserAvatar } from "@/components/user-avatar";
+import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 
 type Status = "pending" | "acknowledged" | "disputed";
 
@@ -105,6 +106,7 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
   };
 
   const filtered = rows.filter((r) => r.status === tab);
+  const page = usePagedList(filtered, 8);
   const counts: Record<Status, number> = {
     pending: rows.filter((r) => r.status === "pending").length,
     acknowledged: rows.filter((r) => r.status === "acknowledged").length,
@@ -142,7 +144,7 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
                 Nothing here yet.
               </p>
             ) : tab === s ? (
-              filtered.map((d) => {
+              page.slice.map((d) => {
                 const meta = STATUS_META[d.status];
                 return (
                   <div
@@ -198,6 +200,14 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
                 );
               })
             ) : null}
+            {tab === s && (
+              <ShowMoreButton
+                hasMore={page.hasMore}
+                onClick={page.showMore}
+                remaining={page.total - page.visible}
+                className="rounded-xl border"
+              />
+            )}
           </TabsContent>
         ))}
       </Tabs>

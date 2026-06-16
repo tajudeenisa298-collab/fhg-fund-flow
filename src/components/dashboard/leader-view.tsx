@@ -469,6 +469,14 @@ export function LeaderView({ profile }: { profile: Profile }) {
       {/* Upkeep dispensations tracker */}
       <LeaderDispensationsSection leaderId={profile.id} />
 
+      {/* Broadcast announcements */}
+      <AnnouncementsSection leaderId={profile.id} canManage />
+
+      {/* Resource library */}
+      <ResourceLibrarySection leaderId={profile.id} canManage />
+
+
+
 
       {/* Cross-team oversight: visible only when there are sub-leaders in the downline */}
       <OrganisationSection leaderId={profile.id} />

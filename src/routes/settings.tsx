@@ -46,7 +46,11 @@ function SettingsPage() {
   }, [loading, session, nav]);
 
   useEffect(() => {
-    if (profile) setFullName(profile.full_name);
+    if (profile) {
+      setFullName(profile.full_name);
+      setWhatsapp(profile.whatsapp_number ?? "");
+      setPayoutMethod(profile.payout_method ?? "bank_transfer");
+    }
   }, [profile]);
 
   useEffect(() => {

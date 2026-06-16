@@ -63,7 +63,7 @@ export function FundRulesSection({ leaderId }: { leaderId: string }) {
         .order("created_at", { ascending: false }),
       supabase
         .from("profiles")
-        .select("id, full_name, email, rank, balance_usd, can_handle_funds, leader_id, sponsor_id, gender, avatar_url, whatsapp_number, payout_method, created_at, updated_at")
+        .select("*")
         .eq("leader_id", leaderId)
         .order("full_name"),
     ]);

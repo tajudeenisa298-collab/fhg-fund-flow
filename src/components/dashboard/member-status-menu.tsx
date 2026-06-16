@@ -232,13 +232,27 @@ export function MemberStatusMenu({
               pardon them — after that the termination is permanent.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label>Reason (optional)</Label>
-            <Textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              rows={3}
-            />
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label>Reason (optional)</Label>
+              <Textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-name">
+                Type <span className="font-mono text-foreground">{expectedName}</span> to confirm
+              </Label>
+              <Input
+                id="confirm-name"
+                value={confirmName}
+                onChange={(e) => setConfirmName(e.target.value)}
+                placeholder={expectedName}
+                autoComplete="off"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={close} disabled={busy}>
@@ -247,7 +261,7 @@ export function MemberStatusMenu({
             <Button
               variant="destructive"
               onClick={submitTerminate}
-              disabled={busy}
+              disabled={busy || !nameMatches}
             >
               {busy ? "Terminating…" : "Terminate"}
             </Button>

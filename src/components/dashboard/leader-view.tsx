@@ -78,6 +78,7 @@ import { BulkActionsBar } from "@/components/dashboard/bulk-actions-bar";
 import { TeamSavedViews, applySavedView, type SavedView } from "@/components/dashboard/team-saved-views";
 import { ForecastCard } from "@/components/dashboard/forecast-card";
 import { CsvImportDialog } from "@/components/dashboard/csv-import-dialog";
+import { MoneySafetyButton } from "@/components/dashboard/money-safety-button";
 
 
 import { generateInviteCode, promoteManagedMember } from "@/lib/team.functions";

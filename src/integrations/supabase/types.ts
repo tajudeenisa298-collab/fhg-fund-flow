@@ -240,6 +240,36 @@ export type Database = {
         }
         Relationships: []
       }
+      login_devices: {
+        Row: {
+          device_hash: string
+          first_seen_at: string
+          id: string
+          label: string | null
+          last_seen_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          device_hash: string
+          first_seen_at?: string
+          id?: string
+          label?: string | null
+          last_seen_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          device_hash?: string
+          first_seen_at?: string
+          id?: string
+          label?: string | null
+          last_seen_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       member_status_log: {
         Row: {
           action: Database["public"]["Enums"]["member_status_action"]
@@ -989,6 +1019,10 @@ export type Database = {
       }
       reassign_members_from: { Args: { _old_leader: string }; Returns: number }
       recompute_fund_handlers: { Args: { _root: string }; Returns: undefined }
+      record_login_device: {
+        Args: { _hash: string; _label: string; _ua: string }
+        Returns: boolean
+      }
       record_office_expense: {
         Args: { _amount_ngn: number; _category: string; _note?: string }
         Returns: string

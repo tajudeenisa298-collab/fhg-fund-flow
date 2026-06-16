@@ -44,6 +44,18 @@ export function MemberDetailDialog({
   const [txns, setTxns] = useState<Transaction[]>([]);
   const [reqs, setReqs] = useState<WithdrawalRequest[]>([]);
   const [bank, setBank] = useState<BankAccount | null>(null);
+  const [reverseTarget, setReverseTarget] = useState<Transaction | null>(null);
+  const [reverseReason, setReverseReason] = useState("");
+  const [reversing, setReversing] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const reversedIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const t of txns) {
+      if (t.parent_txn_id && t.note?.startsWith("Reversal of")) set.add(t.parent_txn_id);
+    }
+    return set;
+  }, [txns]);
 
   useEffect(() => {
     if (!member || !open) return;
@@ -64,7 +76,22 @@ export function MemberDetailDialog({
       setReqs((r.data as WithdrawalRequest[]) ?? []);
       setBank((b.data as BankAccount) ?? null);
     });
-  }, [member, open]);
+  }, [member, open, reloadKey]);
+
+  const doReverse = async () => {
+    if (!reverseTarget) return;
+    setReversing(true);
+    const { error } = await supabase.rpc("reverse_transaction", {
+      _txn_id: reverseTarget.id,
+      _reason: reverseReason || undefined,
+    });
+    setReversing(false);
+    if (error) return toast.error(error.message);
+    toast.success("Transaction reversed");
+    setReverseTarget(null);
+    setReverseReason("");
+    setReloadKey((k) => k + 1);
+  };
 
   if (!member) return null;
 

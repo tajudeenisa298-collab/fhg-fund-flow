@@ -114,6 +114,11 @@ export function FundRulesSection({ leaderId }: { leaderId: string }) {
             <div className="min-w-0">
               <p className="font-medium">
                 {r.name}{" "}
+                {r.member_id && (
+                  <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-primary">
+                    override · {memberName(r.member_id)}
+                  </span>
+                )}
                 {!r.active && (
                   <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
                     paused

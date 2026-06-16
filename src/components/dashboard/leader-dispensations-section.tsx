@@ -57,6 +57,7 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
   const [resolveNote, setResolveNote] = useState("");
   const [resolveCredit, setResolveCredit] = useState<boolean>(true);
   const [busy, setBusy] = useState(false);
+  const [range, setRange] = useState<DateRange>(EMPTY_RANGE);
 
   const load = async () => {
     const { data, error } = await supabase

@@ -934,6 +934,7 @@ export type Database = {
         Args: { _member_id: string; _note?: string }
         Returns: undefined
       }
+      reassign_members_from: { Args: { _old_leader: string }; Returns: number }
       recompute_fund_handlers: { Args: { _root: string }; Returns: undefined }
       record_office_expense: {
         Args: { _amount_ngn: number; _category: string; _note?: string }

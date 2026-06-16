@@ -133,6 +133,30 @@ export type Database = {
         }
         Relationships: []
       }
+      cron_failure_alerts: {
+        Row: {
+          alerted_at: string
+          id: string
+          jobid: number
+          jobname: string | null
+          runid: number
+        }
+        Insert: {
+          alerted_at?: string
+          id?: string
+          jobid: number
+          jobname?: string | null
+          runid: number
+        }
+        Update: {
+          alerted_at?: string
+          id?: string
+          jobid?: number
+          jobname?: string | null
+          runid?: number
+        }
+        Relationships: []
+      }
       fund_rules: {
         Row: {
           active: boolean
@@ -929,6 +953,7 @@ export type Database = {
       }
       anonymize_finalized_members: { Args: never; Returns: number }
       cancel_withdrawal_request: { Args: { _id: string }; Returns: undefined }
+      check_cron_failures: { Args: never; Returns: undefined }
       create_managed_transaction: {
         Args: {
           _amount_usd: number

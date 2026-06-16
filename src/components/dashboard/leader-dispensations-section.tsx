@@ -135,6 +135,7 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
             Track what you've paid out, what members confirmed, and what's in dispute.
           </p>
         </div>
+        <DateRangeFilter value={range} onChange={setRange} />
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as Status)} className="mt-4">

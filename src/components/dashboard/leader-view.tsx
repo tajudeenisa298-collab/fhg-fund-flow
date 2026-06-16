@@ -60,6 +60,8 @@ import { LeaderPurseSection } from "@/components/dashboard/leader-purse-section"
 import { DownlineSection } from "@/components/dashboard/downline-section";
 import { RankUpkeepDefaultsSection } from "@/components/dashboard/rank-upkeep-defaults-section";
 import { OrganisationSection } from "@/components/dashboard/organisation-section";
+import { PvLogSection } from "@/components/dashboard/pv-log-section";
+
 
 import { generateInviteCode, promoteManagedMember } from "@/lib/team.functions";
 
@@ -449,6 +451,10 @@ export function LeaderView({ profile }: { profile: Profile }) {
 
       {/* Cross-team oversight: visible only when there are sub-leaders in the downline */}
       <OrganisationSection leaderId={profile.id} />
+
+      {/* Team NeoLife PV log */}
+      <PvLogSection ownerId={profile.id} scope="team" />
+
 
       {/* Pyramid downline */}
       <DownlineSection rootId={profile.id} />

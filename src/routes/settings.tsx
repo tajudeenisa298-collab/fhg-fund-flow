@@ -37,6 +37,10 @@ function SettingsPage() {
   const [fullName, setFullName] = useState("");
   const [savingName, setSavingName] = useState(false);
 
+  const [whatsapp, setWhatsapp] = useState("");
+  const [payoutMethod, setPayoutMethod] = useState<"bank_transfer" | "neolife_pv">("bank_transfer");
+  const [savingPrefs, setSavingPrefs] = useState(false);
+
   useEffect(() => {
     if (!loading && !session) nav({ to: "/login" });
   }, [loading, session, nav]);

@@ -80,6 +80,7 @@ import { ForecastCard } from "@/components/dashboard/forecast-card";
 import { CsvImportDialog } from "@/components/dashboard/csv-import-dialog";
 import { MoneySafetyButton } from "@/components/dashboard/money-safety-button";
 import { AnomalyFlagsSection } from "@/components/dashboard/anomaly-flags-section";
+import { ReferralLeaderboard } from "@/components/dashboard/referral-leaderboard";
 import { Link } from "@tanstack/react-router";
 import { BarChart3 } from "lucide-react";
 
@@ -231,6 +232,9 @@ export function LeaderView({ profile }: { profile: Profile }) {
       />
 
       <AnomalyFlagsSection leaderId={profile.id} team={team} />
+
+      <ReferralLeaderboard leaderId={profile.id} />
+
 
       <ForecastCard leaderId={profile.id} plans={plans} />
 

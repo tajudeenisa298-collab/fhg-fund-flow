@@ -40,6 +40,7 @@ import { printWithdrawalReceipt } from "@/lib/withdrawal-receipt";
 import { printMemberStatement } from "@/lib/statement-pdf";
 import { ProfileCompleteness } from "@/components/dashboard/profile-completeness";
 import { BalanceProjection } from "@/components/dashboard/balance-projection";
+import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
 
 
 
@@ -309,9 +310,12 @@ export function MemberView({ profile }: { profile: Profile }) {
         <StatCard label="Pending requests" value={String(pending)} icon={Clock} />
       </div>
 
+      <OnboardingChecklist profile={profile} />
+
       <BalanceProjection memberId={profile.id} balanceUsd={profile.balance_usd} />
 
       <ProfileCompleteness profile={profile} />
+
 
       <PendingUpkeepSection memberId={profile.id} onChanged={() => { load(); refresh(); }} />
 

@@ -34,9 +34,12 @@ import { ResourceLibrarySection } from "@/components/dashboard/resource-library-
 import { MemberStatusSelfSection } from "@/components/dashboard/member-status-self-section";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 import { toCsv, downloadCsv } from "@/lib/csv";
-import { X as XIcon, Printer } from "lucide-react";
+import { X as XIcon, Printer, FileText } from "lucide-react";
 import { DateRangeFilter, EMPTY_RANGE, inRange, type DateRange } from "@/components/date-range-filter";
 import { printWithdrawalReceipt } from "@/lib/withdrawal-receipt";
+import { printMemberStatement } from "@/lib/statement-pdf";
+import { ProfileCompleteness } from "@/components/dashboard/profile-completeness";
+import { BalanceProjection } from "@/components/dashboard/balance-projection";
 
 
 
@@ -173,6 +176,22 @@ export function MemberView({ profile }: { profile: Profile }) {
         <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
+            onClick={() =>
+              printMemberStatement({
+                member_name: profile.full_name,
+                member_email: profile.email,
+                locale: profile.locale,
+                balance_usd: profile.balance_usd,
+                days: 90,
+                transactions: txns,
+              })
+            }
+            disabled={txns.length === 0}
+          >
+            <FileText className="mr-1 size-4" /> Statement (PDF)
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => {
               const txnsCsv = toCsv(
                 txns.map((t) => ({
@@ -289,6 +308,10 @@ export function MemberView({ profile }: { profile: Profile }) {
         <StatCard label="Current rank" value={profile.rank} icon={TrendingUp} hint="Reach Director to unlock" />
         <StatCard label="Pending requests" value={String(pending)} icon={Clock} />
       </div>
+
+      <BalanceProjection memberId={profile.id} balanceUsd={profile.balance_usd} />
+
+      <ProfileCompleteness profile={profile} />
 
       <PendingUpkeepSection memberId={profile.id} onChanged={() => { load(); refresh(); }} />
 

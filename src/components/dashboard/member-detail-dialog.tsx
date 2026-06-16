@@ -13,6 +13,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { fmtDate } from "@/lib/format";
 import type { Profile } from "@/lib/auth-context";
 import type { Transaction, WithdrawalRequest, BankAccount } from "@/lib/types";
+import { MemberStatusBadge } from "@/components/dashboard/member-status-menu";
 
 export function MemberDetailDialog({
   member,
@@ -77,7 +78,10 @@ export function MemberDetailDialog({
           <div className="flex items-center gap-3">
             <UserAvatar name={member.full_name} avatarPath={member.avatar_url} className="size-12" />
             <div className="min-w-0">
-              <DialogTitle>{member.full_name}</DialogTitle>
+              <DialogTitle className="flex flex-wrap items-center gap-1">
+                <span>{member.full_name}</span>
+                <MemberStatusBadge member={member} />
+              </DialogTitle>
               <DialogDescription>
                 {member.rank} · {member.email}
               </DialogDescription>

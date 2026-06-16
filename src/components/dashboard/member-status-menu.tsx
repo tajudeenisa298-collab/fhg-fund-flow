@@ -263,18 +263,31 @@ export function MemberStatusMenu({
 export function MemberStatusBadge({ member }: { member: Profile }) {
   const isTerminated = !!member.terminated_at;
   const isSuspended =
-    !!member.suspended_until && new Date(member.suspended_until) > new Date();
+    !isTerminated &&
+    !!member.suspended_until &&
+    new Date(member.suspended_until) > new Date();
   if (!isTerminated && !isSuspended) return null;
-  const permanent =
-    isTerminated &&
-    new Date(member.terminated_at!).getTime() < Date.now() - 90 * 86400 * 1000;
-  const label = isTerminated
-    ? permanent
-      ? "Terminated (permanent)"
-      : "Terminated"
-    : `Suspended · until ${new Date(member.suspended_until!).toLocaleDateString()}`;
+
+  let label: string;
+  let tone = "bg-destructive/15 text-destructive";
+  if (isTerminated) {
+    const termAt = new Date(member.terminated_at!).getTime();
+    const deadline = termAt + 90 * 86400 * 1000;
+    const daysLeft = Math.ceil((deadline - Date.now()) / 86400000);
+    if (daysLeft <= 0) {
+      label = "Terminated · permanent";
+    } else {
+      label = `Terminated · ${daysLeft}d to pardon`;
+      if (daysLeft <= 14) tone = "bg-warning/15 text-warning";
+    }
+  } else {
+    label = `Suspended · until ${new Date(member.suspended_until!).toLocaleDateString()}`;
+    tone = "bg-warning/15 text-warning";
+  }
   return (
-    <span className="ml-2 inline-block rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-destructive">
+    <span
+      className={`ml-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${tone}`}
+    >
       {label}
     </span>
   );

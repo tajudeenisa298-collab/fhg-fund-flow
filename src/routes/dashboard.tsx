@@ -36,6 +36,10 @@ function DashboardPage() {
     );
   }
 
+  if (isAccountBlocked(profile)) {
+    return <AccountStatusScreen profile={profile} />;
+  }
+
   const showSwitcher = roles.length > 1;
 
   return (

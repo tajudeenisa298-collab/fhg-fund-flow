@@ -51,6 +51,23 @@ export function MemberView({ profile }: { profile: Profile }) {
   const [submitting, setSubmitting] = useState(false);
   const [codes, setCodes] = useState<InviteCodeRowData[]>([]);
   const [tick, setTick] = useState(0);
+  const [bankVerifiedAt, setBankVerifiedAt] = useState<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    supabase
+      .from("bank_accounts")
+      .select("verified_at")
+      .eq("user_id", profile.id)
+      .maybeSingle()
+      .then(({ data }) => setBankVerifiedAt((data?.verified_at as string | null) ?? null));
+  }, [profile.id]);
+
+  const bankNeedsAttention =
+    bankVerifiedAt === null
+      ? true
+      : typeof bankVerifiedAt === "string"
+      ? (Date.now() - new Date(bankVerifiedAt).getTime()) / 86400000 > 180
+      : false;
 
   const load = async () => {
     const [{ data: t }, { data: r }, { data: c }] = await Promise.all([
@@ -192,6 +209,31 @@ export function MemberView({ profile }: { profile: Profile }) {
           </DialogContent>
         </Dialog>
       </div>
+
+      {(!profile.leader_id || bankNeedsAttention) && (
+        <div className="space-y-2">
+          {!profile.leader_id && (
+            <div className="rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning-foreground">
+              <strong className="font-semibold">No team leader assigned.</strong> You can't request a
+              withdrawal until a leader is attached to your account. Reach out to your sponsor or wait
+              for reassignment.
+            </div>
+          )}
+          {bankNeedsAttention && (
+            <div className="rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning-foreground flex flex-wrap items-center justify-between gap-2">
+              <span>
+                <strong className="font-semibold">
+                  {bankVerifiedAt === null ? "Bank account not verified." : "Bank details haven't been re-verified in over 6 months."}
+                </strong>{" "}
+                Verify now to avoid payout delays.
+              </span>
+              <a href="/settings" className="text-xs font-medium underline underline-offset-2">
+                Go to settings →
+              </a>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard

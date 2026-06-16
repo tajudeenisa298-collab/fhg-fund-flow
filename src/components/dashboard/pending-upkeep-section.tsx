@@ -44,7 +44,7 @@ export function PendingUpkeepSection({
       .from("upkeep_dispensations")
       .select("id, leader_id, amount_usd, screenshot_path, note, status, created_at")
       .eq("member_id", memberId)
-      .eq("status", "pending")
+      .in("status", ["pending", "disputed"])
       .order("created_at", { ascending: false });
     const rows = (data as Dispensation[]) ?? [];
     // Hydrate leader names

@@ -548,8 +548,13 @@ export function LeaderView({ profile }: { profile: Profile }) {
       {/* Upkeep schedules summary */}
       {plans.length > 0 && (
         <section className="rounded-2xl border bg-card p-6 shadow-card">
-          <h2 className="text-base font-semibold">Upkeep schedules</h2>
-          <p className="text-sm text-muted-foreground">Recurring stipends to your members.</p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-base font-semibold">Upkeep schedules</h2>
+              <p className="text-sm text-muted-foreground">Recurring stipends to your members.</p>
+            </div>
+            <CsvImportDialog kind="upkeep_plans" leaderId={profile.id} onDone={load} />
+          </div>
           <ul className="mt-4 divide-y rounded-xl border">
             {plans.map((p) => {
               const m = memberById(p.member_id);

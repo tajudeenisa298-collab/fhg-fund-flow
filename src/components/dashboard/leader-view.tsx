@@ -79,6 +79,9 @@ import { TeamSavedViews, applySavedView, type SavedView } from "@/components/das
 import { ForecastCard } from "@/components/dashboard/forecast-card";
 import { CsvImportDialog } from "@/components/dashboard/csv-import-dialog";
 import { MoneySafetyButton } from "@/components/dashboard/money-safety-button";
+import { AnomalyFlagsSection } from "@/components/dashboard/anomaly-flags-section";
+import { Link } from "@tanstack/react-router";
+import { BarChart3 } from "lucide-react";
 
 
 import { generateInviteCode, promoteManagedMember } from "@/lib/team.functions";

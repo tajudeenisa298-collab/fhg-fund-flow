@@ -3,6 +3,7 @@ import { Scale } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtUsd, fmtMoney } from "@/lib/format";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Reconciliation = {
   deposits_usd: number;

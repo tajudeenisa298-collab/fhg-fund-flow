@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtUsd, fmtDate } from "@/lib/format";
+import { DisputeThread } from "@/components/dashboard/dispute-thread";
 
 interface Dispensation {
   id: string;

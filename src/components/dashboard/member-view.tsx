@@ -442,16 +442,19 @@ export function MemberView({ profile }: { profile: Profile }) {
   );
 }
 
-function StatusPill({ status }: { status: WithdrawalRequest["status"] }) {
+function StatusPill({ status, cancelled }: { status: WithdrawalRequest["status"]; cancelled?: boolean }) {
+  const label = cancelled ? "cancelled" : status;
   const styles =
     status === "pending"
       ? "bg-warning/15 text-warning"
       : status === "approved"
         ? "bg-success/15 text-success"
-        : "bg-destructive/15 text-destructive";
+        : cancelled
+          ? "bg-muted text-muted-foreground"
+          : "bg-destructive/15 text-destructive";
   return (
     <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium capitalize ${styles}`}>
-      {status}
+      {label}
     </span>
   );
 }

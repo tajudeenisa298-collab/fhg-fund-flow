@@ -318,7 +318,9 @@ export function MemberView({ profile }: { profile: Profile }) {
           {requests.length === 0 && (
             <p className="px-4 py-10 text-center text-sm text-muted-foreground">No requests yet.</p>
           )}
-          {requestsPage.slice.map((r) => (
+          {requestsPage.slice.map((r) => {
+            const cancelled = (r as WithdrawalRequest & { cancelled_by_member?: boolean }).cancelled_by_member;
+            return (
             <div key={r.id} className="flex items-start justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
                 <p className="font-medium">
@@ -335,16 +337,33 @@ export function MemberView({ profile }: { profile: Profile }) {
                   </p>
                 )}
                 <p className="truncate text-xs text-muted-foreground">{r.description}</p>
-                {r.leader_note && (
+                {r.leader_note && !cancelled && (
                   <p className="mt-1 text-xs italic text-muted-foreground">
                     Leader: "{r.leader_note}"
                   </p>
                 )}
                 <p className="mt-1 text-xs text-muted-foreground">{fmtDate(r.created_at)}</p>
+                {r.status === "pending" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-1 h-7 px-2 text-xs text-destructive hover:text-destructive"
+                    onClick={async () => {
+                      if (!confirm("Cancel this withdrawal request?")) return;
+                      const { error } = await supabase.rpc("cancel_withdrawal_request", { _id: r.id });
+                      if (error) return toast.error(error.message);
+                      toast.success("Request cancelled");
+                      load();
+                    }}
+                  >
+                    <XIcon className="mr-1 size-3" /> Cancel request
+                  </Button>
+                )}
               </div>
-              <StatusPill status={r.status} />
+              <StatusPill status={r.status} cancelled={cancelled} />
             </div>
-          ))}
+          );
+          })}
           <ShowMoreButton
             hasMore={requestsPage.hasMore}
             onClick={requestsPage.showMore}

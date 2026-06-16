@@ -296,6 +296,15 @@ export function LeaderView({ profile }: { profile: Profile }) {
                   member={m ?? null}
                   memberBalance={Number(m?.balance_usd ?? 0)}
                   defaultRate={ngnRate}
+                  autoOpen={autoOpenRequestId === r.id}
+                  onAutoOpened={() => {
+                    setAutoOpenRequestId(null);
+                    if (typeof window !== "undefined") {
+                      const u = new URL(window.location.href);
+                      u.searchParams.delete("request");
+                      window.history.replaceState({}, "", u.toString());
+                    }
+                  }}
                   onDone={async () => {
                     await load();
                     await refresh();

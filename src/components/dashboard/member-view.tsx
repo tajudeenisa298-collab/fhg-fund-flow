@@ -28,6 +28,8 @@ import { InviteCodeRow, type InviteCodeRowData } from "@/components/dashboard/in
 import { generateInviteCode } from "@/lib/team.functions";
 import { CurrencyAmountInput } from "@/components/currency-amount-input";
 import { PendingUpkeepSection } from "@/components/dashboard/pending-upkeep-section";
+import { PvLogSection } from "@/components/dashboard/pv-log-section";
+
 
 
 const requestSchema = z.object({
@@ -197,6 +199,9 @@ export function MemberView({ profile }: { profile: Profile }) {
       </div>
 
       <PendingUpkeepSection memberId={profile.id} onChanged={() => { load(); refresh(); }} />
+
+      <PvLogSection ownerId={profile.id} scope="self" />
+
 
       <section className="rounded-2xl border bg-card p-6 shadow-card">
 

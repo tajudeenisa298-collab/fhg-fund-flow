@@ -342,6 +342,44 @@ export type Database = {
           },
         ]
       }
+      pv_logs: {
+        Row: {
+          created_at: string
+          id: string
+          member_id: string
+          note: string | null
+          period_month: string
+          pv: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          member_id: string
+          note?: string | null
+          period_month: string
+          pv: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          member_id?: string
+          note?: string | null
+          period_month?: string
+          pv?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pv_logs_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rank_upkeep_defaults: {
         Row: {
           amount_usd: number

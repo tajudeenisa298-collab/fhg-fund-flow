@@ -148,19 +148,30 @@ export function PendingUpkeepSection({
                 </Button>
               )}
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={() => approve(d.id)} disabled={busy}>
-                <Check className="mr-1 size-3.5" /> Approve
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setDisputing(d.id)}
-                disabled={busy}
-              >
-                <X className="mr-1 size-3.5" /> Dispute
-              </Button>
-            </div>
+            {d.status === "pending" ? (
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => approve(d.id)} disabled={busy}>
+                  <Check className="mr-1 size-3.5" /> Approve
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setDisputing(d.id)}
+                  disabled={busy}
+                >
+                  <X className="mr-1 size-3.5" /> Dispute
+                </Button>
+              </div>
+            ) : (
+              <span className="rounded-full bg-destructive/15 px-2.5 py-1 text-xs font-medium text-destructive">
+                Disputed
+              </span>
+            )}
+            {d.status === "disputed" && (
+              <div className="w-full">
+                <DisputeThread dispensationId={d.id} currentUserId={memberId} canPost={true} />
+              </div>
+            )}
           </div>
         ))}
       </div>

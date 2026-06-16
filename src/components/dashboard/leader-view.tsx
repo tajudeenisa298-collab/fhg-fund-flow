@@ -65,6 +65,7 @@ import { LeaderDispensationsSection } from "@/components/dashboard/leader-dispen
 import { AnnouncementsSection } from "@/components/dashboard/announcements-section";
 import { ResourceLibrarySection } from "@/components/dashboard/resource-library-section";
 import { MemberStatusMenu, MemberStatusBadge } from "@/components/dashboard/member-status-menu";
+import { MemberStatusAuditSection } from "@/components/dashboard/member-status-audit-section";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 
 

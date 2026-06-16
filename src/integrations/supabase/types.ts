@@ -352,6 +352,10 @@ export type Database = {
           payout_method: Database["public"]["Enums"]["payout_method_kind"]
           rank: string
           sponsor_id: string | null
+          suspended_reason: string | null
+          suspended_until: string | null
+          terminated_at: string | null
+          terminated_reason: string | null
           updated_at: string
           whatsapp_number: string | null
         }
@@ -368,6 +372,10 @@ export type Database = {
           payout_method?: Database["public"]["Enums"]["payout_method_kind"]
           rank?: string
           sponsor_id?: string | null
+          suspended_reason?: string | null
+          suspended_until?: string | null
+          terminated_at?: string | null
+          terminated_reason?: string | null
           updated_at?: string
           whatsapp_number?: string | null
         }
@@ -384,6 +392,10 @@ export type Database = {
           payout_method?: Database["public"]["Enums"]["payout_method_kind"]
           rank?: string
           sponsor_id?: string | null
+          suspended_reason?: string | null
+          suspended_until?: string | null
+          terminated_at?: string | null
+          terminated_reason?: string | null
           updated_at?: string
           whatsapp_number?: string | null
         }
@@ -849,6 +861,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      pardon_member: { Args: { _member_id: string }; Returns: undefined }
       promote_member: {
         Args: {
           _grant_fund_handler?: boolean
@@ -893,6 +906,14 @@ export type Database = {
           }
       run_due_fund_rules: { Args: never; Returns: number }
       run_due_upkeep: { Args: never; Returns: number }
+      suspend_member: {
+        Args: { _member_id: string; _reason?: string; _until: string }
+        Returns: undefined
+      }
+      terminate_member: {
+        Args: { _member_id: string; _reason?: string }
+        Returns: undefined
+      }
       validate_invite_code: {
         Args: { _code: string }
         Returns: {

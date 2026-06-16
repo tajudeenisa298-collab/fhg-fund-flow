@@ -64,6 +64,7 @@ import { PvLogSection } from "@/components/dashboard/pv-log-section";
 import { LeaderDispensationsSection } from "@/components/dashboard/leader-dispensations-section";
 import { AnnouncementsSection } from "@/components/dashboard/announcements-section";
 import { ResourceLibrarySection } from "@/components/dashboard/resource-library-section";
+import { MemberStatusMenu, MemberStatusBadge } from "@/components/dashboard/member-status-menu";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 
 
@@ -334,7 +335,10 @@ export function LeaderView({ profile }: { profile: Profile }) {
                     onClick={() => setDetailMember(m)}
                   >
                     <td className="px-4 py-3">
-                      <p className="font-medium text-primary hover:underline">{m.full_name}</p>
+                      <p className="font-medium text-primary hover:underline">
+                        {m.full_name}
+                        <MemberStatusBadge member={m} />
+                      </p>
                       <p className="text-xs text-muted-foreground">{m.email}</p>
                     </td>
                     <td className="px-4 py-3">
@@ -349,7 +353,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
                       <Money usd={m.balance_usd} size="sm" className="items-end" />
                     </td>
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex flex-wrap justify-end gap-2">
+                      <div className="flex flex-wrap items-center justify-end gap-2">
                         <DepositDialog member={m} leaderId={profile.id} onDone={load} />
                         <DeductDialog member={m} leaderId={profile.id} onDone={load} />
                         <DispenseUpkeepDialog member={m} leaderId={profile.id} onDone={load} />
@@ -362,6 +366,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
                           onDone={load}
                         />
                         <PromoteDialog member={m} onDone={load} />
+                        <MemberStatusMenu member={m} onDone={load} />
                       </div>
                     </td>
                   </tr>

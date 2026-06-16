@@ -1115,12 +1115,16 @@ function ApproveDialog({
   member,
   memberBalance,
   defaultRate,
+  autoOpen,
+  onAutoOpened,
   onDone,
 }: {
   request: WithdrawalRequest;
   member: Profile | null;
   memberBalance: number;
   defaultRate: number;
+  autoOpen?: boolean;
+  onAutoOpened?: () => void;
   onDone: () => void;
 }) {
   const [bank, setBank] = useState<{ bank_name: string; account_number: string; account_owner_name: string } | null>(null);
@@ -1131,6 +1135,15 @@ function ApproveDialog({
   const [note, setNote] = useState("");
   const [platformFee, setPlatformFee] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // Auto-open when arriving via notification link (?request=<id>)
+  useEffect(() => {
+    if (autoOpen && !open) {
+      setOpen(true);
+      onAutoOpened?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpen]);
 
   const rateNum = Number(rate);
   const drift =

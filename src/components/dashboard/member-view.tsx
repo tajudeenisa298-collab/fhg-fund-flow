@@ -51,6 +51,23 @@ export function MemberView({ profile }: { profile: Profile }) {
   const [submitting, setSubmitting] = useState(false);
   const [codes, setCodes] = useState<InviteCodeRowData[]>([]);
   const [tick, setTick] = useState(0);
+  const [bankVerifiedAt, setBankVerifiedAt] = useState<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    supabase
+      .from("bank_accounts")
+      .select("verified_at")
+      .eq("user_id", profile.id)
+      .maybeSingle()
+      .then(({ data }) => setBankVerifiedAt((data?.verified_at as string | null) ?? null));
+  }, [profile.id]);
+
+  const bankNeedsAttention =
+    bankVerifiedAt === null
+      ? true
+      : typeof bankVerifiedAt === "string"
+      ? (Date.now() - new Date(bankVerifiedAt).getTime()) / 86400000 > 180
+      : false;
 
   const load = async () => {
     const [{ data: t }, { data: r }, { data: c }] = await Promise.all([

@@ -702,11 +702,16 @@ export function LeaderView({ profile }: { profile: Profile }) {
 
       {/* Rank-based upkeep defaults */}
       <MobileCollapsible title="Rank upkeep defaults">
-        <RankUpkeepDefaultsSection
-          leaderId={profile.id}
-          defaults={rankDefaults}
-          onChanged={load}
-        />
+        <div className="space-y-3">
+          <div className="flex justify-end">
+            <CsvImportDialog kind="rank_defaults" leaderId={profile.id} onDone={load} />
+          </div>
+          <RankUpkeepDefaultsSection
+            leaderId={profile.id}
+            defaults={rankDefaults}
+            onChanged={load}
+          />
+        </div>
       </MobileCollapsible>
 
 

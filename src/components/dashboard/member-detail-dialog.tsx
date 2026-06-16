@@ -29,6 +29,7 @@ import { fmtDate } from "@/lib/format";
 import type { Profile } from "@/lib/auth-context";
 import type { Transaction, WithdrawalRequest, BankAccount } from "@/lib/types";
 import { MemberStatusBadge } from "@/components/dashboard/member-status-menu";
+import { MemberNotesSection } from "@/components/dashboard/member-notes-section";
 
 const REVERSIBLE_TYPES = new Set(["deposit", "fund_deduction", "bank_fee"]);
 
@@ -216,6 +217,8 @@ export function MemberDetailDialog({
                 </p>
               )}
             </section>
+
+            {member && <MemberNotesSection memberId={member.id} />}
 
             <section>
               <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">

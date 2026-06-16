@@ -216,6 +216,9 @@ export function LeaderView({ profile }: { profile: Profile }) {
           <p className="text-sm text-muted-foreground">Manage your team's funds and requests.</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/analytics"><BarChart3 className="mr-1 size-4" /> Analytics</Link>
+          </Button>
           <MoneySafetyButton onSaved={refresh} />
           <NgnRateButton currentRate={ngnRate} onSaved={refresh} />
         </div>
@@ -226,6 +229,8 @@ export function LeaderView({ profile }: { profile: Profile }) {
         pendingRequests={pendingRequests.length}
         teamIds={team.map((m) => m.id)}
       />
+
+      <AnomalyFlagsSection leaderId={profile.id} team={team} />
 
       <ForecastCard leaderId={profile.id} plans={plans} />
 

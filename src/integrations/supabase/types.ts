@@ -324,6 +324,51 @@ export type Database = {
         }
         Relationships: []
       }
+      member_notes: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          leader_id: string
+          member_id: string
+          tags: string[]
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          leader_id: string
+          member_id: string
+          tags?: string[]
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          leader_id?: string
+          member_id?: string
+          tags?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_notes_leader_id_fkey"
+            columns: ["leader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_notes_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       member_status_log: {
         Row: {
           action: Database["public"]["Enums"]["member_status_action"]

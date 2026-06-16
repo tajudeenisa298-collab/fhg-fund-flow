@@ -75,6 +75,9 @@ import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 import { PendingActionsChips } from "@/components/dashboard/pending-actions-chips";
 import { RecentSignupsSection } from "@/components/dashboard/recent-signups-section";
 import { BulkActionsBar } from "@/components/dashboard/bulk-actions-bar";
+import { TeamSavedViews, applySavedView, type SavedView } from "@/components/dashboard/team-saved-views";
+import { ForecastCard } from "@/components/dashboard/forecast-card";
+import { CsvImportDialog } from "@/components/dashboard/csv-import-dialog";
 
 
 import { generateInviteCode, promoteManagedMember } from "@/lib/team.functions";
@@ -95,6 +98,14 @@ export function LeaderView({ profile }: { profile: Profile }) {
   const [teamSearch, setTeamSearch] = useState("");
   const [teamRankFilter, setTeamRankFilter] = useState<string>("all");
   const [teamSort, setTeamSort] = useState<"name" | "balance_desc" | "balance_asc" | "recent">("name");
+  const [savedView, setSavedView] = useState<SavedView>("all");
+  const [bankIds, setBankIds] = useState<Set<string>>(new Set());
+  // Open ApproveDialog automatically when arriving from a notification link
+  const [autoOpenRequestId, setAutoOpenRequestId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    const u = new URL(window.location.href);
+    return u.searchParams.get("request");
+  });
 
   const load = useCallback(async () => {
     const [{ data: t }, { data: c }, { data: r }, { data: p }, { data: o }, { data: pu }, { data: rd }] =
@@ -119,6 +130,20 @@ export function LeaderView({ profile }: { profile: Profile }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Track which team members have a bank account on file (for the "No bank" saved view)
+  useEffect(() => {
+    if (team.length === 0) {
+      setBankIds(new Set());
+      return;
+    }
+    const ids = team.map((m) => m.id);
+    supabase
+      .from("bank_accounts")
+      .select("user_id")
+      .in("user_id", ids)
+      .then(({ data }) => setBankIds(new Set(((data as { user_id: string }[]) ?? []).map((r) => r.user_id))));
+  }, [team]);
 
   // Live updates: refresh dashboard when any related row changes
   useEffect(() => {
@@ -195,6 +220,8 @@ export function LeaderView({ profile }: { profile: Profile }) {
         teamIds={team.map((m) => m.id)}
       />
 
+      <ForecastCard leaderId={profile.id} plans={plans} />
+
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total members" value={String(team.length)} icon={Users} />
@@ -269,6 +296,15 @@ export function LeaderView({ profile }: { profile: Profile }) {
                   member={m ?? null}
                   memberBalance={Number(m?.balance_usd ?? 0)}
                   defaultRate={ngnRate}
+                  autoOpen={autoOpenRequestId === r.id}
+                  onAutoOpened={() => {
+                    setAutoOpenRequestId(null);
+                    if (typeof window !== "undefined") {
+                      const u = new URL(window.location.href);
+                      u.searchParams.delete("request");
+                      window.history.replaceState({}, "", u.toString());
+                    }
+                  }}
                   onDone={async () => {
                     await load();
                     await refresh();
@@ -334,39 +370,42 @@ export function LeaderView({ profile }: { profile: Profile }) {
         </div>
 
         {team.length > 0 && (
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <div className="relative min-w-[180px] flex-1">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={teamSearch}
-                onChange={(e) => setTeamSearch(e.target.value)}
-                placeholder="Search by name or email"
-                className="pl-8"
-              />
+          <div className="mt-4 space-y-3">
+            <TeamSavedViews team={team} bankIds={bankIds} active={savedView} onChange={setSavedView} />
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative min-w-[180px] flex-1">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={teamSearch}
+                  onChange={(e) => setTeamSearch(e.target.value)}
+                  placeholder="Search by name or email"
+                  className="pl-8"
+                />
+              </div>
+              <Select value={teamRankFilter} onValueChange={setTeamRankFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="All ranks" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All ranks</SelectItem>
+                  {RANKS.map((r) => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={teamSort} onValueChange={(v) => setTeamSort(v as typeof teamSort)}>
+                <SelectTrigger className="w-[170px]">
+                  <ArrowUpDown className="mr-1 size-3.5" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">Name (A–Z)</SelectItem>
+                  <SelectItem value="balance_desc">Balance (high → low)</SelectItem>
+                  <SelectItem value="balance_asc">Balance (low → high)</SelectItem>
+                  <SelectItem value="recent">Recently added</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={teamRankFilter} onValueChange={setTeamRankFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="All ranks" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All ranks</SelectItem>
-                {RANKS.map((r) => (
-                  <SelectItem key={r} value={r}>{r}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={teamSort} onValueChange={(v) => setTeamSort(v as typeof teamSort)}>
-              <SelectTrigger className="w-[170px]">
-                <ArrowUpDown className="mr-1 size-3.5" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="name">Name (A–Z)</SelectItem>
-                <SelectItem value="balance_desc">Balance (high → low)</SelectItem>
-                <SelectItem value="balance_asc">Balance (low → high)</SelectItem>
-                <SelectItem value="recent">Recently added</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         )}
 
@@ -387,7 +426,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
             </p>
           ) : (() => {
             const q = teamSearch.trim().toLowerCase();
-            const filtered = team
+            const filtered = applySavedView(team, savedView, bankIds)
               .filter((m) => teamRankFilter === "all" || m.rank === teamRankFilter)
               .filter(
                 (m) =>
@@ -509,8 +548,13 @@ export function LeaderView({ profile }: { profile: Profile }) {
       {/* Upkeep schedules summary */}
       {plans.length > 0 && (
         <section className="rounded-2xl border bg-card p-6 shadow-card">
-          <h2 className="text-base font-semibold">Upkeep schedules</h2>
-          <p className="text-sm text-muted-foreground">Recurring stipends to your members.</p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-base font-semibold">Upkeep schedules</h2>
+              <p className="text-sm text-muted-foreground">Recurring stipends to your members.</p>
+            </div>
+            <CsvImportDialog kind="upkeep_plans" leaderId={profile.id} onDone={load} />
+          </div>
           <ul className="mt-4 divide-y rounded-xl border">
             {plans.map((p) => {
               const m = memberById(p.member_id);
@@ -658,11 +702,16 @@ export function LeaderView({ profile }: { profile: Profile }) {
 
       {/* Rank-based upkeep defaults */}
       <MobileCollapsible title="Rank upkeep defaults">
-        <RankUpkeepDefaultsSection
-          leaderId={profile.id}
-          defaults={rankDefaults}
-          onChanged={load}
-        />
+        <div className="space-y-3">
+          <div className="flex justify-end">
+            <CsvImportDialog kind="rank_defaults" leaderId={profile.id} onDone={load} />
+          </div>
+          <RankUpkeepDefaultsSection
+            leaderId={profile.id}
+            defaults={rankDefaults}
+            onChanged={load}
+          />
+        </div>
       </MobileCollapsible>
 
 
@@ -1079,12 +1128,16 @@ function ApproveDialog({
   member,
   memberBalance,
   defaultRate,
+  autoOpen,
+  onAutoOpened,
   onDone,
 }: {
   request: WithdrawalRequest;
   member: Profile | null;
   memberBalance: number;
   defaultRate: number;
+  autoOpen?: boolean;
+  onAutoOpened?: () => void;
   onDone: () => void;
 }) {
   const [bank, setBank] = useState<{ bank_name: string; account_number: string; account_owner_name: string } | null>(null);
@@ -1095,6 +1148,15 @@ function ApproveDialog({
   const [note, setNote] = useState("");
   const [platformFee, setPlatformFee] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // Auto-open when arriving via notification link (?request=<id>)
+  useEffect(() => {
+    if (autoOpen && !open) {
+      setOpen(true);
+      onAutoOpened?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpen]);
 
   const rateNum = Number(rate);
   const drift =

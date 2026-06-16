@@ -796,6 +796,9 @@ export type Database = {
           leader_note: string | null
           member_id: string
           resolved_at: string | null
+          snapshot_currency: string | null
+          snapshot_local_amount: number | null
+          snapshot_rate: number | null
           status: Database["public"]["Enums"]["withdrawal_status"]
         }
         Insert: {
@@ -807,6 +810,9 @@ export type Database = {
           leader_note?: string | null
           member_id: string
           resolved_at?: string | null
+          snapshot_currency?: string | null
+          snapshot_local_amount?: number | null
+          snapshot_rate?: number | null
           status?: Database["public"]["Enums"]["withdrawal_status"]
         }
         Update: {
@@ -818,6 +824,9 @@ export type Database = {
           leader_note?: string | null
           member_id?: string
           resolved_at?: string | null
+          snapshot_currency?: string | null
+          snapshot_local_amount?: number | null
+          snapshot_rate?: number | null
           status?: Database["public"]["Enums"]["withdrawal_status"]
         }
         Relationships: [
@@ -905,6 +914,25 @@ export type Database = {
           whatsapp_number: string
         }[]
       }
+      get_leader_monthly_reconciliation: {
+        Args: { _month_start: string }
+        Returns: {
+          adjustments_usd: number
+          bank_fees_usd: number
+          deposits_usd: number
+          fund_deductions_usd: number
+          office_expense_out_ngn: number
+          office_support_in_ngn: number
+          purse_credits_usd: number
+          purse_debits_usd: number
+          releases_usd: number
+          team_balance_usd: number
+          upkeep_acknowledged_usd: number
+          upkeep_disputed_usd: number
+          upkeep_pending_usd: number
+          withdrawals_usd: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -976,6 +1004,10 @@ export type Database = {
             }
             Returns: undefined
           }
+      reverse_transaction: {
+        Args: { _reason?: string; _txn_id: string }
+        Returns: string
+      }
       run_due_fund_rules: { Args: never; Returns: number }
       run_due_upkeep: { Args: never; Returns: number }
       suspend_member: {

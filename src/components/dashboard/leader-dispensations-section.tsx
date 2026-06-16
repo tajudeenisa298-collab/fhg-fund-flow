@@ -200,6 +200,14 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
                 );
               })
             ) : null}
+            {tab === s && (
+              <ShowMoreButton
+                hasMore={page.hasMore}
+                onClick={page.showMore}
+                remaining={page.total - page.visible}
+                className="rounded-xl border"
+              />
+            )}
           </TabsContent>
         ))}
       </Tabs>

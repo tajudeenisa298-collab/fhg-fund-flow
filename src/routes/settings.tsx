@@ -209,9 +209,43 @@ function SettingsPage() {
               <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-3 text-sm">
                 <ShieldCheck className="size-4 text-success" />
                 <span className="text-muted-foreground">
-                  Account name is verified live with Paystack — no email code needed.
+                  For your security, we'll email a 6-digit code to confirm any bank change.
                 </span>
               </div>
+
+              {otpStage === "awaiting" || otpStage === "verifying" ? (
+                <div className="space-y-2 rounded-lg border bg-card p-4">
+                  <label className="text-sm font-medium" htmlFor="bank-otp">
+                    Enter the 6-digit code sent to {session?.user?.email}
+                  </label>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Input
+                      id="bank-otp"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={6}
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                      placeholder="123456"
+                      className="max-w-[140px] tracking-[0.5em] text-center font-mono text-lg"
+                    />
+                    <Button
+                      onClick={verifyOtpAndSave}
+                      disabled={otpStage === "verifying" || saving || otpCode.length !== 6}
+                    >
+                      {otpStage === "verifying" || saving ? "Verifying…" : "Confirm & save"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={requestOtp}
+                      disabled={otpStage === "verifying"}
+                    >
+                      Resend code
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
 
               <div className="flex justify-end gap-2">
                 <Button
@@ -219,14 +253,23 @@ function SettingsPage() {
                   onClick={() => {
                     setEditing(false);
                     setVerified(null);
+                    setOtpStage("idle");
+                    setOtpCode("");
                   }}
                 >
                   Cancel
                 </Button>
-                <Button onClick={save} disabled={!verified || saving}>
-                  {saving ? "Saving…" : verified ? "Save bank details" : "Verify account first"}
-                </Button>
+                {otpStage === "idle" || otpStage === "sending" ? (
+                  <Button onClick={requestOtp} disabled={!verified || otpStage === "sending"}>
+                    {otpStage === "sending"
+                      ? "Sending code…"
+                      : verified
+                        ? "Send verification code"
+                        : "Verify account first"}
+                  </Button>
+                ) : null}
               </div>
+
             </div>
           )}
         </section>

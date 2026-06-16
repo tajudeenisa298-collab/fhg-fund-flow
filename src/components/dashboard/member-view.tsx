@@ -365,6 +365,29 @@ export function MemberView({ profile }: { profile: Profile }) {
                     <XIcon className="mr-1 size-3" /> Cancel request
                   </Button>
                 )}
+                {r.status === "approved" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-1 h-7 px-2 text-xs"
+                    onClick={() =>
+                      printWithdrawalReceipt({
+                        id: r.id,
+                        amount_usd: Number(r.amount_usd),
+                        description: r.description,
+                        member_name: profile.full_name,
+                        resolved_at: r.resolved_at,
+                        created_at: r.created_at,
+                        snapshot_currency: r.snapshot_currency,
+                        snapshot_local_amount: r.snapshot_local_amount,
+                        snapshot_rate: r.snapshot_rate,
+                        leader_note: r.leader_note,
+                      })
+                    }
+                  >
+                    <Printer className="mr-1 size-3" /> Print receipt
+                  </Button>
+                )}
               </div>
               <StatusPill status={r.status} cancelled={cancelled} />
             </div>

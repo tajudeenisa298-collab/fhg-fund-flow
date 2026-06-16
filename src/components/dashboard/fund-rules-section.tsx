@@ -95,6 +95,7 @@ export function FundRulesSection({ leaderId }: { leaderId: string }) {
           <h2 className="text-base font-semibold">Team fund rules</h2>
           <p className="text-sm text-muted-foreground">
             Office support, TV fund, etc. — choose per-USD or fixed deductions.
+            Override any rule for a specific member to handle different branch costs.
           </p>
         </div>
         <Button onClick={() => setCreating(true)}>

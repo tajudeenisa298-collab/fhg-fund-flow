@@ -81,7 +81,7 @@ export function MemberStatusMenu({
     const { error } = await supabase.rpc("suspend_member", {
       _member_id: member.id,
       _until: until,
-      _reason: reason || null,
+      _reason: reason || undefined,
     });
     setBusy(false);
     if (error) return toast.error(error.message);
@@ -94,7 +94,7 @@ export function MemberStatusMenu({
     setBusy(true);
     const { error } = await supabase.rpc("terminate_member", {
       _member_id: member.id,
-      _reason: reason || null,
+      _reason: reason || undefined,
     });
     setBusy(false);
     if (error) return toast.error(error.message);

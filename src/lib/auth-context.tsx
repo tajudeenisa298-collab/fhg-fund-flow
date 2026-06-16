@@ -72,6 +72,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
     const prof = (p as Profile) ?? null;
     setProfile(prof);
+    // Cache the balance for offline / next-paint reads (PWA "last-known balance")
+    if (prof) {
+      import("@/lib/pwa").then(({ cacheBalance }) => cacheBalance(prof.id, Number(prof.balance_usd) || 0));
+    }
     const list = ((r as { role: AppRole }[]) ?? []).map((x) => x.role);
     setRoles(list);
     if (s?.usd_to_ngn) setNgnRate(Number(s.usd_to_ngn));

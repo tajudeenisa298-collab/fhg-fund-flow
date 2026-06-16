@@ -14,6 +14,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import "@/lib/i18n";
 import { initObservability } from "@/lib/observability";
+import { setupPwa } from "@/lib/pwa";
 import { useEffect } from "react";
 
 function NotFoundComponent() {

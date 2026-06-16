@@ -16,6 +16,7 @@ export interface Profile {
   gender: "male" | "female" | "other" | "prefer_not_to_say" | null;
   whatsapp_number: string | null;
   payout_method: "bank_transfer" | "neolife_pv";
+  avatar_url: string | null;
 }
 
 interface AuthContextValue {

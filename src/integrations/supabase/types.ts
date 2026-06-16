@@ -294,6 +294,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           balance_usd: number
           can_handle_funds: boolean
           created_at: string
@@ -309,6 +310,7 @@ export type Database = {
           whatsapp_number: string | null
         }
         Insert: {
+          avatar_url?: string | null
           balance_usd?: number
           can_handle_funds?: boolean
           created_at?: string
@@ -324,6 +326,7 @@ export type Database = {
           whatsapp_number?: string | null
         }
         Update: {
+          avatar_url?: string | null
           balance_usd?: number
           can_handle_funds?: boolean
           created_at?: string

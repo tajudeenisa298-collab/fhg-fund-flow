@@ -322,6 +322,42 @@ export function MemberDetailDialog({
           </div>
         </ScrollArea>
       </DialogContent>
+
+      <AlertDialog open={!!reverseTarget} onOpenChange={(o) => !o && setReverseTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reverse this transaction?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {reverseTarget && (
+                <>
+                  This will create a paired correcting entry that undoes the{" "}
+                  <span className="font-medium capitalize">
+                    {reverseTarget.type.replace("_", " ")}
+                  </span>{" "}
+                  of <span className="font-mono">${Number(reverseTarget.amount_usd).toFixed(2)}</span>
+                  . The original record stays in the history for audit.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="reverse-reason">Reason (optional)</Label>
+            <Textarea
+              id="reverse-reason"
+              rows={3}
+              value={reverseReason}
+              onChange={(e) => setReverseReason(e.target.value)}
+              placeholder="Why is this being reversed?"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={reversing}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={doReverse} disabled={reversing}>
+              {reversing ? "Reversing…" : "Reverse"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

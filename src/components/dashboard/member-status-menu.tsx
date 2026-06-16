@@ -58,7 +58,12 @@ export function MemberStatusMenu({
   const [durKey, setDurKey] = useState("7");
   const [customDays, setCustomDays] = useState(7);
   const [reason, setReason] = useState("");
+  const [confirmName, setConfirmName] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const expectedName = member.full_name.trim();
+  const nameMatches =
+    confirmName.trim().toLowerCase() === expectedName.toLowerCase();
 
   const isSuspended =
     !!member.suspended_until && new Date(member.suspended_until) > new Date();

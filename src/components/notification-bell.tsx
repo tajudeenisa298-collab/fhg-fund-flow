@@ -58,24 +58,35 @@ export function NotificationBell() {
 
   const markAll = async () => {
     if (!userId) return;
-    await supabase
+    const now = new Date().toISOString();
+    const prev = items;
+    // optimistic: flip everything to read locally
+    setItems((cur) => cur.map((n) => (n.read_at ? n : { ...n, read_at: now })));
+    const { error } = await supabase
       .from("notifications")
-      .update({ read_at: new Date().toISOString() })
+      .update({ read_at: now })
       .is("read_at", null)
       .eq("user_id", userId);
-    load();
+    if (error) {
+      setItems(prev);
+      // surface failure quietly — realtime will reconcile if the write actually landed
+      console.error("mark all read failed", error);
+    }
   };
 
   const click = async (n: Notification) => {
     if (!n.read_at) {
-      await supabase
+      const now = new Date().toISOString();
+      const prev = items;
+      setItems((cur) => cur.map((x) => (x.id === n.id ? { ...x, read_at: now } : x)));
+      const { error } = await supabase
         .from("notifications")
-        .update({ read_at: new Date().toISOString() })
+        .update({ read_at: now })
         .eq("id", n.id);
+      if (error) setItems(prev);
     }
     setOpen(false);
     if (n.link) nav({ to: n.link });
-    load();
   };
 
   return (

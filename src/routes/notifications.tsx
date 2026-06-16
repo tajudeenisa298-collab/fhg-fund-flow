@@ -61,32 +61,41 @@ function NotificationsPage() {
   const markAll = async () => {
     if (!userId || unread.length === 0) return;
     setBusy(true);
-    await supabase
+    const now = new Date().toISOString();
+    const prev = items;
+    setItems((cur) => cur.map((n) => (n.read_at ? n : { ...n, read_at: now })));
+    const { error } = await supabase
       .from("notifications")
-      .update({ read_at: new Date().toISOString() })
+      .update({ read_at: now })
       .is("read_at", null)
       .eq("user_id", userId);
+    if (error) setItems(prev);
     setBusy(false);
-    load();
   };
 
   const toggleRead = async (n: Notification) => {
-    await supabase
+    const next = n.read_at ? null : new Date().toISOString();
+    const prev = items;
+    setItems((cur) => cur.map((x) => (x.id === n.id ? { ...x, read_at: next } : x)));
+    const { error } = await supabase
       .from("notifications")
-      .update({ read_at: n.read_at ? null : new Date().toISOString() })
+      .update({ read_at: next })
       .eq("id", n.id);
-    load();
+    if (error) setItems(prev);
   };
 
   const open = async (n: Notification) => {
     if (!n.read_at) {
-      await supabase
+      const now = new Date().toISOString();
+      const prev = items;
+      setItems((cur) => cur.map((x) => (x.id === n.id ? { ...x, read_at: now } : x)));
+      const { error } = await supabase
         .from("notifications")
-        .update({ read_at: new Date().toISOString() })
+        .update({ read_at: now })
         .eq("id", n.id);
+      if (error) setItems(prev);
     }
     if (n.link) nav({ to: n.link });
-    else load();
   };
 
   return (

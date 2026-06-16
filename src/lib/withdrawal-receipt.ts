@@ -24,7 +24,7 @@ export interface ReceiptData {
 }
 
 /** Open a printable receipt for an approved withdrawal in a new window. */
-export function printWithdrawalReceipt(r: ReceiptData) {
+export async function printWithdrawalReceipt(r: ReceiptData) {
   const localLine =
     r.snapshot_currency && r.snapshot_local_amount && r.snapshot_rate
       ? `${r.snapshot_currency} ${r.snapshot_local_amount.toLocaleString()} @ ${r.snapshot_rate}`

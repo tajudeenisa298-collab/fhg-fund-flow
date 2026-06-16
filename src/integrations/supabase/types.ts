@@ -81,20 +81,35 @@ export type Database = {
       }
       app_settings: {
         Row: {
+          deposit_reversal_window_hours: number
+          dual_approval_threshold_usd: number
           fx_rates: Json
           id: number
+          member_daily_upkeep_cap_usd: number
+          member_daily_withdrawal_cap_usd: number
+          member_weekly_withdrawal_cap_usd: number
           updated_at: string
           usd_to_ngn: number
         }
         Insert: {
+          deposit_reversal_window_hours?: number
+          dual_approval_threshold_usd?: number
           fx_rates?: Json
           id?: number
+          member_daily_upkeep_cap_usd?: number
+          member_daily_withdrawal_cap_usd?: number
+          member_weekly_withdrawal_cap_usd?: number
           updated_at?: string
           usd_to_ngn?: number
         }
         Update: {
+          deposit_reversal_window_hours?: number
+          dual_approval_threshold_usd?: number
           fx_rates?: Json
           id?: number
+          member_daily_upkeep_cap_usd?: number
+          member_daily_withdrawal_cap_usd?: number
+          member_weekly_withdrawal_cap_usd?: number
           updated_at?: string
           usd_to_ngn?: number
         }
@@ -729,7 +744,9 @@ export type Database = {
           member_id: string
           note: string | null
           parent_txn_id: string | null
+          receipt_sha256: string | null
           request_id: string | null
+          reversal_window_until: string | null
           type: Database["public"]["Enums"]["txn_type"]
         }
         Insert: {
@@ -743,7 +760,9 @@ export type Database = {
           member_id: string
           note?: string | null
           parent_txn_id?: string | null
+          receipt_sha256?: string | null
           request_id?: string | null
+          reversal_window_until?: string | null
           type: Database["public"]["Enums"]["txn_type"]
         }
         Update: {
@@ -757,7 +776,9 @@ export type Database = {
           member_id?: string
           note?: string | null
           parent_txn_id?: string | null
+          receipt_sha256?: string | null
           request_id?: string | null
+          reversal_window_until?: string | null
           type?: Database["public"]["Enums"]["txn_type"]
         }
         Relationships: [
@@ -867,6 +888,45 @@ export type Database = {
           },
         ]
       }
+      upkeep_dispute_messages: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          dispensation_id: string
+          id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          dispensation_id: string
+          id?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          dispensation_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "upkeep_dispute_messages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "upkeep_dispute_messages_dispensation_id_fkey"
+            columns: ["dispensation_id"]
+            isOneToOne: false
+            referencedRelation: "upkeep_dispensations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       upkeep_plans: {
         Row: {
           active: boolean
@@ -933,11 +993,16 @@ export type Database = {
           cancelled_by_member: boolean
           created_at: string
           description: string
+          first_approver_at: string | null
+          first_approver_id: string | null
           id: string
           leader_id: string
           leader_note: string | null
           member_id: string
+          receipt_sha256: string | null
           resolved_at: string | null
+          second_approver_at: string | null
+          second_approver_id: string | null
           snapshot_currency: string | null
           snapshot_local_amount: number | null
           snapshot_rate: number | null
@@ -948,11 +1013,16 @@ export type Database = {
           cancelled_by_member?: boolean
           created_at?: string
           description: string
+          first_approver_at?: string | null
+          first_approver_id?: string | null
           id?: string
           leader_id: string
           leader_note?: string | null
           member_id: string
+          receipt_sha256?: string | null
           resolved_at?: string | null
+          second_approver_at?: string | null
+          second_approver_id?: string | null
           snapshot_currency?: string | null
           snapshot_local_amount?: number | null
           snapshot_rate?: number | null
@@ -963,17 +1033,29 @@ export type Database = {
           cancelled_by_member?: boolean
           created_at?: string
           description?: string
+          first_approver_at?: string | null
+          first_approver_id?: string | null
           id?: string
           leader_id?: string
           leader_note?: string | null
           member_id?: string
+          receipt_sha256?: string | null
           resolved_at?: string | null
+          second_approver_at?: string | null
+          second_approver_id?: string | null
           snapshot_currency?: string | null
           snapshot_local_amount?: number | null
           snapshot_rate?: number | null
           status?: Database["public"]["Enums"]["withdrawal_status"]
         }
         Relationships: [
+          {
+            foreignKeyName: "withdrawal_requests_first_approver_id_fkey"
+            columns: ["first_approver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "withdrawal_requests_leader_id_fkey"
             columns: ["leader_id"]
@@ -984,6 +1066,13 @@ export type Database = {
           {
             foreignKeyName: "withdrawal_requests_member_id_fkey"
             columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withdrawal_requests_second_approver_id_fkey"
+            columns: ["second_approver_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1174,6 +1263,14 @@ export type Database = {
       }
       run_due_fund_rules: { Args: never; Returns: number }
       run_due_upkeep: { Args: never; Returns: number }
+      set_transaction_receipt_hash: {
+        Args: { _sha256: string; _txn_id: string }
+        Returns: undefined
+      }
+      set_withdrawal_receipt_hash: {
+        Args: { _id: string; _sha256: string }
+        Returns: undefined
+      }
       suspend_member: {
         Args: { _member_id: string; _reason?: string; _until: string }
         Returns: undefined
@@ -1182,6 +1279,7 @@ export type Database = {
         Args: { _member_id: string; _reason?: string }
         Returns: undefined
       }
+      undo_recent_deposit: { Args: { _txn_id: string }; Returns: string }
       validate_invite_code: {
         Args: { _code: string }
         Returns: {
@@ -1238,7 +1336,11 @@ export type Database = {
         | "biweekly"
         | "monthly"
         | "custom_days"
-      withdrawal_status: "pending" | "approved" | "declined"
+      withdrawal_status:
+        | "pending"
+        | "approved"
+        | "declined"
+        | "awaiting_second_approval"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1419,7 +1521,12 @@ export const Constants = {
         "monthly",
         "custom_days",
       ],
-      withdrawal_status: ["pending", "approved", "declined"],
+      withdrawal_status: [
+        "pending",
+        "approved",
+        "declined",
+        "awaiting_second_approval",
+      ],
     },
   },
 } as const

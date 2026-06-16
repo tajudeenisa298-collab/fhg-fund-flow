@@ -161,6 +161,7 @@ export function FundRulesSection({ leaderId }: { leaderId: string }) {
           }
         }}
         leaderId={leaderId}
+        team={team}
         existing={editing}
         onDone={() => {
           setCreating(false);

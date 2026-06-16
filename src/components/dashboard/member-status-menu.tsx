@@ -77,6 +77,7 @@ export function MemberStatusMenu({
     setReason("");
     setDurKey("7");
     setCustomDays(7);
+    setConfirmName("");
   };
 
   const submitSuspend = async () => {

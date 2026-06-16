@@ -244,7 +244,9 @@ export function MemberView({ profile }: { profile: Profile }) {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
 
       {(!profile.leader_id || bankNeedsAttention) && (
         <div className="space-y-2">

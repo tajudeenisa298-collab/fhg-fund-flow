@@ -81,7 +81,8 @@ export async function printWithdrawalReceipt(r: ReceiptData) {
     <div class="row"><span class="label">Local amount</span><span>${esc(localLine)}</span></div>
     <div class="row"><span class="label">Reason</span><span style="max-width:60%;text-align:right;">${esc(r.description ?? "—")}</span></div>
     ${r.leader_note ? `<div class="row"><span class="label">Leader note</span><span style="max-width:60%;text-align:right;font-style:italic;">${esc(r.leader_note)}</span></div>` : ""}
-    <p class="footer">Generated ${esc(new Date().toLocaleString())}</p>
+    <div class="row"><span class="label">Receipt hash (sha256)</span><span style="font-family:ui-monospace,monospace;font-size:10px;max-width:60%;text-align:right;word-break:break-all;">__SHA256__</span></div>
+    <p class="footer">Generated ${esc(new Date().toLocaleString())} · Verify hash against the audit log</p>
     <div class="noprint" style="text-align:center;margin-top:24px;">
       <button class="btn" onclick="window.print()">Print / Save as PDF</button>
     </div>
@@ -89,8 +90,16 @@ export async function printWithdrawalReceipt(r: ReceiptData) {
   <script>setTimeout(() => window.print(), 350);</script>
 </body>
 </html>`;
+  // Compute deterministic hash of receipt body (without the hash placeholder itself)
+  const hashable = html.replace("__SHA256__", "");
+  const hash = await sha256Hex(hashable);
+  const finalHtml = html.replace("__SHA256__", hash);
+
+  // Persist hash on the withdrawal row (idempotent; one-shot per receipt)
+  void supabase.rpc("set_withdrawal_receipt_hash" as never, { _id: r.id, _sha256: hash } as never);
+
   const w = window.open("", "_blank", "noopener,noreferrer,width=780,height=900");
   if (!w) return;
-  w.document.write(html);
+  w.document.write(finalHtml);
   w.document.close();
 }

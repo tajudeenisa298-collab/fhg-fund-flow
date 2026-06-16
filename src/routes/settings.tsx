@@ -138,6 +138,25 @@ function SettingsPage() {
     await refresh();
   };
 
+  const savePrefs = async () => {
+    if (!session?.user) return;
+    const trimmed = whatsapp.trim();
+    if (trimmed && !/^\+?[0-9]{7,15}$/.test(trimmed)) {
+      return toast.error("WhatsApp must be 7–15 digits, optional leading +");
+    }
+    setSavingPrefs(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        whatsapp_number: trimmed || null,
+        payout_method: payoutMethod,
+      })
+      .eq("id", session.user.id);
+    setSavingPrefs(false);
+    if (error) return toast.error(error.message);
+    toast.success("Preferences saved");
+    await refresh();
+  };
 
 
   if (loading || !profile) {

@@ -236,6 +236,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
                 </div>
                 <ApproveDialog
                   request={r}
+                  member={m ?? null}
                   memberBalance={Number(m?.balance_usd ?? 0)}
                   defaultRate={ngnRate}
                   onDone={async () => {
@@ -248,6 +249,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
           })}
         </div>
       </section>
+
 
       {/* Resolved history */}
       {requests.some((r) => r.status !== "pending") && (

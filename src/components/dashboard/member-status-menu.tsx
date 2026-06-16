@@ -75,14 +75,22 @@ export function MemberStatusMenu({
   };
 
   const submitSuspend = async () => {
-    const days =
-      durKey === "custom" ? Math.max(1, Math.floor(customDays)) : Number(durKey);
-    if (!Number.isFinite(days) || days <= 0) {
-      toast.error("Enter a valid number of days");
-      return;
+    let until: string;
+    let label: string;
+    if (durKey === "indefinite") {
+      until = INDEFINITE_UNTIL;
+      label = "indefinitely";
+    } else {
+      const days =
+        durKey === "custom" ? Math.max(1, Math.floor(customDays)) : Number(durKey);
+      if (!Number.isFinite(days) || days <= 0) {
+        toast.error("Enter a valid number of days");
+        return;
+      }
+      until = new Date(Date.now() + days * 86400 * 1000).toISOString();
+      label = `for ${days} day(s)`;
     }
     setBusy(true);
-    const until = new Date(Date.now() + days * 86400 * 1000).toISOString();
     const { error } = await supabase.rpc("suspend_member", {
       _member_id: member.id,
       _until: until,
@@ -90,7 +98,7 @@ export function MemberStatusMenu({
     });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success(`${member.full_name} suspended for ${days} day(s)`);
+    toast.success(`${member.full_name} suspended ${label}`);
     close();
     onDone();
   };

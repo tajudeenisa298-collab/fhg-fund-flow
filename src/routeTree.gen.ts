@@ -18,6 +18,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DevComponentsRouteImport } from './routes/dev.components'
 import { Route as ApiPublicHooksRunUpkeepRouteImport } from './routes/api/public/hooks/run-upkeep'
 import { Route as ApiPublicHooksFinalizeTerminationsRouteImport } from './routes/api/public/hooks/finalize-terminations'
 
@@ -66,6 +67,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevComponentsRoute = DevComponentsRouteImport.update({
+  id: '/dev/components',
+  path: '/dev/components',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksRunUpkeepRoute = ApiPublicHooksRunUpkeepRouteImport.update({
   id: '/api/public/hooks/run-upkeep',
   path: '/api/public/hooks/run-upkeep',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/dev/components': typeof DevComponentsRoute
   '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
   '/api/public/hooks/run-upkeep': typeof ApiPublicHooksRunUpkeepRoute
 }
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/dev/components': typeof DevComponentsRoute
   '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
   '/api/public/hooks/run-upkeep': typeof ApiPublicHooksRunUpkeepRoute
 }
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/dev/components': typeof DevComponentsRoute
   '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
   '/api/public/hooks/run-upkeep': typeof ApiPublicHooksRunUpkeepRoute
 }
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/dev/components'
     | '/api/public/hooks/finalize-terminations'
     | '/api/public/hooks/run-upkeep'
   fileRoutesByTo: FileRoutesByTo
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/dev/components'
     | '/api/public/hooks/finalize-terminations'
     | '/api/public/hooks/run-upkeep'
   id:
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/dev/components'
     | '/api/public/hooks/finalize-terminations'
     | '/api/public/hooks/run-upkeep'
   fileRoutesById: FileRoutesById
@@ -170,6 +182,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
+  DevComponentsRoute: typeof DevComponentsRoute
   ApiPublicHooksFinalizeTerminationsRoute: typeof ApiPublicHooksFinalizeTerminationsRoute
   ApiPublicHooksRunUpkeepRoute: typeof ApiPublicHooksRunUpkeepRoute
 }
@@ -239,6 +252,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/components': {
+      id: '/dev/components'
+      path: '/dev/components'
+      fullPath: '/dev/components'
+      preLoaderRoute: typeof DevComponentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/run-upkeep': {
       id: '/api/public/hooks/run-upkeep'
       path: '/api/public/hooks/run-upkeep'
@@ -266,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
+  DevComponentsRoute: DevComponentsRoute,
   ApiPublicHooksFinalizeTerminationsRoute:
     ApiPublicHooksFinalizeTerminationsRoute,
   ApiPublicHooksRunUpkeepRoute: ApiPublicHooksRunUpkeepRoute,

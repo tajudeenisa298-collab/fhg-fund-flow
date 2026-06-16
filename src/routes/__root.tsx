@@ -12,6 +12,9 @@ import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import "@/lib/i18n";
+import { initObservability } from "@/lib/observability";
+import { useEffect } from "react";
 
 function NotFoundComponent() {
   return (
@@ -116,6 +119,8 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => { initObservability(); }, []);
+
 
   return (
     <QueryClientProvider client={queryClient}>

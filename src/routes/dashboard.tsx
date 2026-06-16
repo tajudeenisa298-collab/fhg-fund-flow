@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Wallet, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth, isAccountBlocked } from "@/lib/auth-context";
 import { MemberView } from "@/components/dashboard/member-view";
 import { LeaderView } from "@/components/dashboard/leader-view";

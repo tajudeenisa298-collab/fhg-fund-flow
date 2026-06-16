@@ -390,10 +390,12 @@ export function LeaderView({ profile }: { profile: Profile }) {
                       size="icon"
                       title={p.active ? "Pause" : "Resume"}
                       onClick={async () => {
-                        await supabase
+                        const { error } = await supabase
                           .from("upkeep_plans")
                           .update({ active: !p.active })
                           .eq("id", p.id);
+                        if (error) return toast.error(error.message);
+                        toast.success(p.active ? "Plan paused" : "Plan resumed");
                         load();
                       }}
                     >
@@ -404,7 +406,9 @@ export function LeaderView({ profile }: { profile: Profile }) {
                       size="icon"
                       title="Delete"
                       onClick={async () => {
-                        await supabase.from("upkeep_plans").delete().eq("id", p.id);
+                        const { error } = await supabase.from("upkeep_plans").delete().eq("id", p.id);
+                        if (error) return toast.error(error.message);
+                        toast.success("Plan deleted");
                         load();
                       }}
                     >

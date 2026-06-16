@@ -40,7 +40,12 @@ const DURATIONS: { value: string; label: string; days: number }[] = [
   { value: "30", label: "30 days", days: 30 },
   { value: "90", label: "90 days", days: 90 },
   { value: "custom", label: "Custom…", days: 0 },
+  { value: "indefinite", label: "Indefinite (until pardoned)", days: 0 },
 ];
+
+// Sentinel for indefinite suspension — far enough in the future that we
+// treat anything past it as "no end date set".
+const INDEFINITE_UNTIL = "9999-12-31T00:00:00.000Z";
 
 export function MemberStatusMenu({
   member,
@@ -70,14 +75,22 @@ export function MemberStatusMenu({
   };
 
   const submitSuspend = async () => {
-    const days =
-      durKey === "custom" ? Math.max(1, Math.floor(customDays)) : Number(durKey);
-    if (!Number.isFinite(days) || days <= 0) {
-      toast.error("Enter a valid number of days");
-      return;
+    let until: string;
+    let label: string;
+    if (durKey === "indefinite") {
+      until = INDEFINITE_UNTIL;
+      label = "indefinitely";
+    } else {
+      const days =
+        durKey === "custom" ? Math.max(1, Math.floor(customDays)) : Number(durKey);
+      if (!Number.isFinite(days) || days <= 0) {
+        toast.error("Enter a valid number of days");
+        return;
+      }
+      until = new Date(Date.now() + days * 86400 * 1000).toISOString();
+      label = `for ${days} day(s)`;
     }
     setBusy(true);
-    const until = new Date(Date.now() + days * 86400 * 1000).toISOString();
     const { error } = await supabase.rpc("suspend_member", {
       _member_id: member.id,
       _until: until,
@@ -85,7 +98,7 @@ export function MemberStatusMenu({
     });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success(`${member.full_name} suspended for ${days} day(s)`);
+    toast.success(`${member.full_name} suspended ${label}`);
     close();
     onDone();
   };
@@ -281,7 +294,11 @@ export function MemberStatusBadge({ member }: { member: Profile }) {
       if (daysLeft <= 14) tone = "bg-warning/15 text-warning";
     }
   } else {
-    label = `Suspended · until ${new Date(member.suspended_until!).toLocaleDateString()}`;
+    const until = new Date(member.suspended_until!);
+    const indefinite = until.getUTCFullYear() >= 9000;
+    label = indefinite
+      ? "Suspended · indefinite"
+      : `Suspended · until ${until.toLocaleDateString()}`;
     tone = "bg-warning/15 text-warning";
   }
   return (

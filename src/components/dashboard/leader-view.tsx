@@ -67,6 +67,7 @@ import { ResourceLibrarySection } from "@/components/dashboard/resource-library-
 import { MemberStatusMenu, MemberStatusBadge } from "@/components/dashboard/member-status-menu";
 import { MemberStatusAuditSection } from "@/components/dashboard/member-status-audit-section";
 import { CronHealthSection } from "@/components/dashboard/cron-health-section";
+import { MobileCollapsible } from "@/components/dashboard/mobile-collapsible";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 
 
@@ -468,55 +469,70 @@ export function LeaderView({ profile }: { profile: Profile }) {
       </section>
 
       {/* Office support ledger */}
-      <OfficeSection leaderId={profile.id} />
+      <MobileCollapsible title="Office support ledger">
+        <OfficeSection leaderId={profile.id} />
+      </MobileCollapsible>
 
       {/* Team leader's personal purse */}
-      <LeaderPurseSection leaderId={profile.id} />
+      <MobileCollapsible title="Personal purse">
+        <LeaderPurseSection leaderId={profile.id} />
+      </MobileCollapsible>
 
       {/* Upkeep dispensations tracker */}
-      <LeaderDispensationsSection leaderId={profile.id} />
+      <MobileCollapsible title="Upkeep dispensations" defaultOpen>
+        <LeaderDispensationsSection leaderId={profile.id} />
+      </MobileCollapsible>
 
       {/* Suspend / terminate / pardon audit log */}
-      <MemberStatusAuditSection
-        leaderId={profile.id}
-        memberNames={Object.fromEntries(team.map((m) => [m.id, m.full_name]))}
-      />
+      <MobileCollapsible title="Member status history">
+        <MemberStatusAuditSection
+          leaderId={profile.id}
+          memberNames={Object.fromEntries(team.map((m) => [m.id, m.full_name]))}
+        />
+      </MobileCollapsible>
 
       {/* Scheduled-job health */}
-      <CronHealthSection />
-
-
-
+      <MobileCollapsible title="Scheduled jobs">
+        <CronHealthSection />
+      </MobileCollapsible>
 
       {/* Broadcast announcements */}
-      <AnnouncementsSection leaderId={profile.id} canManage />
+      <MobileCollapsible title="Announcements">
+        <AnnouncementsSection leaderId={profile.id} canManage />
+      </MobileCollapsible>
 
       {/* Resource library */}
-      <ResourceLibrarySection leaderId={profile.id} canManage />
-
-
-
+      <MobileCollapsible title="Resource library">
+        <ResourceLibrarySection leaderId={profile.id} canManage />
+      </MobileCollapsible>
 
       {/* Cross-team oversight: visible only when there are sub-leaders in the downline */}
       <OrganisationSection leaderId={profile.id} />
 
       {/* Team NeoLife PV log */}
-      <PvLogSection ownerId={profile.id} scope="team" />
-
+      <MobileCollapsible title="Team PV log">
+        <PvLogSection ownerId={profile.id} scope="team" />
+      </MobileCollapsible>
 
       {/* Pyramid downline */}
-      <DownlineSection rootId={profile.id} />
-
+      <MobileCollapsible title="Downline tree">
+        <DownlineSection rootId={profile.id} />
+      </MobileCollapsible>
 
       {/* Flexible fund rules */}
-      <FundRulesSection leaderId={profile.id} />
+      <MobileCollapsible title="Fund rules">
+        <FundRulesSection leaderId={profile.id} />
+      </MobileCollapsible>
 
       {/* Rank-based upkeep defaults */}
-      <RankUpkeepDefaultsSection
-        leaderId={profile.id}
-        defaults={rankDefaults}
-        onChanged={load}
-      />
+      <MobileCollapsible title="Rank upkeep defaults">
+        <RankUpkeepDefaultsSection
+          leaderId={profile.id}
+          defaults={rankDefaults}
+          onChanged={load}
+        />
+      </MobileCollapsible>
+
 
       <MemberDetailDialog
         member={detailMember}

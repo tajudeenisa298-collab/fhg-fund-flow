@@ -1,7 +1,14 @@
-import { useEffect, useState } from "react";
-import { ShieldAlert, Ban, CheckCircle2, Lock } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ShieldAlert, Ban, CheckCircle2, Lock, History } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtDate } from "@/lib/format";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Action = "suspended" | "terminated" | "pardoned" | "finalized";
 interface LogRow {
@@ -27,6 +34,14 @@ const TONE: Record<Action, string> = {
   finalized: "text-muted-foreground",
 };
 
+const ACTIONS: { value: Action | "all"; label: string }[] = [
+  { value: "all", label: "All actions" },
+  { value: "suspended", label: "Suspensions" },
+  { value: "terminated", label: "Terminations" },
+  { value: "pardoned", label: "Pardons" },
+  { value: "finalized", label: "Finalized" },
+];
+
 export function MemberStatusAuditSection({
   leaderId,
   memberNames,
@@ -36,6 +51,8 @@ export function MemberStatusAuditSection({
 }) {
   const [rows, setRows] = useState<LogRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [memberFilter, setMemberFilter] = useState<string>("all");
+  const [actionFilter, setActionFilter] = useState<Action | "all">("all");
 
   useEffect(() => {
     let cancelled = false;
@@ -55,7 +72,7 @@ export function MemberStatusAuditSection({
         .select("id,member_id,action,reason,effective_until,created_at")
         .eq("leader_id", leaderId)
         .order("created_at", { ascending: false })
-        .limit(25);
+        .limit(100);
       if (!cancelled) {
         setRows(data ?? []);
         setLoading(false);
@@ -66,24 +83,85 @@ export function MemberStatusAuditSection({
     };
   }, [leaderId]);
 
+  const memberOptions = useMemo(() => {
+    const ids = Array.from(new Set(rows.map((r) => r.member_id)));
+    return ids.map((id) => ({ id, name: memberNames[id] ?? "Member" }));
+  }, [rows, memberNames]);
+
+  const filtered = useMemo(
+    () =>
+      rows.filter(
+        (r) =>
+          (memberFilter === "all" || r.member_id === memberFilter) &&
+          (actionFilter === "all" || r.action === actionFilter),
+      ),
+    [rows, memberFilter, actionFilter],
+  );
+
   return (
     <section className="rounded-2xl border bg-card p-5 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">Member status history</h2>
           <p className="text-xs text-muted-foreground">
             Audit trail of suspensions, terminations, and pardons.
           </p>
         </div>
+        {rows.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            <Select value={actionFilter} onValueChange={(v) => setActionFilter(v as Action | "all")}>
+              <SelectTrigger className="h-8 w-[140px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ACTIONS.map((a) => (
+                  <SelectItem key={a.value} value={a.value}>
+                    {a.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={memberFilter} onValueChange={setMemberFilter}>
+              <SelectTrigger className="h-8 w-[160px] text-xs">
+                <SelectValue placeholder="All members" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All members</SelectItem>
+                {memberOptions.map((m) => (
+                  <SelectItem key={m.id} value={m.id}>
+                    {m.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
+
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <p className="rounded-xl border border-dashed bg-muted/30 p-6 text-center text-sm text-muted-foreground">
+          Loading…
+        </p>
       ) : rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No status changes recorded yet.</p>
+        <div className="rounded-xl border border-dashed bg-muted/30 p-8 text-center">
+          <History className="mx-auto size-6 text-muted-foreground" />
+          <p className="mt-2 text-sm font-medium">No status changes yet</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Suspensions, terminations, and pardons will appear here.
+          </p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <p className="rounded-xl border border-dashed bg-muted/30 p-6 text-center text-sm text-muted-foreground">
+          No entries match the current filter.
+        </p>
       ) : (
         <ul className="divide-y">
-          {rows.map((r) => {
+          {filtered.map((r) => {
             const Icon = ICON[r.action];
+            const indefinite =
+              r.action === "suspended" &&
+              r.effective_until &&
+              new Date(r.effective_until).getUTCFullYear() >= 9000;
             return (
               <li key={r.id} className="flex items-start gap-3 py-3">
                 <Icon className={`mt-0.5 size-4 shrink-0 ${TONE[r.action]}`} />
@@ -95,7 +173,9 @@ export function MemberStatusAuditSection({
                     <span className="capitalize text-muted-foreground">{r.action}</span>
                     {r.effective_until && (
                       <span className="text-muted-foreground">
-                        {" "}· until {fmtDate(r.effective_until)}
+                        {indefinite
+                          ? " · indefinite"
+                          : ` · until ${fmtDate(r.effective_until)}`}
                       </span>
                     )}
                   </p>

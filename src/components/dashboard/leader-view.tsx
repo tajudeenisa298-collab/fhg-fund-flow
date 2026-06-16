@@ -447,8 +447,12 @@ export function LeaderView({ profile }: { profile: Profile }) {
       {/* Team leader's personal purse */}
       <LeaderPurseSection leaderId={profile.id} />
 
+      {/* Cross-team oversight: visible only when there are sub-leaders in the downline */}
+      <OrganisationSection leaderId={profile.id} />
+
       {/* Pyramid downline */}
       <DownlineSection rootId={profile.id} />
+
 
       {/* Flexible fund rules */}
       <FundRulesSection leaderId={profile.id} />

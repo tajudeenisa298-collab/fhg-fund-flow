@@ -39,8 +39,7 @@ export function OnboardingChecklist({ profile }: { profile: Profile }) {
       .then(({ data }) => setHasBank(!!data));
   }, [profile.id]);
 
-  const isNew = (Date.now() - new Date(profile.created_at).getTime()) / 86400_000 < 14;
-  if (dismissed || !isNew) return null;
+  if (dismissed) return null;
 
   const steps: Step[] = [
     {

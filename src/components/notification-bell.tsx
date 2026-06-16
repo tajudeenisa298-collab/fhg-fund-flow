@@ -133,6 +133,19 @@ export function NotificationBell() {
             </ul>
           )}
         </ScrollArea>
+        <div className="border-t px-3 py-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-full justify-center text-xs"
+            onClick={() => {
+              setOpen(false);
+              nav({ to: "/notifications" });
+            }}
+          >
+            View all notifications
+          </Button>
+        </div>
       </PopoverContent>
     </Popover>
   );

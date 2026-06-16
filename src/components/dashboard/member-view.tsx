@@ -419,10 +419,15 @@ export function MemberView({ profile }: { profile: Profile }) {
 
 
       <section className="rounded-2xl border bg-card p-6 shadow-card">
-        <h2 className="text-base font-semibold">Transaction history</h2>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <h2 className="text-base font-semibold">Transaction history</h2>
+          {txns.length > 0 && <DateRangeFilter value={txnRange} onChange={setTxnRange} />}
+        </div>
         <div className="mt-4 overflow-x-auto rounded-xl border">
           {txns.length === 0 ? (
             <p className="px-4 py-10 text-center text-sm text-muted-foreground">No activity yet.</p>
+          ) : filteredTxns.length === 0 ? (
+            <p className="px-4 py-10 text-center text-sm text-muted-foreground">No transactions in this date range.</p>
           ) : (
             <>
               <table className="w-full text-sm">

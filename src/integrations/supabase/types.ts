@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          id: string
+          target_id: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          target_id?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          target_id?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       announcements: {
         Row: {
           body: string
@@ -897,6 +927,7 @@ export type Database = {
         Args: { _dispensation_id: string }
         Returns: string
       }
+      anonymize_finalized_members: { Args: never; Returns: number }
       cancel_withdrawal_request: { Args: { _id: string }; Returns: undefined }
       create_managed_transaction: {
         Args: {
@@ -991,6 +1022,15 @@ export type Database = {
       leader_purse_withdraw: {
         Args: { _amount_usd: number; _note?: string }
         Returns: string
+      }
+      log_admin_action: {
+        Args: {
+          _action: string
+          _details: Json
+          _target_id: string
+          _target_user_id: string
+        }
+        Returns: undefined
       }
       nearest_fund_handler: { Args: { _start: string }; Returns: string }
       notify_user: {

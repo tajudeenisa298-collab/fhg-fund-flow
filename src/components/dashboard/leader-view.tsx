@@ -91,6 +91,10 @@ export function LeaderView({ profile }: { profile: Profile }) {
   const [office, setOffice] = useState<OfficeLedgerEntry[]>([]);
   const [purse, setPurse] = useState<LeaderPurseEntry[]>([]);
   const [rankDefaults, setRankDefaults] = useState<RankUpkeepDefault[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [teamSearch, setTeamSearch] = useState("");
+  const [teamRankFilter, setTeamRankFilter] = useState<string>("all");
+  const [teamSort, setTeamSort] = useState<"name" | "balance_desc" | "balance_asc" | "recent">("name");
 
   const load = useCallback(async () => {
     const [{ data: t }, { data: c }, { data: r }, { data: p }, { data: o }, { data: pu }, { data: rd }] =

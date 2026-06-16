@@ -302,9 +302,11 @@ export type Database = {
           gender: Database["public"]["Enums"]["gender_kind"] | null
           id: string
           leader_id: string | null
+          payout_method: Database["public"]["Enums"]["payout_method_kind"]
           rank: string
           sponsor_id: string | null
           updated_at: string
+          whatsapp_number: string | null
         }
         Insert: {
           balance_usd?: number
@@ -315,9 +317,11 @@ export type Database = {
           gender?: Database["public"]["Enums"]["gender_kind"] | null
           id: string
           leader_id?: string | null
+          payout_method?: Database["public"]["Enums"]["payout_method_kind"]
           rank?: string
           sponsor_id?: string | null
           updated_at?: string
+          whatsapp_number?: string | null
         }
         Update: {
           balance_usd?: number
@@ -328,9 +332,11 @@ export type Database = {
           gender?: Database["public"]["Enums"]["gender_kind"] | null
           id?: string
           leader_id?: string | null
+          payout_method?: Database["public"]["Enums"]["payout_method_kind"]
           rank?: string
           sponsor_id?: string | null
           updated_at?: string
+          whatsapp_number?: string | null
         }
         Relationships: [
           {
@@ -807,6 +813,7 @@ export type Database = {
         | "upkeep"
         | "generic"
         | "office"
+      payout_method_kind: "bank_transfer" | "neolife_pv"
       txn_type:
         | "deposit"
         | "withdrawal"
@@ -979,6 +986,7 @@ export const Constants = {
         "generic",
         "office",
       ],
+      payout_method_kind: ["bank_transfer", "neolife_pv"],
       txn_type: [
         "deposit",
         "withdrawal",

@@ -83,6 +83,17 @@ function SignupPage() {
           full_name: parsed.data.full_name,
           invite_code: inviteCode.trim(),
           gender: parsed.data.gender,
+          ...(verifiedBank
+            ? {
+                bank: {
+                  bank_name: verifiedBank.bank_name,
+                  bank_code: verifiedBank.bank_code,
+                  account_number: verifiedBank.account_number,
+                  account_owner_name: verifiedBank.account_owner_name,
+                  verified: true,
+                },
+              }
+            : {}),
         },
       },
     });
@@ -90,17 +101,7 @@ function SignupPage() {
       setLoading(false);
       return toast.error(error.message);
     }
-    if (verifiedBank && authData.user) {
-      const { error: bankErr } = await supabase.from("bank_accounts").insert({
-        user_id: authData.user.id,
-        bank_name: verifiedBank.bank_name,
-        bank_code: verifiedBank.bank_code,
-        account_number: verifiedBank.account_number,
-        account_owner_name: verifiedBank.account_owner_name,
-        verified_at: new Date().toISOString(),
-      });
-      if (bankErr) toast.error(`Bank details: ${bankErr.message}`);
-    }
+    void authData;
     setLoading(false);
     toast.success("Account created!");
     nav({ to: "/dashboard" });

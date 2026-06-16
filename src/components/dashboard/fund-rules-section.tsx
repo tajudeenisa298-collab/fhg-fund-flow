@@ -228,6 +228,7 @@ function RuleDialog({
     setBusy(true);
     const payload = {
       leader_id: leaderId,
+      member_id: memberId === "__all__" ? null : memberId,
       name: name.trim(),
       kind,
       destination,

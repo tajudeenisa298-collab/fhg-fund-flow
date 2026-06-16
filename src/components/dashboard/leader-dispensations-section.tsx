@@ -35,6 +35,9 @@ interface Row {
   dispute_note: string | null;
   acknowledged_at: string | null;
   created_at: string;
+  resolved_at: string | null;
+  resolution_note: string | null;
+  resolution_credit: boolean | null;
   member_name?: string;
   member_avatar?: string | null;
 }

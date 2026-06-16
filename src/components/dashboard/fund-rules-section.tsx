@@ -177,12 +177,14 @@ function RuleDialog({
   open,
   onOpenChange,
   leaderId,
+  team,
   existing,
   onDone,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   leaderId: string;
+  team: Profile[];
   existing: FundRule | null;
   onDone: () => void;
 }) {
@@ -193,6 +195,7 @@ function RuleDialog({
   const [freq, setFreq] = useState<FundFrequency>("monthly");
   const [customDays, setCustomDays] = useState("7");
   const [desc, setDesc] = useState("");
+  const [memberId, setMemberId] = useState<string>("__all__");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -204,6 +207,7 @@ function RuleDialog({
       setFreq(existing.frequency ?? "monthly");
       setCustomDays(existing.custom_days ? String(existing.custom_days) : "7");
       setDesc(existing.description ?? "");
+      setMemberId(existing.member_id ?? "__all__");
     } else {
       setName("");
       setKind("per_usd");
@@ -212,6 +216,7 @@ function RuleDialog({
       setFreq("monthly");
       setCustomDays("7");
       setDesc("");
+      setMemberId("__all__");
     }
   }, [existing, open]);
 

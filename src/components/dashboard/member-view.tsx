@@ -27,6 +27,8 @@ import { TeamFundRulesReadonly } from "@/components/dashboard/team-fund-rules-re
 import { InviteCodeRow, type InviteCodeRowData } from "@/components/dashboard/invite-code-row";
 import { generateInviteCode } from "@/lib/team.functions";
 import { CurrencyAmountInput } from "@/components/currency-amount-input";
+import { PendingUpkeepSection } from "@/components/dashboard/pending-upkeep-section";
+
 
 const requestSchema = z.object({
   amount: z.number().positive().max(1_000_000),
@@ -194,7 +196,10 @@ export function MemberView({ profile }: { profile: Profile }) {
         <StatCard label="Pending requests" value={String(pending)} icon={Clock} />
       </div>
 
+      <PendingUpkeepSection memberId={profile.id} onChanged={() => { load(); refresh(); }} />
+
       <section className="rounded-2xl border bg-card p-6 shadow-card">
+
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold">Invite codes</h2>

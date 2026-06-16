@@ -449,6 +449,73 @@ export type Database = {
           },
         ]
       }
+      upkeep_dispensations: {
+        Row: {
+          acknowledged_at: string | null
+          amount_usd: number
+          created_at: string
+          dispute_note: string | null
+          id: string
+          leader_id: string
+          member_id: string
+          note: string | null
+          screenshot_path: string | null
+          status: Database["public"]["Enums"]["upkeep_ack_status"]
+          txn_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          amount_usd: number
+          created_at?: string
+          dispute_note?: string | null
+          id?: string
+          leader_id: string
+          member_id: string
+          note?: string | null
+          screenshot_path?: string | null
+          status?: Database["public"]["Enums"]["upkeep_ack_status"]
+          txn_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          amount_usd?: number
+          created_at?: string
+          dispute_note?: string | null
+          id?: string
+          leader_id?: string
+          member_id?: string
+          note?: string | null
+          screenshot_path?: string | null
+          status?: Database["public"]["Enums"]["upkeep_ack_status"]
+          txn_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "upkeep_dispensations_leader_id_fkey"
+            columns: ["leader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "upkeep_dispensations_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "upkeep_dispensations_txn_id_fkey"
+            columns: ["txn_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       upkeep_plans: {
         Row: {
           active: boolean
@@ -565,6 +632,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      acknowledge_upkeep: {
+        Args: { _dispensation_id: string }
+        Returns: string
+      }
       create_managed_transaction: {
         Args: {
           _amount_usd: number
@@ -577,6 +648,19 @@ export type Database = {
           _type: string
         }
         Returns: string
+      }
+      dispense_upkeep: {
+        Args: {
+          _amount_usd: number
+          _member_id: string
+          _note?: string
+          _screenshot_path?: string
+        }
+        Returns: string
+      }
+      dispute_upkeep: {
+        Args: { _dispensation_id: string; _reason: string }
+        Returns: undefined
       }
       get_downline: {
         Args: { _root: string }
@@ -696,6 +780,7 @@ export type Database = {
         | "office_expense"
         | "leader_credit"
         | "leader_debit"
+      upkeep_ack_status: "pending" | "acknowledged" | "disputed"
       upkeep_frequency:
         | "every_3_days"
         | "weekly"
@@ -868,6 +953,7 @@ export const Constants = {
         "leader_credit",
         "leader_debit",
       ],
+      upkeep_ack_status: ["pending", "acknowledged", "disputed"],
       upkeep_frequency: [
         "every_3_days",
         "weekly",

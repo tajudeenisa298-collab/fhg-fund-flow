@@ -311,7 +311,10 @@ function SettingsPage() {
               </Button>
             )}
           </div>
-          <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="mt-6">
+            <AvatarUpload />
+          </div>
+          <dl className="mt-6 grid gap-4 sm:grid-cols-2">
             <div>
               <dt className="text-xs uppercase tracking-wide text-muted-foreground">Name</dt>
               {editingName ? (

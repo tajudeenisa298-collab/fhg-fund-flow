@@ -90,6 +90,7 @@ export function PendingUpkeepSection({
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Upkeep approved — credited to your balance");
+    load();
     onChanged?.();
   };
 

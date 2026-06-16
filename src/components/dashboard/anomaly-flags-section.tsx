@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth as _unused, type Profile } from "@/lib/auth-context";
+import { type Profile } from "@/lib/auth-context";
+import { fmtUsd, fmtDate } from "@/lib/format";
 
 type Txn = {
   id: string;

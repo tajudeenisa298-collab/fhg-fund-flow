@@ -712,6 +712,7 @@ export type Database = {
       get_downline: {
         Args: { _root: string }
         Returns: {
+          avatar_url: string
           balance_usd: number
           can_handle_funds: boolean
           created_at: string
@@ -721,9 +722,11 @@ export type Database = {
           gender: Database["public"]["Enums"]["gender_kind"]
           id: string
           leader_id: string
+          payout_method: string
           rank: string
           sponsor_id: string
           updated_at: string
+          whatsapp_number: string
         }[]
       }
       has_role: {
@@ -771,17 +774,30 @@ export type Database = {
         Args: { _amount_ngn: number; _category: string; _note?: string }
         Returns: string
       }
-      resolve_withdrawal_request: {
-        Args: {
-          _currency?: string
-          _exchange_rate?: number
-          _id: string
-          _local_amount?: number
-          _note?: string
-          _status: string
-        }
-        Returns: undefined
-      }
+      resolve_withdrawal_request:
+        | {
+            Args: {
+              _currency?: string
+              _exchange_rate?: number
+              _id: string
+              _local_amount?: number
+              _note?: string
+              _status: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _currency?: string
+              _exchange_rate?: number
+              _id: string
+              _local_amount?: number
+              _note?: string
+              _platform_fee_usd?: number
+              _status: string
+            }
+            Returns: undefined
+          }
       run_due_fund_rules: { Args: never; Returns: number }
       run_due_upkeep: { Args: never; Returns: number }
       validate_invite_code: {

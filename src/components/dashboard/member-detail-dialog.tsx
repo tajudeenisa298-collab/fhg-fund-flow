@@ -9,6 +9,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { Money } from "@/components/money";
+import { UserAvatar } from "@/components/user-avatar";
 import { fmtDate } from "@/lib/format";
 import type { Profile } from "@/lib/auth-context";
 import type { Transaction, WithdrawalRequest, BankAccount } from "@/lib/types";
@@ -73,10 +74,15 @@ export function MemberDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{member.full_name}</DialogTitle>
-          <DialogDescription>
-            {member.rank} · {member.email}
-          </DialogDescription>
+          <div className="flex items-center gap-3">
+            <UserAvatar name={member.full_name} avatarPath={member.avatar_url} className="size-12" />
+            <div className="min-w-0">
+              <DialogTitle>{member.full_name}</DialogTitle>
+              <DialogDescription>
+                {member.rank} · {member.email}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <ScrollArea className="max-h-[70vh] pr-2">
@@ -112,6 +118,35 @@ export function MemberDetailDialog({
                 </ul>
               </section>
             )}
+
+            <section>
+              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Contact & payout preference
+              </h4>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border p-3 text-sm">
+                  <p className="text-[11px] uppercase tracking-wide text-muted-foreground">WhatsApp</p>
+                  {member.whatsapp_number ? (
+                    <a
+                      href={`https://wa.me/${member.whatsapp_number.replace(/[^0-9]/g, "")}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium text-primary hover:underline"
+                    >
+                      {member.whatsapp_number}
+                    </a>
+                  ) : (
+                    <p className="text-muted-foreground">Not provided</p>
+                  )}
+                </div>
+                <div className="rounded-xl border p-3 text-sm">
+                  <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Payout method</p>
+                  <p className="font-medium">
+                    {member.payout_method === "neolife_pv" ? "NeoLife PV credit" : "Bank transfer (NGN)"}
+                  </p>
+                </div>
+              </div>
+            </section>
 
             <section>
               <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">

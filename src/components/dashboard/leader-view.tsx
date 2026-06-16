@@ -236,6 +236,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
                 </div>
                 <ApproveDialog
                   request={r}
+                  member={m ?? null}
                   memberBalance={Number(m?.balance_usd ?? 0)}
                   defaultRate={ngnRate}
                   onDone={async () => {
@@ -248,6 +249,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
           })}
         </div>
       </section>
+
 
       {/* Resolved history */}
       {requests.some((r) => r.status !== "pending") && (
@@ -390,10 +392,12 @@ export function LeaderView({ profile }: { profile: Profile }) {
                       size="icon"
                       title={p.active ? "Pause" : "Resume"}
                       onClick={async () => {
-                        await supabase
+                        const { error } = await supabase
                           .from("upkeep_plans")
                           .update({ active: !p.active })
                           .eq("id", p.id);
+                        if (error) return toast.error(error.message);
+                        toast.success(p.active ? "Plan paused" : "Plan resumed");
                         load();
                       }}
                     >
@@ -404,7 +408,9 @@ export function LeaderView({ profile }: { profile: Profile }) {
                       size="icon"
                       title="Delete"
                       onClick={async () => {
-                        await supabase.from("upkeep_plans").delete().eq("id", p.id);
+                        const { error } = await supabase.from("upkeep_plans").delete().eq("id", p.id);
+                        if (error) return toast.error(error.message);
+                        toast.success("Plan deleted");
                         load();
                       }}
                     >
@@ -880,21 +886,34 @@ const approveSchema = z.object({
 
 function ApproveDialog({
   request,
+  member,
   memberBalance,
   defaultRate,
   onDone,
 }: {
   request: WithdrawalRequest;
+  member: Profile | null;
   memberBalance: number;
   defaultRate: number;
   onDone: () => void;
 }) {
+  const [bank, setBank] = useState<{ bank_name: string; account_number: string; account_owner_name: string } | null>(null);
   const [open, setOpen] = useState(false);
   const [currency, setCurrency] = useState("NGN");
   const [rate, setRate] = useState(String(defaultRate));
   const [note, setNote] = useState("");
   const [platformFee, setPlatformFee] = useState("");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!open || !member) return;
+    supabase
+      .from("bank_accounts")
+      .select("bank_name, account_number, account_owner_name")
+      .eq("user_id", member.id)
+      .maybeSingle()
+      .then(({ data }) => setBank(data ?? null));
+  }, [open, member]);
 
   const feeUsd = Number(platformFee) > 0 ? Number(platformFee) : 0;
   const netUsd = Math.max(0, Number(request.amount_usd) - feeUsd);
@@ -924,22 +943,9 @@ function ApproveDialog({
       _currency: parsed.data.currency,
       _exchange_rate: parsed.data.exchange_rate,
       _local_amount: parsed.data.local_amount ?? undefined,
+      _platform_fee_usd: feeUsd > 0 ? Number(feeUsd.toFixed(2)) : 0,
     });
     if (rpcErr) { setBusy(false); return toast.error(rpcErr.message); }
-
-    if (feeUsd > 0) {
-      const { error: feeErr } = await supabase.rpc("create_managed_transaction", {
-        _member_id: request.member_id,
-        _type: "bank_fee",
-        _amount_usd: Number(feeUsd.toFixed(2)),
-        _currency: "USD",
-        _note: `Platform fee on withdrawal of ${fmtUsd(request.amount_usd)}`,
-      });
-      if (feeErr) {
-        setBusy(false);
-        return toast.error(`Approved, but fee failed: ${feeErr.message}`);
-      }
-    }
 
     setBusy(false);
     toast.success("Withdrawal approved & recorded");
@@ -973,6 +979,37 @@ function ApproveDialog({
             <DialogTitle>Review withdrawal · {fmtUsd(request.amount_usd)}</DialogTitle>
             <DialogDescription>"{request.description}"</DialogDescription>
           </DialogHeader>
+          {member && (
+            <div className="space-y-1 rounded-lg border bg-muted/40 p-3 text-xs">
+              <p className="font-medium text-foreground">
+                Pay via:{" "}
+                <span className="text-primary">
+                  {member.payout_method === "neolife_pv" ? "NeoLife PV credit" : "Bank transfer (NGN)"}
+                </span>
+              </p>
+              {bank ? (
+                <p className="text-muted-foreground">
+                  {bank.bank_name} · <span className="font-mono">{bank.account_number}</span> ·{" "}
+                  {bank.account_owner_name}
+                </p>
+              ) : (
+                <p className="text-warning">No bank account on file.</p>
+              )}
+              {member.whatsapp_number && (
+                <p className="text-muted-foreground">
+                  WhatsApp:{" "}
+                  <a
+                    className="text-primary hover:underline"
+                    href={`https://wa.me/${member.whatsapp_number.replace(/[^0-9]/g, "")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {member.whatsapp_number}
+                  </a>
+                </p>
+              )}
+            </div>
+          )}
           <form onSubmit={accept} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">

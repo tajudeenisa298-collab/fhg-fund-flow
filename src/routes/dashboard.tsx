@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { MemberView } from "@/components/dashboard/member-view";
 import { LeaderView } from "@/components/dashboard/leader-view";
 import { NotificationBell } from "@/components/notification-bell";
+import { UserAvatar } from "@/components/user-avatar";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -60,9 +61,12 @@ function DashboardPage() {
                 </TabsList>
               </Tabs>
             )}
-            <div className="hidden text-right md:block">
-              <p className="text-sm font-medium leading-tight">{profile.full_name}</p>
-              <p className="text-xs text-muted-foreground">{profile.email}</p>
+            <div className="hidden items-center gap-2 md:flex">
+              <UserAvatar name={profile.full_name} avatarPath={profile.avatar_url} className="size-8" />
+              <div className="text-right">
+                <p className="text-sm font-medium leading-tight">{profile.full_name}</p>
+                <p className="text-xs text-muted-foreground">{profile.email}</p>
+              </div>
             </div>
             <NotificationBell />
             <Button variant="outline" size="icon" asChild aria-label="Settings">

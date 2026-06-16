@@ -482,6 +482,10 @@ export function LeaderView({ profile }: { profile: Profile }) {
         memberNames={Object.fromEntries(team.map((m) => [m.id, m.full_name]))}
       />
 
+      {/* Scheduled-job health */}
+      <CronHealthSection />
+
+
 
 
       {/* Broadcast announcements */}

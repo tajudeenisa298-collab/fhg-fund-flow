@@ -75,6 +75,9 @@ import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 import { PendingActionsChips } from "@/components/dashboard/pending-actions-chips";
 import { RecentSignupsSection } from "@/components/dashboard/recent-signups-section";
 import { BulkActionsBar } from "@/components/dashboard/bulk-actions-bar";
+import { TeamSavedViews, applySavedView, type SavedView } from "@/components/dashboard/team-saved-views";
+import { ForecastCard } from "@/components/dashboard/forecast-card";
+import { CsvImportDialog } from "@/components/dashboard/csv-import-dialog";
 
 
 import { generateInviteCode, promoteManagedMember } from "@/lib/team.functions";
@@ -95,6 +98,14 @@ export function LeaderView({ profile }: { profile: Profile }) {
   const [teamSearch, setTeamSearch] = useState("");
   const [teamRankFilter, setTeamRankFilter] = useState<string>("all");
   const [teamSort, setTeamSort] = useState<"name" | "balance_desc" | "balance_asc" | "recent">("name");
+  const [savedView, setSavedView] = useState<SavedView>("all");
+  const [bankIds, setBankIds] = useState<Set<string>>(new Set());
+  // Open ApproveDialog automatically when arriving from a notification link
+  const [autoOpenRequestId, setAutoOpenRequestId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    const u = new URL(window.location.href);
+    return u.searchParams.get("request");
+  });
 
   const load = useCallback(async () => {
     const [{ data: t }, { data: c }, { data: r }, { data: p }, { data: o }, { data: pu }, { data: rd }] =

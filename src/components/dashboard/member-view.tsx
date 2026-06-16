@@ -31,8 +31,10 @@ import { PendingUpkeepSection } from "@/components/dashboard/pending-upkeep-sect
 import { PvLogSection } from "@/components/dashboard/pv-log-section";
 import { AnnouncementsSection } from "@/components/dashboard/announcements-section";
 import { ResourceLibrarySection } from "@/components/dashboard/resource-library-section";
+import { MemberStatusSelfSection } from "@/components/dashboard/member-status-self-section";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 import { toCsv, downloadCsv } from "@/lib/csv";
+import { X as XIcon } from "lucide-react";
 
 
 

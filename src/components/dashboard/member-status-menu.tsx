@@ -294,7 +294,11 @@ export function MemberStatusBadge({ member }: { member: Profile }) {
       if (daysLeft <= 14) tone = "bg-warning/15 text-warning";
     }
   } else {
-    label = `Suspended · until ${new Date(member.suspended_until!).toLocaleDateString()}`;
+    const until = new Date(member.suspended_until!);
+    const indefinite = until.getUTCFullYear() >= 9000;
+    label = indefinite
+      ? "Suspended · indefinite"
+      : `Suspended · until ${until.toLocaleDateString()}`;
     tone = "bg-warning/15 text-warning";
   }
   return (

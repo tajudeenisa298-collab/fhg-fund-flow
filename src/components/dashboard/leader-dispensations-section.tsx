@@ -183,6 +183,12 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
                             Dispute: {d.dispute_note}
                           </p>
                         )}
+                        {d.resolved_at && d.resolution_note && (
+                          <p className="mt-1 text-xs italic text-muted-foreground">
+                            Resolved {fmtDate(d.resolved_at)}
+                            {d.resolution_credit ? " (credited)" : " (no credit)"}: {d.resolution_note}
+                          </p>
+                        )}
                         <p className="mt-1 text-xs text-muted-foreground">
                           {fmtDate(d.created_at)}
                           {d.status === "acknowledged" && d.acknowledged_at && (
@@ -204,6 +210,19 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
                           onClick={() => viewProof(d.screenshot_path!)}
                         >
                           <ImageIcon className="mr-1 size-3.5" /> Proof
+                        </Button>
+                      )}
+                      {d.status === "disputed" && !d.resolved_at && (
+                        <Button
+                          size="sm"
+                          className="h-7 px-2"
+                          onClick={() => {
+                            setResolving(d);
+                            setResolveNote("");
+                            setResolveCredit(true);
+                          }}
+                        >
+                          <Gavel className="mr-1 size-3.5" /> Resolve
                         </Button>
                       )}
                     </div>

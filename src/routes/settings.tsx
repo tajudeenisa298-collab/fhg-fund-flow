@@ -420,6 +420,24 @@ function SettingsPage() {
                 <option value="neolife_pv">NeoLife PV credit</option>
               </select>
             </div>
+            <div className="sm:col-span-2">
+              <label className="text-xs uppercase tracking-wide text-muted-foreground" htmlFor="locale">
+                Language & region
+              </label>
+              <select
+                id="locale"
+                value={locale}
+                onChange={(e) => setLocale(e.target.value)}
+                className="mt-1 h-10 w-full rounded-md border bg-background px-3 text-sm"
+              >
+                {SUPPORTED_LOCALES.map((l) => (
+                  <option key={l.value} value={l.value}>{l.label}</option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Controls how numbers, currencies, and dates are formatted across the app.
+              </p>
+            </div>
           </div>
           <div className="mt-4 flex justify-end">
             <Button
@@ -427,7 +445,8 @@ function SettingsPage() {
               disabled={
                 savingPrefs ||
                 (whatsapp.trim() === (profile.whatsapp_number ?? "") &&
-                  payoutMethod === (profile.payout_method ?? "bank_transfer"))
+                  payoutMethod === (profile.payout_method ?? "bank_transfer") &&
+                  locale === (profile.locale ?? "en-US"))
               }
             >
               {savingPrefs ? "Saving…" : "Save preferences"}

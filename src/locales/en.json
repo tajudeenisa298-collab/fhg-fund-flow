@@ -1,0 +1,44 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "close": "Close",
+    "loading": "Loading…",
+    "back": "Back",
+    "search": "Search",
+    "submit": "Submit",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "signOut": "Sign out",
+    "analytics": "Analytics"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot your password?"
+  },
+  "dashboard": {
+    "balance": "Balance",
+    "deposits": "Deposits",
+    "withdrawals": "Withdrawals",
+    "team": "Team",
+    "office": "Office",
+    "fundRules": "Fund rules",
+    "upkeep": "Upkeep"
+  },
+  "notifications": {
+    "empty": "You're all caught up.",
+    "markAll": "Mark all read",
+    "markRead": "Mark read",
+    "markUnread": "Mark unread"
+  }
+}

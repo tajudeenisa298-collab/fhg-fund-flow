@@ -294,6 +294,11 @@ export function LeaderView({ profile }: { profile: Profile }) {
                   </p>
                   <p className="text-xs text-muted-foreground">{r.description}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{fmtDate(r.created_at)}</p>
+                  {(r.status as string) === "awaiting_second_approval" && (
+                    <p className="mt-1 inline-block rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-medium text-warning">
+                      Awaiting 2nd leader approval
+                    </p>
+                  )}
                 </div>
                 <ApproveDialog
                   request={r}

@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Action = "suspended" | "terminated" | "pardoned" | "finalized";
 interface LogRow {

@@ -323,79 +323,188 @@ export function LeaderView({ profile }: { profile: Profile }) {
       )}
 
       {/* Team */}
-      <section className="rounded-2xl border bg-card p-6 shadow-card">
+      <section id="team-members" className="rounded-2xl border bg-card p-6 shadow-card">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold">Team members</h2>
             <p className="text-sm text-muted-foreground">
-              Add deposits, schedule upkeep, or change rank.
+              Add deposits, schedule upkeep, or change rank. Tick rows for bulk actions.
             </p>
           </div>
         </div>
+
+        {team.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <div className="relative min-w-[180px] flex-1">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={teamSearch}
+                onChange={(e) => setTeamSearch(e.target.value)}
+                placeholder="Search by name or email"
+                className="pl-8"
+              />
+            </div>
+            <Select value={teamRankFilter} onValueChange={setTeamRankFilter}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="All ranks" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All ranks</SelectItem>
+                {RANKS.map((r) => (
+                  <SelectItem key={r} value={r}>{r}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={teamSort} onValueChange={(v) => setTeamSort(v as typeof teamSort)}>
+              <SelectTrigger className="w-[170px]">
+                <ArrowUpDown className="mr-1 size-3.5" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Name (A–Z)</SelectItem>
+                <SelectItem value="balance_desc">Balance (high → low)</SelectItem>
+                <SelectItem value="balance_asc">Balance (low → high)</SelectItem>
+                <SelectItem value="recent">Recently added</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {selectedIds.size > 0 && (
+          <div className="mt-3">
+            <BulkActionsBar
+              selected={team.filter((m) => selectedIds.has(m.id))}
+              onClear={() => setSelectedIds(new Set())}
+              onDone={load}
+            />
+          </div>
+        )}
+
         <div className="mt-4 overflow-x-auto rounded-xl border">
           {team.length === 0 ? (
             <p className="px-4 py-10 text-center text-sm text-muted-foreground">
               No members yet. Generate an invite code to get started.
             </p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Member</th>
-                  <th className="px-4 py-3 font-medium">Rank</th>
-                  <th className="px-4 py-3 text-right font-medium">Balance</th>
-                  <th className="px-4 py-3 text-right font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {team.map((m) => (
-                  <tr
-                    key={m.id}
-                    className="cursor-pointer transition hover:bg-muted/40"
-                    onClick={() => setDetailMember(m)}
-                  >
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-primary hover:underline">
-                        {m.full_name}
-                        <MemberStatusBadge member={m} />
-                      </p>
-                      <p className="text-xs text-muted-foreground">{m.email}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div>{m.rank}</div>
-                      {m.can_handle_funds && !isDirectorOrAbove(m.rank) && (
-                        <span className="text-[10px] uppercase tracking-wide text-success">
-                          fund handler
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <Money usd={m.balance_usd} size="sm" className="items-end" />
-                    </td>
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex flex-wrap items-center justify-end gap-2">
-                        <DepositDialog member={m} leaderId={profile.id} onDone={load} />
-                        <DeductDialog member={m} leaderId={profile.id} onDone={load} />
-                        <DispenseUpkeepDialog member={m} leaderId={profile.id} onDone={load} />
-                        <UpkeepDialog
-
-                          member={m}
-                          leaderId={profile.id}
-                          existing={plans.find((p) => p.member_id === m.id) ?? null}
-                          rankDefault={rankDefaults.find((rd) => rd.rank === m.rank) ?? null}
-                          onDone={load}
-                        />
-                        <PromoteDialog member={m} onDone={load} />
-                        <MemberStatusMenu member={m} onDone={load} />
-                      </div>
-                    </td>
+          ) : (() => {
+            const q = teamSearch.trim().toLowerCase();
+            const filtered = team
+              .filter((m) => teamRankFilter === "all" || m.rank === teamRankFilter)
+              .filter(
+                (m) =>
+                  !q ||
+                  m.full_name.toLowerCase().includes(q) ||
+                  (m.email ?? "").toLowerCase().includes(q),
+              );
+            const sorted = [...filtered].sort((a, b) => {
+              if (teamSort === "name") return a.full_name.localeCompare(b.full_name);
+              if (teamSort === "balance_desc")
+                return Number(b.balance_usd) - Number(a.balance_usd);
+              if (teamSort === "balance_asc")
+                return Number(a.balance_usd) - Number(b.balance_usd);
+              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            });
+            const allChecked = sorted.length > 0 && sorted.every((m) => selectedIds.has(m.id));
+            const someChecked = sorted.some((m) => selectedIds.has(m.id));
+            const toggleAll = () => {
+              setSelectedIds((prev) => {
+                const next = new Set(prev);
+                if (allChecked) sorted.forEach((m) => next.delete(m.id));
+                else sorted.forEach((m) => next.add(m.id));
+                return next;
+              });
+            };
+            if (sorted.length === 0)
+              return (
+                <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+                  No members match the current filter.
+                </p>
+              );
+            return (
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                  <tr>
+                    <th className="w-10 px-3 py-3">
+                      <Checkbox
+                        checked={allChecked ? true : someChecked ? "indeterminate" : false}
+                        onCheckedChange={toggleAll}
+                        aria-label="Select all"
+                      />
+                    </th>
+                    <th className="px-4 py-3 font-medium">Member</th>
+                    <th className="px-4 py-3 font-medium">Rank</th>
+                    <th className="px-4 py-3 text-right font-medium">Balance</th>
+                    <th className="px-4 py-3 text-right font-medium">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                </thead>
+                <tbody className="divide-y">
+                  {sorted.map((m) => {
+                    const checked = selectedIds.has(m.id);
+                    return (
+                      <tr
+                        key={m.id}
+                        className={`cursor-pointer transition hover:bg-muted/40 ${checked ? "bg-primary/5" : ""}`}
+                        onClick={() => setDetailMember(m)}
+                      >
+                        <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) =>
+                              setSelectedIds((prev) => {
+                                const next = new Set(prev);
+                                if (v) next.add(m.id);
+                                else next.delete(m.id);
+                                return next;
+                              })
+                            }
+                            aria-label={`Select ${m.full_name}`}
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-primary hover:underline">
+                            {m.full_name}
+                            <MemberStatusBadge member={m} />
+                          </p>
+                          <p className="text-xs text-muted-foreground">{m.email}</p>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div>{m.rank}</div>
+                          {m.can_handle_funds && !isDirectorOrAbove(m.rank) && (
+                            <span className="text-[10px] uppercase tracking-wide text-success">
+                              fund handler
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <Money usd={m.balance_usd} size="sm" className="items-end" />
+                        </td>
+                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex flex-wrap items-center justify-end gap-2">
+                            <DepositDialog member={m} leaderId={profile.id} onDone={load} />
+                            <DeductDialog member={m} leaderId={profile.id} onDone={load} />
+                            <DispenseUpkeepDialog member={m} leaderId={profile.id} onDone={load} />
+                            <UpkeepDialog
+                              member={m}
+                              leaderId={profile.id}
+                              existing={plans.find((p) => p.member_id === m.id) ?? null}
+                              rankDefault={rankDefaults.find((rd) => rd.rank === m.rank) ?? null}
+                              onDone={load}
+                            />
+                            <PromoteDialog member={m} onDone={load} />
+                            <MemberStatusMenu member={m} onDone={load} />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            );
+          })()}
         </div>
       </section>
+
+      <RecentSignupsSection leaderId={profile.id} />
+
 
       {/* Upkeep schedules summary */}
       {plans.length > 0 && (

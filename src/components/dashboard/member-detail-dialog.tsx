@@ -264,17 +264,48 @@ export function MemberDetailDialog({
                               <Money usd={t.amount_usd} rate={t.exchange_rate ?? undefined} size="sm" inline />
                             </td>
                             <td className="px-3 py-2 text-right">
-                              {canReverse && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 px-2"
-                                  onClick={() => setReverseTarget(t)}
-                                  title="Reverse this transaction"
-                                >
-                                  <Undo2 className="size-3.5" />
-                                </Button>
-                              )}
+                              {(() => {
+                                const window = (t as unknown as { reversal_window_until?: string | null })
+                                  .reversal_window_until;
+                                const inWindow =
+                                  t.type === "deposit" && !isReversed && !isReversal &&
+                                  window && new Date(window) > new Date();
+                                if (inWindow) {
+                                  return (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 px-2 text-warning hover:text-warning"
+                                      onClick={async () => {
+                                        const { error } = await supabase.rpc(
+                                          "undo_recent_deposit" as never,
+                                          { _txn_id: t.id } as never,
+                                        );
+                                        if (error) return toast.error(error.message);
+                                        toast.success("Deposit undone");
+                                        setReloadKey((k) => k + 1);
+                                      }}
+                                      title="Undo this deposit (within window)"
+                                    >
+                                      <Undo2 className="mr-1 size-3.5" /> Undo
+                                    </Button>
+                                  );
+                                }
+                                if (canReverse) {
+                                  return (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 px-2"
+                                      onClick={() => setReverseTarget(t)}
+                                      title="Reverse this transaction"
+                                    >
+                                      <Undo2 className="size-3.5" />
+                                    </Button>
+                                  );
+                                }
+                                return null;
+                              })()}
                             </td>
                           </tr>
                         );

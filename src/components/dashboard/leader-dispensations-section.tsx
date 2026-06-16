@@ -23,6 +23,7 @@ import { fmtUsd, fmtDate } from "@/lib/format";
 import { UserAvatar } from "@/components/user-avatar";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 import { DateRangeFilter, EMPTY_RANGE, inRange, type DateRange } from "@/components/date-range-filter";
+import { DisputeThread } from "@/components/dashboard/dispute-thread";
 
 type Status = "pending" | "acknowledged" | "disputed";
 
@@ -229,6 +230,11 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
                         </Button>
                       )}
                     </div>
+                    {d.status === "disputed" && (
+                      <div className="w-full">
+                        <DisputeThread dispensationId={d.id} currentUserId={leaderId} canPost={!d.resolved_at} />
+                      </div>
+                    )}
                   </div>
                 );
               })

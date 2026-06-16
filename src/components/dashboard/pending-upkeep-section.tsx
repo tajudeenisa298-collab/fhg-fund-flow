@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtUsd, fmtDate } from "@/lib/format";
+import { DisputeThread } from "@/components/dashboard/dispute-thread";
 
 interface Dispensation {
   id: string;
@@ -44,7 +45,7 @@ export function PendingUpkeepSection({
       .from("upkeep_dispensations")
       .select("id, leader_id, amount_usd, screenshot_path, note, status, created_at")
       .eq("member_id", memberId)
-      .eq("status", "pending")
+      .in("status", ["pending", "disputed"])
       .order("created_at", { ascending: false });
     const rows = (data as Dispensation[]) ?? [];
     // Hydrate leader names
@@ -117,7 +118,7 @@ export function PendingUpkeepSection({
         <div>
           <h2 className="text-base font-semibold">Upkeep awaiting your approval</h2>
           <p className="text-sm text-muted-foreground">
-            Confirm receipt to credit your balance, or dispute if something's off.
+            Confirm receipt to credit your balance, dispute if something's off, or continue an open dispute below.
           </p>
         </div>
       </div>
@@ -147,19 +148,30 @@ export function PendingUpkeepSection({
                 </Button>
               )}
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={() => approve(d.id)} disabled={busy}>
-                <Check className="mr-1 size-3.5" /> Approve
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setDisputing(d.id)}
-                disabled={busy}
-              >
-                <X className="mr-1 size-3.5" /> Dispute
-              </Button>
-            </div>
+            {d.status === "pending" ? (
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => approve(d.id)} disabled={busy}>
+                  <Check className="mr-1 size-3.5" /> Approve
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setDisputing(d.id)}
+                  disabled={busy}
+                >
+                  <X className="mr-1 size-3.5" /> Dispute
+                </Button>
+              </div>
+            ) : (
+              <span className="rounded-full bg-destructive/15 px-2.5 py-1 text-xs font-medium text-destructive">
+                Disputed
+              </span>
+            )}
+            {d.status === "disputed" && (
+              <div className="w-full">
+                <DisputeThread dispensationId={d.id} currentUserId={memberId} canPost={true} />
+              </div>
+            )}
           </div>
         ))}
       </div>

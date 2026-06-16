@@ -78,6 +78,7 @@ import { BulkActionsBar } from "@/components/dashboard/bulk-actions-bar";
 import { TeamSavedViews, applySavedView, type SavedView } from "@/components/dashboard/team-saved-views";
 import { ForecastCard } from "@/components/dashboard/forecast-card";
 import { CsvImportDialog } from "@/components/dashboard/csv-import-dialog";
+import { MoneySafetyButton } from "@/components/dashboard/money-safety-button";
 
 
 import { generateInviteCode, promoteManagedMember } from "@/lib/team.functions";
@@ -179,7 +180,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
       ),
     [codes, tick],
   );
-  const pendingRequests = requests.filter((r) => r.status === "pending");
+  const pendingRequests = requests.filter((r) => r.status === "pending" || (r.status as string) === "awaiting_second_approval");
   const resolvedRequests = useMemo(
     () => requests.filter((r) => r.status !== "pending"),
     [requests],
@@ -211,7 +212,10 @@ export function LeaderView({ profile }: { profile: Profile }) {
           </h1>
           <p className="text-sm text-muted-foreground">Manage your team's funds and requests.</p>
         </div>
-        <NgnRateButton currentRate={ngnRate} onSaved={refresh} />
+        <div className="flex flex-wrap gap-2">
+          <MoneySafetyButton onSaved={refresh} />
+          <NgnRateButton currentRate={ngnRate} onSaved={refresh} />
+        </div>
       </div>
 
       <PendingActionsChips
@@ -290,6 +294,11 @@ export function LeaderView({ profile }: { profile: Profile }) {
                   </p>
                   <p className="text-xs text-muted-foreground">{r.description}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{fmtDate(r.created_at)}</p>
+                  {(r.status as string) === "awaiting_second_approval" && (
+                    <p className="mt-1 inline-block rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-medium text-warning">
+                      Awaiting 2nd leader approval
+                    </p>
+                  )}
                 </div>
                 <ApproveDialog
                   request={r}

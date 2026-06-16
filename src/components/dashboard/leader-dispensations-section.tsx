@@ -118,7 +118,7 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
     setPreviewUrl(data.signedUrl);
   };
 
-  const filtered = rows.filter((r) => r.status === tab);
+  const filtered = rows.filter((r) => r.status === tab && inRange(r.created_at, range));
   const page = usePagedList(filtered, 8);
   const counts: Record<Status, number> = {
     pending: rows.filter((r) => r.status === "pending").length,

@@ -1317,6 +1317,8 @@ export type Database = {
         | "upkeep"
         | "generic"
         | "office"
+        | "fund_rule_changed"
+        | "fx_rate_changed"
       payout_method_kind: "bank_transfer" | "neolife_pv"
       txn_type:
         | "deposit"
@@ -1499,6 +1501,8 @@ export const Constants = {
         "upkeep",
         "generic",
         "office",
+        "fund_rule_changed",
+        "fx_rate_changed",
       ],
       payout_method_kind: ["bank_transfer", "neolife_pv"],
       txn_type: [

@@ -29,6 +29,7 @@ import { generateInviteCode } from "@/lib/team.functions";
 import { CurrencyAmountInput } from "@/components/currency-amount-input";
 import { PendingUpkeepSection } from "@/components/dashboard/pending-upkeep-section";
 import { PvLogSection } from "@/components/dashboard/pv-log-section";
+import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 
 
 
@@ -84,6 +85,9 @@ export function MemberView({ profile }: { profile: Profile }) {
     () => codes.filter((c) => !c.used_by && !c.revoked && new Date(c.expires_at).getTime() > Date.now()),
     [codes, tick],
   );
+
+  const requestsPage = usePagedList(requests);
+  const txnsPage = usePagedList(txns);
 
   const generateCode = async () => {
     try {
@@ -230,7 +234,7 @@ export function MemberView({ profile }: { profile: Profile }) {
           {requests.length === 0 && (
             <p className="px-4 py-10 text-center text-sm text-muted-foreground">No requests yet.</p>
           )}
-          {requests.map((r) => (
+          {requestsPage.slice.map((r) => (
             <div key={r.id} className="flex items-start justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
                 <p className="font-medium">
@@ -250,6 +254,11 @@ export function MemberView({ profile }: { profile: Profile }) {
               <StatusPill status={r.status} />
             </div>
           ))}
+          <ShowMoreButton
+            hasMore={requestsPage.hasMore}
+            onClick={requestsPage.showMore}
+            remaining={requestsPage.total - requestsPage.visible}
+          />
         </div>
       </section>
 
@@ -265,39 +274,46 @@ export function MemberView({ profile }: { profile: Profile }) {
           {txns.length === 0 ? (
             <p className="px-4 py-10 text-center text-sm text-muted-foreground">No activity yet.</p>
           ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-3 font-medium">When</th>
-                  <th className="px-4 py-3 font-medium">Type</th>
-                  <th className="px-4 py-3 font-medium">Note</th>
-                  <th className="px-4 py-3 text-right font-medium">USD</th>
-                  <th className="px-4 py-3 text-right font-medium">Local</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {txns.map((t) => (
-                  <tr key={t.id}>
-                    <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{fmtDate(t.created_at)}</td>
-                    <td className="px-4 py-3 capitalize">{t.type}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{t.note ?? "—"}</td>
-                    <td
-                      className={`px-4 py-3 text-right font-mono ${
-                        t.type === "deposit" || t.type === "adjustment" ? "text-success" : "text-foreground"
-                      }`}
-                    >
-                      {t.type === "withdrawal" || t.type === "release" ? "−" : "+"}
-                      {fmtUsd(t.amount_usd)}
-                    </td>
-                    <td className="px-4 py-3 text-right font-mono text-muted-foreground">
-                      {t.local_amount && t.currency !== "USD"
-                        ? `${fmtMoney(t.local_amount, t.currency)} @ ${t.exchange_rate}`
-                        : "—"}
-                    </td>
+            <>
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">When</th>
+                    <th className="px-4 py-3 font-medium">Type</th>
+                    <th className="px-4 py-3 font-medium">Note</th>
+                    <th className="px-4 py-3 text-right font-medium">USD</th>
+                    <th className="px-4 py-3 text-right font-medium">Local</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y">
+                  {txnsPage.slice.map((t) => (
+                    <tr key={t.id}>
+                      <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{fmtDate(t.created_at)}</td>
+                      <td className="px-4 py-3 capitalize">{t.type}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{t.note ?? "—"}</td>
+                      <td
+                        className={`px-4 py-3 text-right font-mono ${
+                          t.type === "deposit" || t.type === "adjustment" ? "text-success" : "text-foreground"
+                        }`}
+                      >
+                        {t.type === "withdrawal" || t.type === "release" ? "−" : "+"}
+                        {fmtUsd(t.amount_usd)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-muted-foreground">
+                        {t.local_amount && t.currency !== "USD"
+                          ? `${fmtMoney(t.local_amount, t.currency)} @ ${t.exchange_rate}`
+                          : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <ShowMoreButton
+                hasMore={txnsPage.hasMore}
+                onClick={txnsPage.showMore}
+                remaining={txnsPage.total - txnsPage.visible}
+              />
+            </>
           )}
         </div>
       </section>

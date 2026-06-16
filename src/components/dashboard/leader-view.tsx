@@ -62,6 +62,7 @@ import { RankUpkeepDefaultsSection } from "@/components/dashboard/rank-upkeep-de
 import { OrganisationSection } from "@/components/dashboard/organisation-section";
 import { PvLogSection } from "@/components/dashboard/pv-log-section";
 import { LeaderDispensationsSection } from "@/components/dashboard/leader-dispensations-section";
+import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 
 
 import { generateInviteCode, promoteManagedMember } from "@/lib/team.functions";
@@ -138,6 +139,11 @@ export function LeaderView({ profile }: { profile: Profile }) {
     [codes, tick],
   );
   const pendingRequests = requests.filter((r) => r.status === "pending");
+  const resolvedRequests = useMemo(
+    () => requests.filter((r) => r.status !== "pending"),
+    [requests],
+  );
+  const resolvedPage = usePagedList(resolvedRequests, 8);
 
   const generateCode = async () => {
     try {
@@ -253,14 +259,11 @@ export function LeaderView({ profile }: { profile: Profile }) {
 
 
       {/* Resolved history */}
-      {requests.some((r) => r.status !== "pending") && (
+      {resolvedRequests.length > 0 && (
         <section className="rounded-2xl border bg-card p-6 shadow-card">
           <h2 className="text-base font-semibold">Recent decisions</h2>
           <ul className="mt-4 divide-y rounded-xl border">
-            {requests
-              .filter((r) => r.status !== "pending")
-              .slice(0, 8)
-              .map((r) => {
+            {resolvedPage.slice.map((r) => {
                 const m = memberById(r.member_id);
                 return (
                   <li key={r.id} className="flex items-center justify-between px-4 py-3 text-sm">
@@ -287,6 +290,11 @@ export function LeaderView({ profile }: { profile: Profile }) {
                   </li>
                 );
               })}
+            <ShowMoreButton
+              hasMore={resolvedPage.hasMore}
+              onClick={resolvedPage.showMore}
+              remaining={resolvedPage.total - resolvedPage.visible}
+            />
           </ul>
         </section>
       )}

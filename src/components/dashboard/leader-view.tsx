@@ -979,6 +979,37 @@ function ApproveDialog({
             <DialogTitle>Review withdrawal · {fmtUsd(request.amount_usd)}</DialogTitle>
             <DialogDescription>"{request.description}"</DialogDescription>
           </DialogHeader>
+          {member && (
+            <div className="space-y-1 rounded-lg border bg-muted/40 p-3 text-xs">
+              <p className="font-medium text-foreground">
+                Pay via:{" "}
+                <span className="text-primary">
+                  {member.payout_method === "neolife_pv" ? "NeoLife PV credit" : "Bank transfer (NGN)"}
+                </span>
+              </p>
+              {bank ? (
+                <p className="text-muted-foreground">
+                  {bank.bank_name} · <span className="font-mono">{bank.account_number}</span> ·{" "}
+                  {bank.account_owner_name}
+                </p>
+              ) : (
+                <p className="text-warning">No bank account on file.</p>
+              )}
+              {member.whatsapp_number && (
+                <p className="text-muted-foreground">
+                  WhatsApp:{" "}
+                  <a
+                    className="text-primary hover:underline"
+                    href={`https://wa.me/${member.whatsapp_number.replace(/[^0-9]/g, "")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {member.whatsapp_number}
+                  </a>
+                </p>
+              )}
+            </div>
+          )}
           <form onSubmit={accept} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">

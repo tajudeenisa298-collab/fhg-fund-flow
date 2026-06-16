@@ -99,6 +99,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  // Detect suspension/termination mid-session: re-check profile on focus,
+  // periodically, and via realtime updates on the user's own profile row.
+  useEffect(() => {
+    const uid = session?.user?.id;
+    if (!uid) return;
+    const recheck = () => loadProfile(uid);
+    const onFocus = () => {
+      if (document.visibilityState === "visible") recheck();
+    };
+    document.addEventListener("visibilitychange", onFocus);
+    const id = window.setInterval(recheck, 60_000);
+    const channel = supabase
+      .channel(`profile:${uid}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${uid}` },
+        () => recheck(),
+      )
+      .subscribe();
+    return () => {
+      document.removeEventListener("visibilitychange", onFocus);
+      window.clearInterval(id);
+      supabase.removeChannel(channel);
+    };
+  }, [session?.user?.id]);
+
   const refresh = async () => {
     if (session?.user) await loadProfile(session.user.id);
   };

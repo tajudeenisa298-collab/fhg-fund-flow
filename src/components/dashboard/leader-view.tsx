@@ -72,6 +72,9 @@ import { CronHealthSection } from "@/components/dashboard/cron-health-section";
 import { MobileCollapsible } from "@/components/dashboard/mobile-collapsible";
 import { ReconciliationSection } from "@/components/dashboard/reconciliation-section";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
+import { PendingActionsChips } from "@/components/dashboard/pending-actions-chips";
+import { RecentSignupsSection } from "@/components/dashboard/recent-signups-section";
+import { BulkActionsBar } from "@/components/dashboard/bulk-actions-bar";
 
 
 import { generateInviteCode, promoteManagedMember } from "@/lib/team.functions";

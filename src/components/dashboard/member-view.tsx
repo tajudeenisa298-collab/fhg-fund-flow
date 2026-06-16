@@ -110,8 +110,10 @@ export function MemberView({ profile }: { profile: Profile }) {
     [codes, tick],
   );
 
+  const [txnRange, setTxnRange] = useState<DateRange>(EMPTY_RANGE);
+  const filteredTxns = useMemo(() => txns.filter((t) => inRange(t.created_at, txnRange)), [txns, txnRange]);
   const requestsPage = usePagedList(requests);
-  const txnsPage = usePagedList(txns);
+  const txnsPage = usePagedList(filteredTxns);
 
   const generateCode = async () => {
     try {

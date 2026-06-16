@@ -99,7 +99,7 @@ export function PendingActionsChips({
       key: "unverifiedBanks",
       label: "unverified bank accounts",
       Icon: ShieldCheck,
-      tone: "bg-amber-500/15 text-amber-700 border-amber-500/30",
+      tone: "bg-warning/15 text-warning border-warning/30",
       target: "team-members",
     },
     {

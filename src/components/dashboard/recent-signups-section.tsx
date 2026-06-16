@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtDate } from "@/lib/format";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Row {
   id: string;
@@ -66,7 +67,17 @@ export function RecentSignupsSection({ leaderId }: { leaderId: string }) {
       <p className="text-sm text-muted-foreground">Invite codes redeemed in the last 30 days.</p>
       <div className="mt-4 divide-y rounded-xl border">
         {loading ? (
-          <p className="px-4 py-8 text-center text-sm text-muted-foreground">Loading…</p>
+          <div className="space-y-px">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex items-center justify-between gap-3 px-4 py-3">
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-3 w-40" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="h-3 w-16" />
+              </div>
+            ))}
+          </div>
         ) : rows.length === 0 ? (
           <p className="px-4 py-8 text-center text-sm text-muted-foreground">
             No signups in the last 30 days.

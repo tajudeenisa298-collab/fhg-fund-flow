@@ -3,6 +3,7 @@ import { Scale } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtUsd, fmtMoney } from "@/lib/format";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Reconciliation = {
   deposits_usd: number;
@@ -98,7 +99,11 @@ export function ReconciliationSection() {
 
       {err && <p className="mt-4 text-sm text-destructive">{err}</p>}
       {loading && !data && (
-        <p className="mt-4 text-sm text-muted-foreground">Loading…</p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 rounded-xl" />
+          ))}
+        </div>
       )}
 
       {data && (

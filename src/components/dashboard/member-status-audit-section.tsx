@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Action = "suspended" | "terminated" | "pardoned" | "finalized";
 interface LogRow {
@@ -28,9 +29,9 @@ const ICON: Record<Action, typeof ShieldAlert> = {
 };
 
 const TONE: Record<Action, string> = {
-  suspended: "text-amber-600",
+  suspended: "text-warning",
   terminated: "text-destructive",
-  pardoned: "text-emerald-600",
+  pardoned: "text-success",
   finalized: "text-muted-foreground",
 };
 
@@ -139,9 +140,18 @@ export function MemberStatusAuditSection({
       </div>
 
       {loading ? (
-        <p className="rounded-xl border border-dashed bg-muted/30 p-6 text-center text-sm text-muted-foreground">
-          Loading…
-        </p>
+        <div className="space-y-2">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex items-start gap-3 rounded-xl border border-dashed bg-muted/20 p-3">
+              <Skeleton className="size-4 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-3 w-1/2" />
+                <Skeleton className="h-3 w-1/3" />
+              </div>
+              <Skeleton className="h-3 w-16" />
+            </div>
+          ))}
+        </div>
       ) : rows.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-muted/30 p-8 text-center">
           <History className="mx-auto size-6 text-muted-foreground" />

@@ -34,7 +34,9 @@ import { ResourceLibrarySection } from "@/components/dashboard/resource-library-
 import { MemberStatusSelfSection } from "@/components/dashboard/member-status-self-section";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 import { toCsv, downloadCsv } from "@/lib/csv";
-import { X as XIcon } from "lucide-react";
+import { X as XIcon, Printer } from "lucide-react";
+import { DateRangeFilter, EMPTY_RANGE, inRange, type DateRange } from "@/components/date-range-filter";
+import { printWithdrawalReceipt } from "@/lib/withdrawal-receipt";
 
 
 
@@ -108,8 +110,10 @@ export function MemberView({ profile }: { profile: Profile }) {
     [codes, tick],
   );
 
+  const [txnRange, setTxnRange] = useState<DateRange>(EMPTY_RANGE);
+  const filteredTxns = useMemo(() => txns.filter((t) => inRange(t.created_at, txnRange)), [txns, txnRange]);
   const requestsPage = usePagedList(requests);
-  const txnsPage = usePagedList(txns);
+  const txnsPage = usePagedList(filteredTxns);
 
   const generateCode = async () => {
     try {
@@ -361,6 +365,29 @@ export function MemberView({ profile }: { profile: Profile }) {
                     <XIcon className="mr-1 size-3" /> Cancel request
                   </Button>
                 )}
+                {r.status === "approved" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-1 h-7 px-2 text-xs"
+                    onClick={() =>
+                      printWithdrawalReceipt({
+                        id: r.id,
+                        amount_usd: Number(r.amount_usd),
+                        description: r.description,
+                        member_name: profile.full_name,
+                        resolved_at: r.resolved_at,
+                        created_at: r.created_at,
+                        snapshot_currency: r.snapshot_currency,
+                        snapshot_local_amount: r.snapshot_local_amount,
+                        snapshot_rate: r.snapshot_rate,
+                        leader_note: r.leader_note,
+                      })
+                    }
+                  >
+                    <Printer className="mr-1 size-3" /> Print receipt
+                  </Button>
+                )}
               </div>
               <StatusPill status={r.status} cancelled={cancelled} />
             </div>
@@ -392,10 +419,15 @@ export function MemberView({ profile }: { profile: Profile }) {
 
 
       <section className="rounded-2xl border bg-card p-6 shadow-card">
-        <h2 className="text-base font-semibold">Transaction history</h2>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <h2 className="text-base font-semibold">Transaction history</h2>
+          {txns.length > 0 && <DateRangeFilter value={txnRange} onChange={setTxnRange} />}
+        </div>
         <div className="mt-4 overflow-x-auto rounded-xl border">
           {txns.length === 0 ? (
             <p className="px-4 py-10 text-center text-sm text-muted-foreground">No activity yet.</p>
+          ) : filteredTxns.length === 0 ? (
+            <p className="px-4 py-10 text-center text-sm text-muted-foreground">No transactions in this date range.</p>
           ) : (
             <>
               <table className="w-full text-sm">

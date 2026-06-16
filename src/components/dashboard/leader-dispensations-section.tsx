@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fmtUsd, fmtDate } from "@/lib/format";
 import { UserAvatar } from "@/components/user-avatar";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
+import { DateRangeFilter, EMPTY_RANGE, inRange, type DateRange } from "@/components/date-range-filter";
 
 type Status = "pending" | "acknowledged" | "disputed";
 
@@ -56,6 +57,7 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
   const [resolveNote, setResolveNote] = useState("");
   const [resolveCredit, setResolveCredit] = useState<boolean>(true);
   const [busy, setBusy] = useState(false);
+  const [range, setRange] = useState<DateRange>(EMPTY_RANGE);
 
   const load = async () => {
     const { data, error } = await supabase
@@ -116,7 +118,7 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
     setPreviewUrl(data.signedUrl);
   };
 
-  const filtered = rows.filter((r) => r.status === tab);
+  const filtered = rows.filter((r) => r.status === tab && inRange(r.created_at, range));
   const page = usePagedList(filtered, 8);
   const counts: Record<Status, number> = {
     pending: rows.filter((r) => r.status === "pending").length,
@@ -133,6 +135,7 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
             Track what you've paid out, what members confirmed, and what's in dispute.
           </p>
         </div>
+        <DateRangeFilter value={range} onChange={setRange} />
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as Status)} className="mt-4">

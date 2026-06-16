@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -163,8 +164,12 @@ function SettingsPage() {
 
   if (loading || !profile) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-soft">
-        <p className="text-muted-foreground">Loading…</p>
+      <div className="min-h-screen bg-gradient-soft p-6">
+        <div className="mx-auto max-w-3xl space-y-4">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-64 rounded-2xl" />
+          <Skeleton className="h-48 rounded-2xl" />
+        </div>
       </div>
     );
   }

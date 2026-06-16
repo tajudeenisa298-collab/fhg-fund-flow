@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Activity, AlertCircle, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type CronRow = {
   jobname: string;
@@ -59,7 +60,17 @@ export function CronHealthSection() {
       {err && <p className="mt-3 text-sm text-destructive">{err}</p>}
       <div className="mt-4 divide-y rounded-xl border">
         {rows === null && (
-          <p className="px-4 py-6 text-center text-sm text-muted-foreground">Loading…</p>
+          <div className="space-y-px">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex items-center justify-between gap-3 px-4 py-3">
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-3 w-32" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="h-3 w-16" />
+              </div>
+            ))}
+          </div>
         )}
         {rows && rows.length === 0 && (
           <p className="px-4 py-6 text-center text-sm text-muted-foreground">No jobs scheduled.</p>

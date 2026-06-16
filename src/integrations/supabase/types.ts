@@ -873,6 +873,18 @@ export type Database = {
         Returns: undefined
       }
       finalize_terminated_members: { Args: never; Returns: number }
+      get_cron_health: {
+        Args: never
+        Returns: {
+          active: boolean
+          jobname: string
+          last_end: string
+          last_return: string
+          last_start: string
+          last_status: string
+          schedule: string
+        }[]
+      }
       get_downline: {
         Args: { _root: string }
         Returns: {

@@ -144,7 +144,7 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
                 Nothing here yet.
               </p>
             ) : tab === s ? (
-              filtered.map((d) => {
+              page.slice.map((d) => {
                 const meta = STATUS_META[d.status];
                 return (
                   <div

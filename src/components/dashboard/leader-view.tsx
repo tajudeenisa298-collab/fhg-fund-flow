@@ -211,7 +211,10 @@ export function LeaderView({ profile }: { profile: Profile }) {
           </h1>
           <p className="text-sm text-muted-foreground">Manage your team's funds and requests.</p>
         </div>
-        <NgnRateButton currentRate={ngnRate} onSaved={refresh} />
+        <div className="flex flex-wrap gap-2">
+          <MoneySafetyButton onSaved={refresh} />
+          <NgnRateButton currentRate={ngnRate} onSaved={refresh} />
+        </div>
       </div>
 
       <PendingActionsChips

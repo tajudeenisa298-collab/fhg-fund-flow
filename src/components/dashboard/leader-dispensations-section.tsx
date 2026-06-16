@@ -97,8 +97,9 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
 
   useEffect(() => {
     load();
+    const channelNonce = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const ch = supabase
-      .channel(`leader-disp:${leaderId}`)
+      .channel(`leader-disp:${leaderId}:${channelNonce}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "upkeep_dispensations", filter: `leader_id=eq.${leaderId}` },

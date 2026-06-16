@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { BankVerifier, type VerifiedBank } from "@/components/bank-verifier";
@@ -19,7 +21,7 @@ export const Route = createFileRoute("/settings")({
 });
 
 function SettingsPage() {
-  const { session, profile, loading } = useAuth();
+  const { session, profile, loading, refresh } = useAuth();
   const nav = useNavigate();
 
   const [bank, setBank] = useState<BankAccount | null>(null);
@@ -27,9 +29,17 @@ function SettingsPage() {
   const [verified, setVerified] = useState<VerifiedBank | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const [editingName, setEditingName] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+
   useEffect(() => {
     if (!loading && !session) nav({ to: "/login" });
   }, [loading, session, nav]);
+
+  useEffect(() => {
+    if (profile) setFullName(profile.full_name);
+  }, [profile]);
 
   useEffect(() => {
     if (!session?.user) return;
@@ -66,6 +76,25 @@ function SettingsPage() {
     setEditing(false);
     setVerified(null);
   };
+
+  const saveName = async () => {
+    if (!session?.user) return;
+    const trimmed = fullName.trim();
+    if (trimmed.length < 2 || trimmed.length > 100) {
+      return toast.error("Name must be 2–100 characters");
+    }
+    setSavingName(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ full_name: trimmed })
+      .eq("id", session.user.id);
+    setSavingName(false);
+    if (error) return toast.error(error.message);
+    toast.success("Name updated");
+    setEditingName(false);
+    await refresh();
+  };
+
 
   if (loading || !profile) {
     return (
@@ -167,11 +196,42 @@ function SettingsPage() {
         </section>
 
         <section className="rounded-2xl border bg-card p-6 shadow-card">
-          <h2 className="text-lg font-semibold">Account</h2>
+          <div className="flex items-start justify-between gap-3">
+            <h2 className="text-lg font-semibold">Account</h2>
+            {!editingName && (
+              <Button variant="outline" size="sm" onClick={() => setEditingName(true)}>
+                Edit name
+              </Button>
+            )}
+          </div>
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <dt className="text-xs uppercase tracking-wide text-muted-foreground">Name</dt>
-              <dd className="mt-1 font-medium">{profile.full_name}</dd>
+              {editingName ? (
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <Input
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    maxLength={100}
+                    className="max-w-xs"
+                  />
+                  <Button size="sm" onClick={saveName} disabled={savingName}>
+                    {savingName ? "Saving…" : "Save"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setFullName(profile.full_name);
+                      setEditingName(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <dd className="mt-1 font-medium">{profile.full_name}</dd>
+              )}
             </div>
             <div>
               <dt className="text-xs uppercase tracking-wide text-muted-foreground">Email</dt>
@@ -183,6 +243,7 @@ function SettingsPage() {
             </div>
           </dl>
         </section>
+
 
         <p className="text-center text-xs text-muted-foreground">
           <Link to="/dashboard" className="text-primary hover:underline">

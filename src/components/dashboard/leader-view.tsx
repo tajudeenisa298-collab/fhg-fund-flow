@@ -877,9 +877,12 @@ function ApproveDialog({
   const [currency, setCurrency] = useState("NGN");
   const [rate, setRate] = useState(String(defaultRate));
   const [note, setNote] = useState("");
+  const [platformFee, setPlatformFee] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const localAmount = Number(rate) > 0 ? Number(request.amount_usd) * Number(rate) : 0;
+  const feeUsd = Number(platformFee) > 0 ? Number(platformFee) : 0;
+  const netUsd = Math.max(0, Number(request.amount_usd) - feeUsd);
+  const localAmount = Number(rate) > 0 ? netUsd * Number(rate) : 0;
 
   const accept = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -893,6 +896,9 @@ function ApproveDialog({
     if (Number(request.amount_usd) > memberBalance) {
       return toast.error("Member's balance is too low for this amount.");
     }
+    if (feeUsd >= Number(request.amount_usd)) {
+      return toast.error("Platform fee must be less than the withdrawal amount.");
+    }
     setBusy(true);
 
     const { error: rpcErr } = await supabase.rpc("resolve_withdrawal_request", {
@@ -903,13 +909,28 @@ function ApproveDialog({
       _exchange_rate: parsed.data.exchange_rate,
       _local_amount: parsed.data.local_amount ?? undefined,
     });
-    setBusy(false);
-    if (rpcErr) return toast.error(rpcErr.message);
+    if (rpcErr) { setBusy(false); return toast.error(rpcErr.message); }
 
+    if (feeUsd > 0) {
+      const { error: feeErr } = await supabase.rpc("create_managed_transaction", {
+        _member_id: request.member_id,
+        _type: "bank_fee",
+        _amount_usd: Number(feeUsd.toFixed(2)),
+        _currency: "USD",
+        _note: `Platform fee on withdrawal of ${fmtUsd(request.amount_usd)}`,
+      });
+      if (feeErr) {
+        setBusy(false);
+        return toast.error(`Approved, but fee failed: ${feeErr.message}`);
+      }
+    }
+
+    setBusy(false);
     toast.success("Withdrawal approved & recorded");
     setOpen(false);
     onDone();
   };
+
 
   const decline = async () => {
     setBusy(true);
@@ -960,12 +981,34 @@ function ApproveDialog({
                 />
               </div>
             </div>
-            <div className="rounded-lg bg-muted/60 px-3 py-2 text-sm">
-              Member receives ≈{" "}
-              <span className="font-mono font-semibold">
-                {localAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })} {currency}
-              </span>
+            <div className="space-y-2">
+              <Label htmlFor="pfee">Platform fee (USD, optional)</Label>
+              <Input
+                id="pfee"
+                type="number"
+                step="0.01"
+                min="0"
+                value={platformFee}
+                onChange={(e) => setPlatformFee(e.target.value)}
+                placeholder="e.g. 4 for Payoneer"
+              />
             </div>
+            <div className="rounded-lg bg-muted/60 px-3 py-2 text-sm space-y-1">
+              <div>
+                Net after fee:{" "}
+                <span className="font-mono font-semibold">{fmtUsd(netUsd)}</span>
+                {feeUsd > 0 && (
+                  <span className="text-muted-foreground"> · fee {fmtUsd(feeUsd)}</span>
+                )}
+              </div>
+              <div>
+                Member receives ≈{" "}
+                <span className="font-mono font-semibold">
+                  {localAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })} {currency}
+                </span>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="lnote">Note (optional)</Label>
               <Textarea

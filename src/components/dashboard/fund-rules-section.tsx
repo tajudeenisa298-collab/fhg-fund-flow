@@ -270,6 +270,26 @@ function RuleDialog({
           </div>
 
           <div className="space-y-2">
+            <Label>Applies to</Label>
+            <Select value={memberId} onValueChange={setMemberId}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">All team members (default)</SelectItem>
+                {team.filter((m) => !m.can_handle_funds).map((m) => (
+                  <SelectItem key={m.id} value={m.id}>
+                    Override for {m.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              An override with the same name as a team-wide rule replaces it for that one member.
+            </p>
+          </div>
+
+          <div className="space-y-2">
             <Label>Deduction type</Label>
             <RadioGroup value={kind} onValueChange={(v) => setKind(v as FundKind)} className="grid grid-cols-2 gap-2">
               <label className="flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm">

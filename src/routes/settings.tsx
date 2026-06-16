@@ -194,23 +194,41 @@ function SettingsPage() {
           </div>
 
           {!editing && bank && (
-            <dl className="mt-6 grid gap-4 sm:grid-cols-3">
-              <div>
-                <dt className="text-xs uppercase tracking-wide text-muted-foreground">Bank</dt>
-                <dd className="mt-1 font-medium">{bank.bank_name}</dd>
-              </div>
-              <div>
-                <dt className="text-xs uppercase tracking-wide text-muted-foreground">Account #</dt>
-                <dd className="mt-1 font-mono">{bank.account_number}</dd>
-              </div>
-              <div>
-                <dt className="text-xs uppercase tracking-wide text-muted-foreground">Holder</dt>
-                <dd className="mt-1 font-medium">{bank.account_owner_name}</dd>
-              </div>
-              {bank.verified_at && (
-                <p className="sm:col-span-3 text-xs text-success">✓ Verified via Paystack</p>
-              )}
-            </dl>
+            <>
+              {(() => {
+                const stale =
+                  !bank.verified_at ||
+                  (Date.now() - new Date(bank.verified_at).getTime()) / 86400000 > 180;
+                if (!stale) return null;
+                return (
+                  <div className="mt-4 rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm">
+                    <strong className="font-semibold">
+                      {bank.verified_at ? "Bank details haven't been re-verified in over 6 months." : "Bank account hasn't been verified."}
+                    </strong>{" "}
+                    Click Edit and re-confirm to keep payouts moving.
+                  </div>
+                );
+              })()}
+              <dl className="mt-6 grid gap-4 sm:grid-cols-3">
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-muted-foreground">Bank</dt>
+                  <dd className="mt-1 font-medium">{bank.bank_name}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-muted-foreground">Account #</dt>
+                  <dd className="mt-1 font-mono">{bank.account_number}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-muted-foreground">Holder</dt>
+                  <dd className="mt-1 font-medium">{bank.account_owner_name}</dd>
+                </div>
+                {bank.verified_at && (
+                  <p className="sm:col-span-3 text-xs text-success">
+                    ✓ Verified via Paystack · {new Date(bank.verified_at).toLocaleDateString()}
+                  </p>
+                )}
+              </dl>
+            </>
           )}
           {!editing && !bank && (
             <p className="mt-6 rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground">

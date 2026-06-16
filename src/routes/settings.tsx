@@ -29,6 +29,10 @@ function SettingsPage() {
   const [verified, setVerified] = useState<VerifiedBank | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // 6-digit email OTP gate before any bank change
+  const [otpStage, setOtpStage] = useState<"idle" | "sending" | "awaiting" | "verifying">("idle");
+  const [otpCode, setOtpCode] = useState("");
+
   const [editingName, setEditingName] = useState(false);
   const [fullName, setFullName] = useState("");
   const [savingName, setSavingName] = useState(false);
@@ -51,8 +55,8 @@ function SettingsPage() {
       .then(({ data }) => setBank((data as BankAccount) ?? null));
   }, [session?.user]);
 
-  const save = async () => {
-    if (!session?.user || !verified) return toast.error("Verify the account first");
+  const writeBank = async () => {
+    if (!session?.user || !verified) return;
     setSaving(true);
     const payload = {
       user_id: session.user.id,
@@ -75,6 +79,37 @@ function SettingsPage() {
     });
     setEditing(false);
     setVerified(null);
+    setOtpStage("idle");
+    setOtpCode("");
+  };
+
+  const requestOtp = async () => {
+    if (!verified) return toast.error("Verify the account first");
+    setOtpStage("sending");
+    const { error } = await supabase.auth.reauthenticate();
+    if (error) {
+      setOtpStage("idle");
+      return toast.error(error.message);
+    }
+    setOtpStage("awaiting");
+    toast.success("We sent a 6-digit code to your email");
+  };
+
+  const verifyOtpAndSave = async () => {
+    if (!session?.user) return;
+    const token = otpCode.trim();
+    if (!/^\d{6}$/.test(token)) return toast.error("Enter the 6-digit code");
+    setOtpStage("verifying");
+    const { error } = await supabase.auth.verifyOtp({
+      email: session.user.email!,
+      token,
+      type: "reauthentication",
+    });
+    if (error) {
+      setOtpStage("awaiting");
+      return toast.error(error.message);
+    }
+    await writeBank();
   };
 
   const saveName = async () => {
@@ -94,6 +129,7 @@ function SettingsPage() {
     setEditingName(false);
     await refresh();
   };
+
 
 
   if (loading || !profile) {

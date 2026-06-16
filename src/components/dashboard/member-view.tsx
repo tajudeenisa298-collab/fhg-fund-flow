@@ -322,9 +322,16 @@ export function MemberView({ profile }: { profile: Profile }) {
                 <p className="font-medium">
                   {fmtUsd(r.amount_usd)}{" "}
                   <span className="text-xs font-normal text-muted-foreground">
-                    ({fmtNgn(r.amount_usd, ngnRate)})
+                    ({r.snapshot_rate && r.snapshot_local_amount
+                      ? `${r.snapshot_currency ?? "NGN"} ${r.snapshot_local_amount.toLocaleString()} @ ${r.snapshot_rate}`
+                      : fmtNgn(r.amount_usd, ngnRate)})
                   </span>
                 </p>
+                {r.snapshot_rate && r.status === "pending" && (
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    Rate locked when you submitted
+                  </p>
+                )}
                 <p className="truncate text-xs text-muted-foreground">{r.description}</p>
                 {r.leader_note && (
                   <p className="mt-1 text-xs italic text-muted-foreground">

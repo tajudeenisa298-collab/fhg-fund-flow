@@ -68,6 +68,7 @@ import { MemberStatusMenu, MemberStatusBadge } from "@/components/dashboard/memb
 import { MemberStatusAuditSection } from "@/components/dashboard/member-status-audit-section";
 import { CronHealthSection } from "@/components/dashboard/cron-health-section";
 import { MobileCollapsible } from "@/components/dashboard/mobile-collapsible";
+import { ReconciliationSection } from "@/components/dashboard/reconciliation-section";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 
 
@@ -495,6 +496,12 @@ export function LeaderView({ profile }: { profile: Profile }) {
       <MobileCollapsible title="Scheduled jobs">
         <CronHealthSection />
       </MobileCollapsible>
+
+      {/* Monthly reconciliation */}
+      <MobileCollapsible title="Monthly reconciliation">
+        <ReconciliationSection />
+      </MobileCollapsible>
+
 
       {/* Broadcast announcements */}
       <MobileCollapsible title="Announcements">
@@ -957,11 +964,16 @@ function ApproveDialog({
 }) {
   const [bank, setBank] = useState<{ bank_name: string; account_number: string; account_owner_name: string } | null>(null);
   const [open, setOpen] = useState(false);
-  const [currency, setCurrency] = useState("NGN");
-  const [rate, setRate] = useState(String(defaultRate));
+  const [currency, setCurrency] = useState(request.snapshot_currency ?? "NGN");
+  const snapshotRate = request.snapshot_rate ?? null;
+  const [rate, setRate] = useState(String(snapshotRate ?? defaultRate));
   const [note, setNote] = useState("");
   const [platformFee, setPlatformFee] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const rateNum = Number(rate);
+  const drift =
+    snapshotRate && rateNum > 0 ? Math.abs(rateNum - snapshotRate) / snapshotRate : 0;
 
   useEffect(() => {
     if (!open || !member) return;
@@ -1090,6 +1102,16 @@ function ApproveDialog({
                   onChange={(e) => setRate(e.target.value)}
                   required
                 />
+                {snapshotRate && (
+                  <p className="text-xs text-muted-foreground">
+                    Rate when submitted: <span className="font-mono">{snapshotRate}</span>
+                    {drift > 0.05 && (
+                      <span className="ml-1 text-warning">
+                        · current differs by {(drift * 100).toFixed(1)}%
+                      </span>
+                    )}
+                  </p>
+                )}
               </div>
             </div>
             <div className="space-y-2">

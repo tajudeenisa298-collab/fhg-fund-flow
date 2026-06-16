@@ -67,6 +67,9 @@ export interface WithdrawalRequest {
   leader_note: string | null;
   created_at: string;
   resolved_at: string | null;
+  snapshot_currency: string | null;
+  snapshot_rate: number | null;
+  snapshot_local_amount: number | null;
 }
 
 export type UpkeepFrequency =

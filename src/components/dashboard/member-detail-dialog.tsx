@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { Undo2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -6,6 +8,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { Money } from "@/components/money";
@@ -14,6 +29,8 @@ import { fmtDate } from "@/lib/format";
 import type { Profile } from "@/lib/auth-context";
 import type { Transaction, WithdrawalRequest, BankAccount } from "@/lib/types";
 import { MemberStatusBadge } from "@/components/dashboard/member-status-menu";
+
+const REVERSIBLE_TYPES = new Set(["deposit", "fund_deduction", "bank_fee"]);
 
 export function MemberDetailDialog({
   member,
@@ -27,6 +44,18 @@ export function MemberDetailDialog({
   const [txns, setTxns] = useState<Transaction[]>([]);
   const [reqs, setReqs] = useState<WithdrawalRequest[]>([]);
   const [bank, setBank] = useState<BankAccount | null>(null);
+  const [reverseTarget, setReverseTarget] = useState<Transaction | null>(null);
+  const [reverseReason, setReverseReason] = useState("");
+  const [reversing, setReversing] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const reversedIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const t of txns) {
+      if (t.parent_txn_id && t.note?.startsWith("Reversal of")) set.add(t.parent_txn_id);
+    }
+    return set;
+  }, [txns]);
 
   useEffect(() => {
     if (!member || !open) return;
@@ -47,7 +76,22 @@ export function MemberDetailDialog({
       setReqs((r.data as WithdrawalRequest[]) ?? []);
       setBank((b.data as BankAccount) ?? null);
     });
-  }, [member, open]);
+  }, [member, open, reloadKey]);
+
+  const doReverse = async () => {
+    if (!reverseTarget) return;
+    setReversing(true);
+    const { error } = await supabase.rpc("reverse_transaction", {
+      _txn_id: reverseTarget.id,
+      _reason: reverseReason || undefined,
+    });
+    setReversing(false);
+    if (error) return toast.error(error.message);
+    toast.success("Transaction reversed");
+    setReverseTarget(null);
+    setReverseReason("");
+    setReloadKey((k) => k + 1);
+  };
 
   if (!member) return null;
 
@@ -190,21 +234,48 @@ export function MemberDetailDialog({
                         <th className="px-3 py-2 font-medium">Type</th>
                         <th className="px-3 py-2 font-medium">Note</th>
                         <th className="px-3 py-2 text-right font-medium">Amount</th>
+                        <th className="px-3 py-2 text-right font-medium"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {txns.map((t) => (
-                        <tr key={t.id}>
-                          <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
-                            {fmtDate(t.created_at)}
-                          </td>
-                          <td className="px-3 py-2 capitalize">{t.type.replace("_", " ")}</td>
-                          <td className="px-3 py-2 text-muted-foreground">{t.note ?? "—"}</td>
-                          <td className="px-3 py-2 text-right">
-                            <Money usd={t.amount_usd} rate={t.exchange_rate ?? undefined} size="sm" inline />
-                          </td>
-                        </tr>
-                      ))}
+                      {txns.map((t) => {
+                        const isReversed = reversedIds.has(t.id);
+                        const isReversal = !!t.note?.startsWith("Reversal of");
+                        const canReverse =
+                          REVERSIBLE_TYPES.has(t.type) && !isReversed && !isReversal;
+                        return (
+                          <tr key={t.id} className={isReversed ? "opacity-60" : ""}>
+                            <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
+                              {fmtDate(t.created_at)}
+                            </td>
+                            <td className="px-3 py-2 capitalize">
+                              {t.type.replace("_", " ")}
+                              {isReversed && (
+                                <span className="ml-1 text-[10px] uppercase text-muted-foreground">
+                                  · reversed
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 text-muted-foreground">{t.note ?? "—"}</td>
+                            <td className="px-3 py-2 text-right">
+                              <Money usd={t.amount_usd} rate={t.exchange_rate ?? undefined} size="sm" inline />
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              {canReverse && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-2"
+                                  onClick={() => setReverseTarget(t)}
+                                  title="Reverse this transaction"
+                                >
+                                  <Undo2 className="size-3.5" />
+                                </Button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 )}
@@ -251,6 +322,42 @@ export function MemberDetailDialog({
           </div>
         </ScrollArea>
       </DialogContent>
+
+      <AlertDialog open={!!reverseTarget} onOpenChange={(o) => !o && setReverseTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reverse this transaction?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {reverseTarget && (
+                <>
+                  This will create a paired correcting entry that undoes the{" "}
+                  <span className="font-medium capitalize">
+                    {reverseTarget.type.replace("_", " ")}
+                  </span>{" "}
+                  of <span className="font-mono">${Number(reverseTarget.amount_usd).toFixed(2)}</span>
+                  . The original record stays in the history for audit.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="reverse-reason">Reason (optional)</Label>
+            <Textarea
+              id="reverse-reason"
+              rows={3}
+              value={reverseReason}
+              onChange={(e) => setReverseReason(e.target.value)}
+              placeholder="Why is this being reversed?"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={reversing}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={doReverse} disabled={reversing}>
+              {reversing ? "Reversing…" : "Reverse"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

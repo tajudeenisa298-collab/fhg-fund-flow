@@ -61,7 +61,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from("user_roles").select("role").eq("user_id", userId),
       supabase.from("app_settings").select("usd_to_ngn, fx_rates").eq("id", 1).maybeSingle(),
     ]);
-    setProfile((p as Profile) ?? null);
+    const prof = (p as Profile) ?? null;
+
+    // Block sign-in for terminated or actively-suspended accounts
+    if (prof) {
+      const isTerminated = !!prof.terminated_at;
+      const isSuspended = prof.suspended_until && new Date(prof.suspended_until) > new Date();
+      if (isTerminated || isSuspended) {
+        const msg = isTerminated
+          ? `Your account has been terminated${prof.terminated_reason ? ` — ${prof.terminated_reason}` : ""}.`
+          : `Your account is suspended until ${new Date(prof.suspended_until!).toLocaleString()}${prof.suspended_reason ? ` — ${prof.suspended_reason}` : ""}.`;
+        const { toast } = await import("sonner");
+        toast.error(msg);
+        await supabase.auth.signOut();
+        setProfile(null);
+        setRoles([]);
+        return;
+      }
+    }
+
+    setProfile(prof);
     const list = ((r as { role: AppRole }[]) ?? []).map((x) => x.role);
     setRoles(list);
     if (s?.usd_to_ngn) setNgnRate(Number(s.usd_to_ngn));

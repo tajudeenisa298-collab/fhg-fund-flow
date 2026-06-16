@@ -9,6 +9,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { Money } from "@/components/money";
+import { UserAvatar } from "@/components/user-avatar";
 import { fmtDate } from "@/lib/format";
 import type { Profile } from "@/lib/auth-context";
 import type { Transaction, WithdrawalRequest, BankAccount } from "@/lib/types";

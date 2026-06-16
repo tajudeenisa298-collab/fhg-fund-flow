@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { BankVerifier, type VerifiedBank } from "@/components/bank-verifier";
+import { AvatarUpload } from "@/components/avatar-upload";
 import type { BankAccount } from "@/lib/types";
 
 export const Route = createFileRoute("/settings")({

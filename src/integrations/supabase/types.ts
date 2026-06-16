@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          leader_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          leader_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          leader_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcements_leader_id_fkey"
+            columns: ["leader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_settings: {
         Row: {
           fx_rates: Json
@@ -80,6 +115,7 @@ export type Database = {
           id: string
           kind: Database["public"]["Enums"]["fund_kind"]
           leader_id: string
+          member_id: string | null
           name: string
           next_run_at: string | null
           target_rank: string | null
@@ -96,6 +132,7 @@ export type Database = {
           id?: string
           kind: Database["public"]["Enums"]["fund_kind"]
           leader_id: string
+          member_id?: string | null
           name: string
           next_run_at?: string | null
           target_rank?: string | null
@@ -112,12 +149,21 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["fund_kind"]
           leader_id?: string
+          member_id?: string | null
           name?: string
           next_run_at?: string | null
           target_rank?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fund_rules_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invite_codes: {
         Row: {
@@ -421,6 +467,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      resources: {
+        Row: {
+          body: string | null
+          category: string | null
+          created_at: string
+          id: string
+          kind: string
+          leader_id: string
+          storage_path: string | null
+          title: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          body?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          leader_id: string
+          storage_path?: string | null
+          title: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          body?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          leader_id?: string
+          storage_path?: string | null
+          title?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resources_leader_id_fkey"
+            columns: ["leader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transactions: {
         Row: {

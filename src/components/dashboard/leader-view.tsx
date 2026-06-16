@@ -370,39 +370,42 @@ export function LeaderView({ profile }: { profile: Profile }) {
         </div>
 
         {team.length > 0 && (
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <div className="relative min-w-[180px] flex-1">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={teamSearch}
-                onChange={(e) => setTeamSearch(e.target.value)}
-                placeholder="Search by name or email"
-                className="pl-8"
-              />
+          <div className="mt-4 space-y-3">
+            <TeamSavedViews team={team} bankIds={bankIds} active={savedView} onChange={setSavedView} />
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative min-w-[180px] flex-1">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={teamSearch}
+                  onChange={(e) => setTeamSearch(e.target.value)}
+                  placeholder="Search by name or email"
+                  className="pl-8"
+                />
+              </div>
+              <Select value={teamRankFilter} onValueChange={setTeamRankFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="All ranks" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All ranks</SelectItem>
+                  {RANKS.map((r) => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={teamSort} onValueChange={(v) => setTeamSort(v as typeof teamSort)}>
+                <SelectTrigger className="w-[170px]">
+                  <ArrowUpDown className="mr-1 size-3.5" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">Name (A–Z)</SelectItem>
+                  <SelectItem value="balance_desc">Balance (high → low)</SelectItem>
+                  <SelectItem value="balance_asc">Balance (low → high)</SelectItem>
+                  <SelectItem value="recent">Recently added</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={teamRankFilter} onValueChange={setTeamRankFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="All ranks" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All ranks</SelectItem>
-                {RANKS.map((r) => (
-                  <SelectItem key={r} value={r}>{r}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={teamSort} onValueChange={(v) => setTeamSort(v as typeof teamSort)}>
-              <SelectTrigger className="w-[170px]">
-                <ArrowUpDown className="mr-1 size-3.5" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="name">Name (A–Z)</SelectItem>
-                <SelectItem value="balance_desc">Balance (high → low)</SelectItem>
-                <SelectItem value="balance_asc">Balance (low → high)</SelectItem>
-                <SelectItem value="recent">Recently added</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         )}
 
@@ -423,7 +426,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
             </p>
           ) : (() => {
             const q = teamSearch.trim().toLowerCase();
-            const filtered = team
+            const filtered = applySavedView(team, savedView, bankIds)
               .filter((m) => teamRankFilter === "all" || m.rank === teamRankFilter)
               .filter(
                 (m) =>

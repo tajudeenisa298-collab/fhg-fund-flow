@@ -20,9 +20,9 @@ const ICON: Record<Action, typeof ShieldAlert> = {
 };
 
 const TONE: Record<Action, string> = {
-  suspended: "text-amber-600",
+  suspended: "text-warning",
   terminated: "text-destructive",
-  pardoned: "text-emerald-600",
+  pardoned: "text-success",
   finalized: "text-muted-foreground",
 };
 

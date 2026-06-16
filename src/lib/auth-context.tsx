@@ -14,6 +14,8 @@ export interface Profile {
   balance_usd: number;
   can_handle_funds: boolean;
   gender: "male" | "female" | "other" | "prefer_not_to_say" | null;
+  whatsapp_number: string | null;
+  payout_method: "bank_transfer" | "neolife_pv";
 }
 
 interface AuthContextValue {

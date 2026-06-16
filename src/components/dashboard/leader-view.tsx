@@ -1095,6 +1095,16 @@ function ApproveDialog({
                   onChange={(e) => setRate(e.target.value)}
                   required
                 />
+                {snapshotRate && (
+                  <p className="text-xs text-muted-foreground">
+                    Rate when submitted: <span className="font-mono">{snapshotRate}</span>
+                    {drift > 0.05 && (
+                      <span className="ml-1 text-warning">
+                        · current differs by {(drift * 100).toFixed(1)}%
+                      </span>
+                    )}
+                  </p>
+                )}
               </div>
             </div>
             <div className="space-y-2">

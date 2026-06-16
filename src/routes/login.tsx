@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { deviceHash, deviceLabel } from "@/lib/device-fingerprint";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -48,6 +49,16 @@ function LoginPage() {
     if (error) {
       toast.error(error.message);
       return;
+    }
+    try {
+      const hash = await deviceHash();
+      await supabase.rpc("record_login_device", {
+        _hash: hash,
+        _ua: navigator.userAgent,
+        _label: deviceLabel(),
+      });
+    } catch {
+      // non-fatal
     }
     toast.success("Welcome back!");
     nav({ to: "/dashboard" });

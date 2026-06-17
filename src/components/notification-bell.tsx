@@ -88,8 +88,11 @@ export function NotificationBell() {
       if (error) setItems(prev);
     }
     setOpen(false);
-    if (n.link) nav({ to: n.link });
+    // Always show details so long-bodied notifications are fully readable.
+    // The detail dialog also exposes a "Go to page" CTA when n.link is set.
+    setDetail({ ...n, read_at: n.read_at ?? new Date().toISOString() });
   };
+
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

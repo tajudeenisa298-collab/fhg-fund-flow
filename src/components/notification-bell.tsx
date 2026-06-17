@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import type { Notification } from "@/lib/types";
+import { NotificationDetailDialog } from "@/components/notification-detail-dialog";
 
 const fmtAgo = (s: string) => {
   const ms = Date.now() - new Date(s).getTime();
@@ -24,6 +25,7 @@ export function NotificationBell() {
   const nav = useNavigate();
   const [items, setItems] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+  const [detail, setDetail] = useState<Notification | null>(null);
   const userId = session?.user?.id;
 
   const load = async () => {
@@ -86,10 +88,14 @@ export function NotificationBell() {
       if (error) setItems(prev);
     }
     setOpen(false);
-    if (n.link) nav({ to: n.link });
+    // Always show details so long-bodied notifications are fully readable.
+    // The detail dialog also exposes a "Go to page" CTA when n.link is set.
+    setDetail({ ...n, read_at: n.read_at ?? new Date().toISOString() });
   };
 
+
   return (
+    <>
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" size="icon" className="relative" aria-label="Notifications">
@@ -159,5 +165,11 @@ export function NotificationBell() {
         </div>
       </PopoverContent>
     </Popover>
+    <NotificationDetailDialog
+      notification={detail}
+      open={!!detail}
+      onOpenChange={(v) => !v && setDetail(null)}
+    />
+    </>
   );
 }

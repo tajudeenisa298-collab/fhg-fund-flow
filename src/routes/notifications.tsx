@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import type { Notification } from "@/lib/types";
 import { fmtDate } from "@/lib/format";
+import { NotificationDetailDialog } from "@/components/notification-detail-dialog";
 
 export const Route = createFileRoute("/notifications")({
   head: () => ({
@@ -22,6 +23,7 @@ function NotificationsPage() {
   const nav = useNavigate();
   const [items, setItems] = useState<Notification[]>([]);
   const [busy, setBusy] = useState(false);
+  const [detail, setDetail] = useState<Notification | null>(null);
   const userId = session?.user?.id;
 
   useEffect(() => {
@@ -95,7 +97,9 @@ function NotificationsPage() {
         .eq("id", n.id);
       if (error) setItems(prev);
     }
-    if (n.link) nav({ to: n.link });
+    // Open the detail dialog so the full body is readable and the user can
+    // choose to jump to the linked page when one exists.
+    setDetail({ ...n, read_at: n.read_at ?? new Date().toISOString() });
   };
 
   return (
@@ -171,6 +175,11 @@ function NotificationsPage() {
           </ul>
         )}
       </main>
+      <NotificationDetailDialog
+        notification={detail}
+        open={!!detail}
+        onOpenChange={(v) => !v && setDetail(null)}
+      />
     </div>
   );
 }

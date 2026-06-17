@@ -1200,6 +1200,19 @@ export type Database = {
         Returns: boolean
       }
       is_valid_rank: { Args: { _rank: string }; Returns: boolean }
+      leader_adjust_balance: {
+        Args: {
+          _amount_usd: number
+          _direction: string
+          _member_id: string
+          _reason: string
+        }
+        Returns: string
+      }
+      leader_override_rank: {
+        Args: { _member_id: string; _new_rank: string; _reason: string }
+        Returns: undefined
+      }
       leader_purse_withdraw: {
         Args: { _amount_usd: number; _note?: string }
         Returns: string

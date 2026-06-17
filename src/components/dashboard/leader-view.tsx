@@ -212,6 +212,7 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
 
   return (
     <div className="space-y-6">
+      {show("overview") && (
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -227,7 +228,9 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
           <NgnRateButton currentRate={ngnRate} onSaved={refresh} />
         </div>
       </div>
+      )}
 
+      {show("overview") && (<>
       <PendingActionsChips
         leaderId={profile.id}
         pendingRequests={pendingRequests.length}
@@ -285,6 +288,7 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
         <StatCard label="Pending requests" value={String(pendingRequests.length)} icon={Plus} />
         <StatCard label="Active codes" value={String(visibleCodes.length)} icon={Plus} />
       </div>
+      </>)}
 
       {/* Pending requests */}
       <section id="withdrawal-requests" className="rounded-2xl border bg-card p-6 shadow-card">

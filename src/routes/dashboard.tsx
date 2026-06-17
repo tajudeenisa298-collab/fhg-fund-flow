@@ -109,7 +109,9 @@ function DashboardPage() {
       <DashboardSubNav role={activeRole} />
 
       <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
-        {activeRole === "leader" ? (
+        {section === "structure" ? (
+          <StructureSection profile={profile} />
+        ) : activeRole === "leader" ? (
           <LeaderView profile={profile} section={section} />
         ) : (
           <MemberView profile={profile} section={section} />

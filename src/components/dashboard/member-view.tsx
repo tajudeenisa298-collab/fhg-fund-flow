@@ -170,6 +170,7 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
 
   return (
     <div className="space-y-6">
+      {show("overview") && (<>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">

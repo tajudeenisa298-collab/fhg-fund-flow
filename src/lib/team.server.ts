@@ -11,8 +11,8 @@ export async function generateInviteCodeServer(leaderId: string) {
     .toUpperCase()
     .slice(0, 6);
   const code = `FHG-${suffix}`;
-  // 24 hours — long enough for the recipient to finish signing up
-  const expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  // 2 minutes — short-lived, must be redeemed quickly
+  const expires_at = new Date(Date.now() + 2 * 60 * 1000).toISOString();
 
   const { error } = await supabaseAdmin
     .from("invite_codes")

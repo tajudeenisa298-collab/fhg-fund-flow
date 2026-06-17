@@ -23,6 +23,7 @@ function NotificationsPage() {
   const nav = useNavigate();
   const [items, setItems] = useState<Notification[]>([]);
   const [busy, setBusy] = useState(false);
+  const [detail, setDetail] = useState<Notification | null>(null);
   const userId = session?.user?.id;
 
   useEffect(() => {

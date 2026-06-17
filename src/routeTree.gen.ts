@@ -18,7 +18,12 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DevComponentsRouteImport } from './routes/dev.components'
+import { Route as DashboardTeamRouteImport } from './routes/dashboard.team'
+import { Route as DashboardOfficeRouteImport } from './routes/dashboard.office'
+import { Route as DashboardMoneyRouteImport } from './routes/dashboard.money'
+import { Route as DashboardAdminRouteImport } from './routes/dashboard.admin'
 import { Route as ApiPublicHooksWeeklyDigestRouteImport } from './routes/api/public/hooks/weekly-digest'
 import { Route as ApiPublicHooksRunUpkeepRouteImport } from './routes/api/public/hooks/run-upkeep'
 import { Route as ApiPublicHooksFinalizeTerminationsRouteImport } from './routes/api/public/hooks/finalize-terminations'
@@ -68,10 +73,35 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DevComponentsRoute = DevComponentsRouteImport.update({
   id: '/dev/components',
   path: '/dev/components',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardTeamRoute = DashboardTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardOfficeRoute = DashboardOfficeRouteImport.update({
+  id: '/office',
+  path: '/office',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardMoneyRoute = DashboardMoneyRouteImport.update({
+  id: '/money',
+  path: '/money',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAdminRoute = DashboardAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const ApiPublicHooksWeeklyDigestRoute =
   ApiPublicHooksWeeklyDigestRouteImport.update({
@@ -94,14 +124,19 @@ const ApiPublicHooksFinalizeTerminationsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
+  '/dashboard/money': typeof DashboardMoneyRoute
+  '/dashboard/office': typeof DashboardOfficeRoute
+  '/dashboard/team': typeof DashboardTeamRoute
   '/dev/components': typeof DevComponentsRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
   '/api/public/hooks/run-upkeep': typeof ApiPublicHooksRunUpkeepRoute
   '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
@@ -109,14 +144,18 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
-  '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
+  '/dashboard/money': typeof DashboardMoneyRoute
+  '/dashboard/office': typeof DashboardOfficeRoute
+  '/dashboard/team': typeof DashboardTeamRoute
   '/dev/components': typeof DevComponentsRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
   '/api/public/hooks/run-upkeep': typeof ApiPublicHooksRunUpkeepRoute
   '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
@@ -125,14 +164,19 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
+  '/dashboard/money': typeof DashboardMoneyRoute
+  '/dashboard/office': typeof DashboardOfficeRoute
+  '/dashboard/team': typeof DashboardTeamRoute
   '/dev/components': typeof DevComponentsRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
   '/api/public/hooks/run-upkeep': typeof ApiPublicHooksRunUpkeepRoute
   '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
@@ -149,7 +193,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/dashboard/admin'
+    | '/dashboard/money'
+    | '/dashboard/office'
+    | '/dashboard/team'
     | '/dev/components'
+    | '/dashboard/'
     | '/api/public/hooks/finalize-terminations'
     | '/api/public/hooks/run-upkeep'
     | '/api/public/hooks/weekly-digest'
@@ -157,14 +206,18 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/analytics'
-    | '/dashboard'
     | '/forgot-password'
     | '/login'
     | '/notifications'
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/dashboard/admin'
+    | '/dashboard/money'
+    | '/dashboard/office'
+    | '/dashboard/team'
     | '/dev/components'
+    | '/dashboard'
     | '/api/public/hooks/finalize-terminations'
     | '/api/public/hooks/run-upkeep'
     | '/api/public/hooks/weekly-digest'
@@ -179,7 +232,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/dashboard/admin'
+    | '/dashboard/money'
+    | '/dashboard/office'
+    | '/dashboard/team'
     | '/dev/components'
+    | '/dashboard/'
     | '/api/public/hooks/finalize-terminations'
     | '/api/public/hooks/run-upkeep'
     | '/api/public/hooks/weekly-digest'
@@ -188,7 +246,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyticsRoute: typeof AnalyticsRoute
-  DashboardRoute: typeof DashboardRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
@@ -266,12 +324,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dev/components': {
       id: '/dev/components'
       path: '/dev/components'
       fullPath: '/dev/components'
       preLoaderRoute: typeof DevComponentsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/team': {
+      id: '/dashboard/team'
+      path: '/team'
+      fullPath: '/dashboard/team'
+      preLoaderRoute: typeof DashboardTeamRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/office': {
+      id: '/dashboard/office'
+      path: '/office'
+      fullPath: '/dashboard/office'
+      preLoaderRoute: typeof DashboardOfficeRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/money': {
+      id: '/dashboard/money'
+      path: '/money'
+      fullPath: '/dashboard/money'
+      preLoaderRoute: typeof DashboardMoneyRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/admin': {
+      id: '/dashboard/admin'
+      path: '/admin'
+      fullPath: '/dashboard/admin'
+      preLoaderRoute: typeof DashboardAdminRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/api/public/hooks/weekly-digest': {
       id: '/api/public/hooks/weekly-digest'
@@ -297,10 +390,30 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface DashboardRouteChildren {
+  DashboardAdminRoute: typeof DashboardAdminRoute
+  DashboardMoneyRoute: typeof DashboardMoneyRoute
+  DashboardOfficeRoute: typeof DashboardOfficeRoute
+  DashboardTeamRoute: typeof DashboardTeamRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAdminRoute: DashboardAdminRoute,
+  DashboardMoneyRoute: DashboardMoneyRoute,
+  DashboardOfficeRoute: DashboardOfficeRoute,
+  DashboardTeamRoute: DashboardTeamRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyticsRoute: AnalyticsRoute,
-  DashboardRoute: DashboardRoute,
+  DashboardRoute: DashboardRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,

@@ -87,7 +87,10 @@ import { BarChart3 } from "lucide-react";
 
 import { generateInviteCode, promoteManagedMember } from "@/lib/team.functions";
 
-export function LeaderView({ profile }: { profile: Profile }) {
+import type { DashboardSection } from "@/components/dashboard/dashboard-sub-nav";
+
+export function LeaderView({ profile, section = "all" }: { profile: Profile; section?: DashboardSection | "all" }) {
+  const show = (s: DashboardSection) => section === "all" || section === s;
   const { refresh, ngnRate } = useAuth();
   const createInviteCode = useServerFn(generateInviteCode);
   const [team, setTeam] = useState<Profile[]>([]);
@@ -209,6 +212,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
 
   return (
     <div className="space-y-6">
+      {show("overview") && (
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -224,7 +228,9 @@ export function LeaderView({ profile }: { profile: Profile }) {
           <NgnRateButton currentRate={ngnRate} onSaved={refresh} />
         </div>
       </div>
+      )}
 
+      {show("overview") && (<>
       <PendingActionsChips
         leaderId={profile.id}
         pendingRequests={pendingRequests.length}
@@ -282,7 +288,9 @@ export function LeaderView({ profile }: { profile: Profile }) {
         <StatCard label="Pending requests" value={String(pendingRequests.length)} icon={Plus} />
         <StatCard label="Active codes" value={String(visibleCodes.length)} icon={Plus} />
       </div>
+      </>)}
 
+      {show("overview") && (<>
       {/* Pending requests */}
       <section id="withdrawal-requests" className="rounded-2xl border bg-card p-6 shadow-card">
         <h2 className="text-base font-semibold">Withdrawal requests</h2>
@@ -378,7 +386,9 @@ export function LeaderView({ profile }: { profile: Profile }) {
           </ul>
         </section>
       )}
+      </>)}
 
+      {show("team") && (<>
       {/* Team */}
       <section id="team-members" className="rounded-2xl border bg-card p-6 shadow-card">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -564,10 +574,10 @@ export function LeaderView({ profile }: { profile: Profile }) {
       </section>
 
       <RecentSignupsSection leaderId={profile.id} />
-
+      </>)}
 
       {/* Upkeep schedules summary */}
-      {plans.length > 0 && (
+      {show("money") && plans.length > 0 && (
         <section className="rounded-2xl border bg-card p-6 shadow-card">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
@@ -634,7 +644,7 @@ export function LeaderView({ profile }: { profile: Profile }) {
         </section>
       )}
 
-      {/* Invite codes */}
+      {show("team") && (
       <section className="rounded-2xl border bg-card p-6 shadow-card">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -658,82 +668,86 @@ export function LeaderView({ profile }: { profile: Profile }) {
           ))}
         </div>
       </section>
+      )}
 
-      {/* Office support ledger */}
-      <MobileCollapsible title="Office support ledger">
-        <OfficeSection leaderId={profile.id} />
-      </MobileCollapsible>
+      {show("office") && (
+        <MobileCollapsible title="Office support ledger">
+          <OfficeSection leaderId={profile.id} />
+        </MobileCollapsible>
+      )}
 
-      {/* Team leader's personal purse */}
-      <MobileCollapsible title="Personal purse">
-        <LeaderPurseSection leaderId={profile.id} />
-      </MobileCollapsible>
+      {show("money") && (<>
+        <MobileCollapsible title="Personal purse">
+          <LeaderPurseSection leaderId={profile.id} />
+        </MobileCollapsible>
 
-      {/* Upkeep dispensations tracker */}
-      <MobileCollapsible title="Upkeep dispensations" defaultOpen>
-        <LeaderDispensationsSection leaderId={profile.id} />
-      </MobileCollapsible>
+        <MobileCollapsible title="Upkeep dispensations" defaultOpen>
+          <LeaderDispensationsSection leaderId={profile.id} />
+        </MobileCollapsible>
+      </>)}
 
-      {/* Suspend / terminate / pardon audit log */}
-      <MobileCollapsible title="Member status history">
-        <MemberStatusAuditSection
-          leaderId={profile.id}
-          memberNames={Object.fromEntries(team.map((m) => [m.id, m.full_name]))}
-        />
-      </MobileCollapsible>
-
-      {/* Scheduled-job health */}
-      <MobileCollapsible title="Scheduled jobs">
-        <CronHealthSection />
-      </MobileCollapsible>
-
-      {/* Monthly reconciliation */}
-      <MobileCollapsible title="Monthly reconciliation">
-        <ReconciliationSection />
-      </MobileCollapsible>
-
-
-      {/* Broadcast announcements */}
-      <MobileCollapsible title="Announcements">
-        <AnnouncementsSection leaderId={profile.id} canManage />
-      </MobileCollapsible>
-
-      {/* Resource library */}
-      <MobileCollapsible title="Resource library">
-        <ResourceLibrarySection leaderId={profile.id} canManage />
-      </MobileCollapsible>
-
-      {/* Cross-team oversight: visible only when there are sub-leaders in the downline */}
-      <OrganisationSection leaderId={profile.id} />
-
-      {/* Team NeoLife PV log */}
-      <MobileCollapsible title="Team PV log">
-        <PvLogSection ownerId={profile.id} scope="team" />
-      </MobileCollapsible>
-
-      {/* Pyramid downline */}
-      <MobileCollapsible title="Downline tree">
-        <DownlineSection rootId={profile.id} />
-      </MobileCollapsible>
-
-      {/* Flexible fund rules */}
-      <MobileCollapsible title="Fund rules">
-        <FundRulesSection leaderId={profile.id} />
-      </MobileCollapsible>
-
-      {/* Rank-based upkeep defaults */}
-      <MobileCollapsible title="Rank upkeep defaults">
-        <div className="space-y-3">
-          <div className="flex justify-end">
-            <CsvImportDialog kind="rank_defaults" leaderId={profile.id} onDone={load} />
-          </div>
-          <RankUpkeepDefaultsSection
+      {show("team") && (
+        <MobileCollapsible title="Member status history">
+          <MemberStatusAuditSection
             leaderId={profile.id}
-            defaults={rankDefaults}
-            onChanged={load}
+            memberNames={Object.fromEntries(team.map((m) => [m.id, m.full_name]))}
           />
-        </div>
-      </MobileCollapsible>
+        </MobileCollapsible>
+      )}
+
+      {show("admin") && (
+        <MobileCollapsible title="Scheduled jobs">
+          <CronHealthSection />
+        </MobileCollapsible>
+      )}
+
+      {show("office") && (
+        <MobileCollapsible title="Monthly reconciliation">
+          <ReconciliationSection />
+        </MobileCollapsible>
+      )}
+
+      {show("admin") && (<>
+        <MobileCollapsible title="Announcements">
+          <AnnouncementsSection leaderId={profile.id} canManage />
+        </MobileCollapsible>
+
+        <MobileCollapsible title="Resource library">
+          <ResourceLibrarySection leaderId={profile.id} canManage />
+        </MobileCollapsible>
+      </>)}
+
+      {show("team") && (<>
+        <OrganisationSection leaderId={profile.id} />
+
+        <MobileCollapsible title="Team PV log">
+          <PvLogSection ownerId={profile.id} scope="team" />
+        </MobileCollapsible>
+
+        <MobileCollapsible title="Downline tree">
+          <DownlineSection rootId={profile.id} />
+        </MobileCollapsible>
+      </>)}
+
+      {show("money") && (<>
+        <MobileCollapsible title="Fund rules">
+          <FundRulesSection leaderId={profile.id} />
+        </MobileCollapsible>
+
+        <MobileCollapsible title="Rank upkeep defaults">
+          <div className="space-y-3">
+            <div className="flex justify-end">
+              <CsvImportDialog kind="rank_defaults" leaderId={profile.id} onDone={load} />
+            </div>
+            <RankUpkeepDefaultsSection
+              leaderId={profile.id}
+              defaults={rankDefaults}
+              onChanged={load}
+            />
+          </div>
+        </MobileCollapsible>
+      </>)}
+
 
 
       <MemberDetailDialog

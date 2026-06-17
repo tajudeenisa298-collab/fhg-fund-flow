@@ -574,10 +574,10 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
       </section>
 
       <RecentSignupsSection leaderId={profile.id} />
-
+      </>)}
 
       {/* Upkeep schedules summary */}
-      {plans.length > 0 && (
+      {show("money") && plans.length > 0 && (
         <section className="rounded-2xl border bg-card p-6 shadow-card">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
@@ -644,7 +644,7 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
         </section>
       )}
 
-      {/* Invite codes */}
+      {show("team") && (
       <section className="rounded-2xl border bg-card p-6 shadow-card">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -668,82 +668,86 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
           ))}
         </div>
       </section>
+      )}
 
-      {/* Office support ledger */}
-      <MobileCollapsible title="Office support ledger">
-        <OfficeSection leaderId={profile.id} />
-      </MobileCollapsible>
+      {show("office") && (
+        <MobileCollapsible title="Office support ledger">
+          <OfficeSection leaderId={profile.id} />
+        </MobileCollapsible>
+      )}
 
-      {/* Team leader's personal purse */}
-      <MobileCollapsible title="Personal purse">
-        <LeaderPurseSection leaderId={profile.id} />
-      </MobileCollapsible>
+      {show("money") && (<>
+        <MobileCollapsible title="Personal purse">
+          <LeaderPurseSection leaderId={profile.id} />
+        </MobileCollapsible>
 
-      {/* Upkeep dispensations tracker */}
-      <MobileCollapsible title="Upkeep dispensations" defaultOpen>
-        <LeaderDispensationsSection leaderId={profile.id} />
-      </MobileCollapsible>
+        <MobileCollapsible title="Upkeep dispensations" defaultOpen>
+          <LeaderDispensationsSection leaderId={profile.id} />
+        </MobileCollapsible>
+      </>)}
 
-      {/* Suspend / terminate / pardon audit log */}
-      <MobileCollapsible title="Member status history">
-        <MemberStatusAuditSection
-          leaderId={profile.id}
-          memberNames={Object.fromEntries(team.map((m) => [m.id, m.full_name]))}
-        />
-      </MobileCollapsible>
-
-      {/* Scheduled-job health */}
-      <MobileCollapsible title="Scheduled jobs">
-        <CronHealthSection />
-      </MobileCollapsible>
-
-      {/* Monthly reconciliation */}
-      <MobileCollapsible title="Monthly reconciliation">
-        <ReconciliationSection />
-      </MobileCollapsible>
-
-
-      {/* Broadcast announcements */}
-      <MobileCollapsible title="Announcements">
-        <AnnouncementsSection leaderId={profile.id} canManage />
-      </MobileCollapsible>
-
-      {/* Resource library */}
-      <MobileCollapsible title="Resource library">
-        <ResourceLibrarySection leaderId={profile.id} canManage />
-      </MobileCollapsible>
-
-      {/* Cross-team oversight: visible only when there are sub-leaders in the downline */}
-      <OrganisationSection leaderId={profile.id} />
-
-      {/* Team NeoLife PV log */}
-      <MobileCollapsible title="Team PV log">
-        <PvLogSection ownerId={profile.id} scope="team" />
-      </MobileCollapsible>
-
-      {/* Pyramid downline */}
-      <MobileCollapsible title="Downline tree">
-        <DownlineSection rootId={profile.id} />
-      </MobileCollapsible>
-
-      {/* Flexible fund rules */}
-      <MobileCollapsible title="Fund rules">
-        <FundRulesSection leaderId={profile.id} />
-      </MobileCollapsible>
-
-      {/* Rank-based upkeep defaults */}
-      <MobileCollapsible title="Rank upkeep defaults">
-        <div className="space-y-3">
-          <div className="flex justify-end">
-            <CsvImportDialog kind="rank_defaults" leaderId={profile.id} onDone={load} />
-          </div>
-          <RankUpkeepDefaultsSection
+      {show("team") && (
+        <MobileCollapsible title="Member status history">
+          <MemberStatusAuditSection
             leaderId={profile.id}
-            defaults={rankDefaults}
-            onChanged={load}
+            memberNames={Object.fromEntries(team.map((m) => [m.id, m.full_name]))}
           />
-        </div>
-      </MobileCollapsible>
+        </MobileCollapsible>
+      )}
+
+      {show("admin") && (
+        <MobileCollapsible title="Scheduled jobs">
+          <CronHealthSection />
+        </MobileCollapsible>
+      )}
+
+      {show("office") && (
+        <MobileCollapsible title="Monthly reconciliation">
+          <ReconciliationSection />
+        </MobileCollapsible>
+      )}
+
+      {show("admin") && (<>
+        <MobileCollapsible title="Announcements">
+          <AnnouncementsSection leaderId={profile.id} canManage />
+        </MobileCollapsible>
+
+        <MobileCollapsible title="Resource library">
+          <ResourceLibrarySection leaderId={profile.id} canManage />
+        </MobileCollapsible>
+      </>)}
+
+      {show("team") && (<>
+        <OrganisationSection leaderId={profile.id} />
+
+        <MobileCollapsible title="Team PV log">
+          <PvLogSection ownerId={profile.id} scope="team" />
+        </MobileCollapsible>
+
+        <MobileCollapsible title="Downline tree">
+          <DownlineSection rootId={profile.id} />
+        </MobileCollapsible>
+      </>)}
+
+      {show("money") && (<>
+        <MobileCollapsible title="Fund rules">
+          <FundRulesSection leaderId={profile.id} />
+        </MobileCollapsible>
+
+        <MobileCollapsible title="Rank upkeep defaults">
+          <div className="space-y-3">
+            <div className="flex justify-end">
+              <CsvImportDialog kind="rank_defaults" leaderId={profile.id} onDone={load} />
+            </div>
+            <RankUpkeepDefaultsSection
+              leaderId={profile.id}
+              defaults={rankDefaults}
+              onChanged={load}
+            />
+          </div>
+        </MobileCollapsible>
+      </>)}
+
 
 
       <MemberDetailDialog

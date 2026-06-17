@@ -175,6 +175,11 @@ function NotificationsPage() {
           </ul>
         )}
       </main>
+      <NotificationDetailDialog
+        notification={detail}
+        open={!!detail}
+        onOpenChange={(v) => !v && setDetail(null)}
+      />
     </div>
   );
 }

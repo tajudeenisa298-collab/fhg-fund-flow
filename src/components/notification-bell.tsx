@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import type { Notification } from "@/lib/types";
+import { NotificationDetailDialog } from "@/components/notification-detail-dialog";
 
 const fmtAgo = (s: string) => {
   const ms = Date.now() - new Date(s).getTime();

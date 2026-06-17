@@ -197,7 +197,7 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
   const generateCode = async () => {
     try {
       await createInviteCode();
-      toast.success("Invite code created — valid for 24 hours");
+      toast.success("Invite code created — valid for 2 minutes");
       load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not create invite code");
@@ -650,7 +650,7 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
           <div>
             <h2 className="text-base font-semibold">Invite codes</h2>
             <p className="text-sm text-muted-foreground">
-              Each code is valid for 24 hours after you generate it.
+              Each code is valid for 2 minutes after you generate it.
             </p>
           </div>
           <Button onClick={generateCode}>

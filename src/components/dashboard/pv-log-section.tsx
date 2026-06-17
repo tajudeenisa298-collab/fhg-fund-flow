@@ -163,7 +163,7 @@ export function PvLogSection({
       _period_month: monthInputToDate(month),
       _pv: pvNum,
       _price_usd: Number(priceUsd.toFixed(4)),
-      _note: note.trim() || null,
+      _note: note.trim() || undefined,
     });
     setBusy(false);
     if (error) return toast.error(error.message);

@@ -49,7 +49,10 @@ const requestSchema = z.object({
   description: z.string().trim().min(5).max(500),
 });
 
-export function MemberView({ profile }: { profile: Profile }) {
+import type { DashboardSection } from "@/components/dashboard/dashboard-sub-nav";
+
+export function MemberView({ profile, section = "all" }: { profile: Profile; section?: DashboardSection | "all" }) {
+  const show = (s: DashboardSection | "office") => section === "all" || section === s;
   const { refresh, ngnRate } = useAuth();
   const createInviteCode = useServerFn(generateInviteCode);
   const [txns, setTxns] = useState<Transaction[]>([]);

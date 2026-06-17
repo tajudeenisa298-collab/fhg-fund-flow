@@ -97,7 +97,9 @@ function NotificationsPage() {
         .eq("id", n.id);
       if (error) setItems(prev);
     }
-    if (n.link) nav({ to: n.link });
+    // Open the detail dialog so the full body is readable and the user can
+    // choose to jump to the linked page when one exists.
+    setDetail({ ...n, read_at: n.read_at ?? new Date().toISOString() });
   };
 
   return (

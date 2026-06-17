@@ -30,6 +30,7 @@ import type { Profile } from "@/lib/auth-context";
 import type { Transaction, WithdrawalRequest, BankAccount } from "@/lib/types";
 import { MemberStatusBadge } from "@/components/dashboard/member-status-menu";
 import { MemberNotesSection } from "@/components/dashboard/member-notes-section";
+import { LeaderMemberActions } from "@/components/dashboard/leader-member-actions";
 
 const REVERSIBLE_TYPES = new Set(["deposit", "fund_deduction", "bank_fee"]);
 
@@ -151,6 +152,9 @@ export function MemberDetailDialog({
                 <Stat label="Total deducted (funds)" usd={totalDeducted} />
               </div>
             </section>
+
+            <LeaderMemberActions member={member} onChanged={() => setReloadKey((k) => k + 1)} />
+
 
             {byRule.size > 0 && (
               <section>

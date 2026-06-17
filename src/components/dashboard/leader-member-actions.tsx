@@ -141,7 +141,7 @@ function AdjustBalanceDialog({
           <div>
             <Label>Amount</Label>
             <div className="mt-1.5">
-              <CurrencyAmountInput valueUsd={amountUsd} onChangeUsd={setAmountUsd} />
+              <CurrencyAmountInput valueUsd={amountUsd} onUsdChange={setAmountUsd} />
             </div>
           </div>
 

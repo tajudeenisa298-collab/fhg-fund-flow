@@ -650,7 +650,7 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
           <div>
             <h2 className="text-base font-semibold">Invite codes</h2>
             <p className="text-sm text-muted-foreground">
-              Each code expires in 2 minutes — share quickly!
+              Each code is valid for 24 hours after you generate it.
             </p>
           </div>
           <Button onClick={generateCode}>

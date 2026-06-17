@@ -320,14 +320,18 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
 
       <ProfileCompleteness profile={profile} />
 
-
-      <PendingUpkeepSection memberId={profile.id} onChanged={() => { load(); refresh(); }} />
-
       <MemberStatusSelfSection memberId={profile.id} />
+      </>)}
 
-      <PvLogSection ownerId={profile.id} scope="self" />
+      {show("money") && (
+        <PendingUpkeepSection memberId={profile.id} onChanged={() => { load(); refresh(); }} />
+      )}
 
+      {show("admin") && (
+        <PvLogSection ownerId={profile.id} scope="self" />
+      )}
 
+      {show("team") && (
       <section className="rounded-2xl border bg-card p-6 shadow-card">
 
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -348,7 +352,9 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
           ))}
         </div>
       </section>
+      )}
 
+      {show("money") && (
       <section className="rounded-2xl border bg-card p-6 shadow-card">
         <h2 className="text-base font-semibold">Withdrawal requests</h2>
         <div className="mt-4 divide-y rounded-xl border">
@@ -431,24 +437,25 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
           />
         </div>
       </section>
+      )}
 
-      {/* Announcements from leader */}
-      {profile.leader_id && (
+      {show("admin") && profile.leader_id && (
         <AnnouncementsSection leaderId={profile.leader_id} canManage={false} />
       )}
 
-      {/* Resource library from leader */}
-      {profile.leader_id && (
+      {show("admin") && profile.leader_id && (
         <ResourceLibrarySection leaderId={profile.leader_id} canManage={false} />
       )}
 
-      {/* Team fund rules — what your leader auto-deducts */}
-      <TeamFundRulesReadonly leaderId={profile.leader_id} />
+      {show("money") && (
+        <TeamFundRulesReadonly leaderId={profile.leader_id} />
+      )}
 
-      {/* Pyramid: people you've sponsored, directly or indirectly */}
-      <DownlineSection rootId={profile.id} />
+      {show("team") && (
+        <DownlineSection rootId={profile.id} />
+      )}
 
-
+      {show("money") && (
       <section className="rounded-2xl border bg-card p-6 shadow-card">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <h2 className="text-base font-semibold">Transaction history</h2>
@@ -503,6 +510,8 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
           )}
         </div>
       </section>
+      )}
+
     </div>
   );
 }

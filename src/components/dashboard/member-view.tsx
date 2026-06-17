@@ -125,7 +125,7 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
   const generateCode = async () => {
     try {
       await createInviteCode();
-      toast.success("Invite code created — valid for 2 minutes");
+      toast.success("Invite code created — valid for 24 hours");
       load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not create invite code");

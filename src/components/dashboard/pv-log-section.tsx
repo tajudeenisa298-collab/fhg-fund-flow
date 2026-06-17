@@ -4,7 +4,6 @@ import { Plus, TrendingUp, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -21,13 +20,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { CurrencyAmountInput } from "@/components/currency-amount-input";
+import { fmtUsd } from "@/lib/format";
 
 interface PvRow {
   id: string;
   member_id: string;
-  period_month: string; // ISO date
+  period_month: string;
   pv: number;
   note: string | null;
+  price_usd: number | null;
+  price_ngn: number | null;
+  exchange_rate: number | null;
+  txn_id: string | null;
   created_at: string;
   member_name?: string;
 }
@@ -35,6 +40,8 @@ interface PvRow {
 interface TeamMember {
   id: string;
   full_name: string;
+  balance_usd: number;
+  can_handle_funds: boolean;
 }
 
 function monthLabel(iso: string) {
@@ -54,7 +61,7 @@ export function PvLogSection({
   scope,
 }: {
   ownerId: string;
-  /** "self" = current member's own log; "team" = leader-side, can edit members' entries */
+  /** "self" = read-only history of the current member; "team" = leader logs PV (with price) for managed members */
   scope: "self" | "team";
 }) {
   const [rows, setRows] = useState<PvRow[]>([]);
@@ -64,6 +71,7 @@ export function PvLogSection({
   const [targetMemberId, setTargetMemberId] = useState<string>("");
   const [month, setMonth] = useState(thisMonthValue());
   const [pv, setPv] = useState("");
+  const [priceUsd, setPriceUsd] = useState<number>(0);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -79,10 +87,10 @@ export function PvLogSection({
     }
     const { data: teamRows } = await supabase
       .from("profiles")
-      .select("id, full_name")
+      .select("id, full_name, balance_usd, can_handle_funds")
       .eq("leader_id", ownerId)
       .order("full_name");
-    const list = (teamRows ?? []) as TeamMember[];
+    const list = ((teamRows ?? []) as TeamMember[]).filter((m) => !m.can_handle_funds);
     setTeam(list);
     const ids = list.map((m) => m.id);
     if (ids.length === 0) {
@@ -115,12 +123,15 @@ export function PvLogSection({
     return { ytd, last };
   }, [rows]);
 
+  const selectedMember = team.find((m) => m.id === targetMemberId);
+
   const reset = () => {
     setMonth(thisMonthValue());
     setPv("");
+    setPriceUsd(0);
     setNote("");
     setEditing(null);
-    setTargetMemberId(scope === "self" ? ownerId : "");
+    setTargetMemberId("");
   };
 
   const startAdd = () => {
@@ -134,43 +145,54 @@ export function PvLogSection({
     const d = new Date(r.period_month);
     setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
     setPv(String(r.pv));
+    setPriceUsd(Number(r.price_usd ?? 0));
     setNote(r.note ?? "");
     setOpen(true);
   };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const memberId = scope === "self" ? ownerId : targetMemberId;
-    if (!memberId) return toast.error("Pick a member");
+    if (!targetMemberId) return toast.error("Pick a member");
     const pvNum = Number(pv);
     if (!Number.isFinite(pvNum) || pvNum < 0) return toast.error("PV must be 0 or more");
     if (!/^\d{4}-\d{2}$/.test(month)) return toast.error("Pick a month");
+    if (priceUsd < 0) return toast.error("Price cannot be negative");
     setBusy(true);
-    const payload = {
-      member_id: memberId,
-      period_month: monthInputToDate(month),
-      pv: pvNum,
-      note: note.trim() || null,
-    };
-    const { error } = editing
-      ? await supabase.from("pv_logs").update(payload).eq("id", editing.id)
-      : await supabase.from("pv_logs").upsert(payload, { onConflict: "member_id,period_month" });
+    const { error } = await supabase.rpc("log_pv_with_deduction", {
+      _member_id: targetMemberId,
+      _period_month: monthInputToDate(month),
+      _pv: pvNum,
+      _price_usd: Number(priceUsd.toFixed(4)),
+      _note: note.trim() || undefined,
+    });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success(editing ? "PV updated" : "PV recorded");
+    toast.success(
+      editing
+        ? "PV updated"
+        : priceUsd > 0
+          ? `PV logged · ${fmtUsd(priceUsd)} deducted from member`
+          : "PV logged",
+    );
     setOpen(false);
     reset();
     load();
   };
 
   const remove = async (id: string) => {
+    const row = rows.find((r) => r.id === id);
+    if (row?.txn_id) {
+      return toast.error(
+        "This entry has a linked deduction. Reverse the transaction from the member's history first.",
+      );
+    }
     if (!confirm("Delete this PV entry?")) return;
     const { error } = await supabase.from("pv_logs").delete().eq("id", id);
     if (error) return toast.error(error.message);
     load();
   };
 
-  const canManage = scope === "self" || team.length > 0;
+  const canManage = scope === "team" && team.length > 0;
 
   return (
     <section className="rounded-2xl border bg-card p-6 shadow-card">
@@ -185,8 +207,8 @@ export function PvLogSection({
             </h2>
             <p className="text-sm text-muted-foreground">
               {scope === "self"
-                ? "Log your monthly Point Value to track sales activity."
-                : "Monthly PV for members you manage. You can add or correct entries on their behalf."}
+                ? "Monthly Point Value recorded by your team leader."
+                : "Log monthly PV for your managed members. The product price is deducted from their balance."}
             </p>
           </div>
         </div>
@@ -201,7 +223,7 @@ export function PvLogSection({
           </div>
           {canManage && (
             <Button onClick={startAdd}>
-              <Plus className="mr-1 size-4" /> {scope === "self" ? "Log PV" : "Add for member"}
+              <Plus className="mr-1 size-4" /> Log PV
             </Button>
           )}
         </div>
@@ -223,31 +245,43 @@ export function PvLogSection({
               {scope === "team" && r.member_name && (
                 <p className="text-xs text-muted-foreground">{r.member_name}</p>
               )}
+              {Number(r.price_usd) > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Price deducted: {fmtUsd(Number(r.price_usd))}
+                </p>
+              )}
               {r.note && <p className="mt-0.5 text-xs text-muted-foreground">{r.note}</p>}
             </div>
             <div className="flex items-center gap-3">
               <span className="text-base font-semibold tabular-nums">
                 {Number(r.pv).toLocaleString()} PV
               </span>
-              <Button variant="ghost" size="icon" onClick={() => startEdit(r)}>
-                <Pencil className="size-3.5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => remove(r.id)}>
-                <Trash2 className="size-3.5 text-destructive" />
-              </Button>
+              {scope === "team" && (
+                <>
+                  <Button variant="ghost" size="icon" onClick={() => startEdit(r)}>
+                    <Pencil className="size-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => remove(r.id)}>
+                    <Trash2 className="size-3.5 text-destructive" />
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         ))}
       </div>
 
-      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editing ? "Edit PV entry" : "Log monthly PV"}</DialogTitle>
-            <DialogDescription>One entry per member per month. New entries overwrite the existing one.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={submit} className="space-y-4">
-            {scope === "team" && (
+      {scope === "team" && (
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editing ? "Edit PV entry" : "Log monthly PV"}</DialogTitle>
+              <DialogDescription>
+                One entry per member per month. If you enter a price, it is deducted from the
+                member's balance immediately. Once deducted, the price is locked.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={submit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="pv-member">Member</Label>
                 <Select
@@ -261,55 +295,78 @@ export function PvLogSection({
                   <SelectContent>
                     {team.map((m) => (
                       <SelectItem key={m.id} value={m.id}>
-                        {m.full_name}
+                        {m.full_name} · {fmtUsd(m.balance_usd)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {selectedMember && (
+                  <p className="text-xs text-muted-foreground">
+                    Available balance: {fmtUsd(selectedMember.balance_usd)}
+                  </p>
+                )}
               </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="pv-month">Month</Label>
-              <Input
-                id="pv-month"
-                type="month"
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
-                max={thisMonthValue()}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="pv-amt">Point Value (PV)</Label>
-              <Input
-                id="pv-amt"
-                type="number"
-                min="0"
-                step="0.01"
-                value={pv}
-                onChange={(e) => setPv(e.target.value)}
-                placeholder="e.g. 150"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="pv-note">Note (optional)</Label>
-              <Textarea
-                id="pv-note"
-                rows={2}
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                maxLength={200}
-              />
-            </div>
-            <DialogFooter>
-              <Button type="submit" disabled={busy}>
-                {busy ? "Saving…" : editing ? "Update entry" : "Save entry"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+              <div className="space-y-2">
+                <Label htmlFor="pv-month">Month</Label>
+                <Input
+                  id="pv-month"
+                  type="month"
+                  value={month}
+                  onChange={(e) => setMonth(e.target.value)}
+                  max={thisMonthValue()}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pv-amt">Point Value (PV)</Label>
+                <Input
+                  id="pv-amt"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={pv}
+                  onChange={(e) => setPv(e.target.value)}
+                  placeholder="e.g. 150"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Product price{editing?.txn_id ? " (locked)" : ""}</Label>
+                <CurrencyAmountInput
+                  valueUsd={priceUsd}
+                  onUsdChange={setPriceUsd}
+                  disabled={!!editing?.txn_id}
+                />
+                {!editing && priceUsd > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {fmtUsd(priceUsd)} will be deducted from this member's balance.
+                  </p>
+                )}
+                {editing?.txn_id && (
+                  <p className="text-xs text-muted-foreground">
+                    Already deducted. To change the amount, reverse the transaction from the
+                    member's history first.
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pv-note">Note (optional)</Label>
+                <Input
+                  id="pv-note"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="e.g. Product purchased"
+                />
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={busy}>
+                  {busy ? "Saving…" : editing ? "Save changes" : "Log PV"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
     </section>
   );
 }

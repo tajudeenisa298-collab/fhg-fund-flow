@@ -617,29 +617,41 @@ export type Database = {
       pv_logs: {
         Row: {
           created_at: string
+          exchange_rate: number | null
           id: string
           member_id: string
           note: string | null
           period_month: string
+          price_ngn: number | null
+          price_usd: number
           pv: number
+          txn_id: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          exchange_rate?: number | null
           id?: string
           member_id: string
           note?: string | null
           period_month: string
+          price_ngn?: number | null
+          price_usd?: number
           pv: number
+          txn_id?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          exchange_rate?: number | null
           id?: string
           member_id?: string
           note?: string | null
           period_month?: string
+          price_ngn?: number | null
+          price_usd?: number
           pv?: number
+          txn_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -648,6 +660,13 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pv_logs_txn_id_fkey"
+            columns: ["txn_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
             referencedColumns: ["id"]
           },
         ]
@@ -1193,6 +1212,18 @@ export type Database = {
           _target_user_id: string
         }
         Returns: undefined
+      }
+      log_pv_with_deduction: {
+        Args: {
+          _exchange_rate?: number
+          _member_id: string
+          _note?: string
+          _period_month: string
+          _price_ngn?: number
+          _price_usd?: number
+          _pv: number
+        }
+        Returns: string
       }
       nearest_fund_handler: { Args: { _start: string }; Returns: string }
       notify_user: {

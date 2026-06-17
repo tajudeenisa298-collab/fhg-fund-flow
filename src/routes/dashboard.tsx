@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth, isAccountBlocked } from "@/lib/auth-context";
 import { MemberView } from "@/components/dashboard/member-view";
 import { LeaderView } from "@/components/dashboard/leader-view";
+import { StructureSection } from "@/components/dashboard/structure-section";
 import { NotificationBell } from "@/components/notification-bell";
 import { UserAvatar } from "@/components/user-avatar";
 import { AccountStatusScreen } from "@/components/account-status-screen";
@@ -108,7 +109,9 @@ function DashboardPage() {
       <DashboardSubNav role={activeRole} />
 
       <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
-        {activeRole === "leader" ? (
+        {section === "structure" ? (
+          <StructureSection profile={profile} />
+        ) : activeRole === "leader" ? (
           <LeaderView profile={profile} section={section} />
         ) : (
           <MemberView profile={profile} section={section} />

@@ -21,6 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DevComponentsRouteImport } from './routes/dev.components'
 import { Route as DashboardTeamRouteImport } from './routes/dashboard.team'
+import { Route as DashboardOfficeRouteImport } from './routes/dashboard.office'
 import { Route as DashboardMoneyRouteImport } from './routes/dashboard.money'
 import { Route as ApiPublicHooksWeeklyDigestRouteImport } from './routes/api/public/hooks/weekly-digest'
 import { Route as ApiPublicHooksRunUpkeepRouteImport } from './routes/api/public/hooks/run-upkeep'
@@ -86,6 +87,11 @@ const DashboardTeamRoute = DashboardTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardOfficeRoute = DashboardOfficeRouteImport.update({
+  id: '/office',
+  path: '/office',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardMoneyRoute = DashboardMoneyRouteImport.update({
   id: '/money',
   path: '/money',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/dashboard/money': typeof DashboardMoneyRoute
+  '/dashboard/office': typeof DashboardOfficeRoute
   '/dashboard/team': typeof DashboardTeamRoute
   '/dev/components': typeof DevComponentsRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/dashboard/money': typeof DashboardMoneyRoute
+  '/dashboard/office': typeof DashboardOfficeRoute
   '/dashboard/team': typeof DashboardTeamRoute
   '/dev/components': typeof DevComponentsRoute
   '/dashboard': typeof DashboardIndexRoute
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/dashboard/money': typeof DashboardMoneyRoute
+  '/dashboard/office': typeof DashboardOfficeRoute
   '/dashboard/team': typeof DashboardTeamRoute
   '/dev/components': typeof DevComponentsRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/dashboard/money'
+    | '/dashboard/office'
     | '/dashboard/team'
     | '/dev/components'
     | '/dashboard/'
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/dashboard/money'
+    | '/dashboard/office'
     | '/dashboard/team'
     | '/dev/components'
     | '/dashboard'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/dashboard/money'
+    | '/dashboard/office'
     | '/dashboard/team'
     | '/dev/components'
     | '/dashboard/'
@@ -321,6 +333,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardTeamRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/office': {
+      id: '/dashboard/office'
+      path: '/office'
+      fullPath: '/dashboard/office'
+      preLoaderRoute: typeof DashboardOfficeRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/money': {
       id: '/dashboard/money'
       path: '/money'
@@ -354,12 +373,14 @@ declare module '@tanstack/react-router' {
 
 interface DashboardRouteChildren {
   DashboardMoneyRoute: typeof DashboardMoneyRoute
+  DashboardOfficeRoute: typeof DashboardOfficeRoute
   DashboardTeamRoute: typeof DashboardTeamRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardMoneyRoute: DashboardMoneyRoute,
+  DashboardOfficeRoute: DashboardOfficeRoute,
   DashboardTeamRoute: DashboardTeamRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }

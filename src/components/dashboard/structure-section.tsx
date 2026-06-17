@@ -201,7 +201,7 @@ export function StructureSection({ profile }: { profile: Profile }) {
 
   const root = nodes.find((n) => n.id === profile.id);
 
-  const renderNode = (node: Node, depth: number): JSX.Element => {
+  const renderNode = (node: Node, depth: number) => {
     const kids = visibleChildren(node.id);
     const isCollapsed = collapsed.has(node.id);
     const pv = pvByMember[node.id] ?? 0;

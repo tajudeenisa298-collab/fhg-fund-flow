@@ -18,6 +18,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DevComponentsRouteImport } from './routes/dev.components'
 import { Route as ApiPublicHooksWeeklyDigestRouteImport } from './routes/api/public/hooks/weekly-digest'
 import { Route as ApiPublicHooksRunUpkeepRouteImport } from './routes/api/public/hooks/run-upkeep'
@@ -68,6 +69,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DevComponentsRoute = DevComponentsRouteImport.update({
   id: '/dev/components',
   path: '/dev/components',
@@ -94,7 +100,7 @@ const ApiPublicHooksFinalizeTerminationsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/dev/components': typeof DevComponentsRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
   '/api/public/hooks/run-upkeep': typeof ApiPublicHooksRunUpkeepRoute
   '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
@@ -109,7 +116,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
-  '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
@@ -117,6 +123,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/dev/components': typeof DevComponentsRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
   '/api/public/hooks/run-upkeep': typeof ApiPublicHooksRunUpkeepRoute
   '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
@@ -125,7 +132,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
@@ -133,6 +140,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/dev/components': typeof DevComponentsRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
   '/api/public/hooks/run-upkeep': typeof ApiPublicHooksRunUpkeepRoute
   '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
@@ -150,6 +158,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/dev/components'
+    | '/dashboard/'
     | '/api/public/hooks/finalize-terminations'
     | '/api/public/hooks/run-upkeep'
     | '/api/public/hooks/weekly-digest'
@@ -157,7 +166,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/analytics'
-    | '/dashboard'
     | '/forgot-password'
     | '/login'
     | '/notifications'
@@ -165,6 +173,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/dev/components'
+    | '/dashboard'
     | '/api/public/hooks/finalize-terminations'
     | '/api/public/hooks/run-upkeep'
     | '/api/public/hooks/weekly-digest'
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/dev/components'
+    | '/dashboard/'
     | '/api/public/hooks/finalize-terminations'
     | '/api/public/hooks/run-upkeep'
     | '/api/public/hooks/weekly-digest'
@@ -188,7 +198,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyticsRoute: typeof AnalyticsRoute
-  DashboardRoute: typeof DashboardRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
@@ -266,6 +276,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dev/components': {
       id: '/dev/components'
       path: '/dev/components'
@@ -297,10 +314,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface DashboardRouteChildren {
+  DashboardIndexRoute: typeof DashboardIndexRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardIndexRoute: DashboardIndexRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyticsRoute: AnalyticsRoute,
-  DashboardRoute: DashboardRoute,
+  DashboardRoute: DashboardRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,

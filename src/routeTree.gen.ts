@@ -20,6 +20,7 @@ import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DevComponentsRouteImport } from './routes/dev.components'
+import { Route as DashboardTeamRouteImport } from './routes/dashboard.team'
 import { Route as ApiPublicHooksWeeklyDigestRouteImport } from './routes/api/public/hooks/weekly-digest'
 import { Route as ApiPublicHooksRunUpkeepRouteImport } from './routes/api/public/hooks/run-upkeep'
 import { Route as ApiPublicHooksFinalizeTerminationsRouteImport } from './routes/api/public/hooks/finalize-terminations'
@@ -79,6 +80,11 @@ const DevComponentsRoute = DevComponentsRouteImport.update({
   path: '/dev/components',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardTeamRoute = DashboardTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const ApiPublicHooksWeeklyDigestRoute =
   ApiPublicHooksWeeklyDigestRouteImport.update({
     id: '/api/public/hooks/weekly-digest',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/dashboard/team': typeof DashboardTeamRoute
   '/dev/components': typeof DevComponentsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/dashboard/team': typeof DashboardTeamRoute
   '/dev/components': typeof DevComponentsRoute
   '/dashboard': typeof DashboardIndexRoute
   '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/dashboard/team': typeof DashboardTeamRoute
   '/dev/components': typeof DevComponentsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/api/public/hooks/finalize-terminations': typeof ApiPublicHooksFinalizeTerminationsRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/dashboard/team'
     | '/dev/components'
     | '/dashboard/'
     | '/api/public/hooks/finalize-terminations'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/dashboard/team'
     | '/dev/components'
     | '/dashboard'
     | '/api/public/hooks/finalize-terminations'
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/dashboard/team'
     | '/dev/components'
     | '/dashboard/'
     | '/api/public/hooks/finalize-terminations'
@@ -290,6 +302,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevComponentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/team': {
+      id: '/dashboard/team'
+      path: '/team'
+      fullPath: '/dashboard/team'
+      preLoaderRoute: typeof DashboardTeamRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/api/public/hooks/weekly-digest': {
       id: '/api/public/hooks/weekly-digest'
       path: '/api/public/hooks/weekly-digest'
@@ -315,10 +334,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface DashboardRouteChildren {
+  DashboardTeamRoute: typeof DashboardTeamRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardTeamRoute: DashboardTeamRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 

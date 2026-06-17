@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import type { Notification } from "@/lib/types";
 import { fmtDate } from "@/lib/format";
+import { NotificationDetailDialog } from "@/components/notification-detail-dialog";
 
 export const Route = createFileRoute("/notifications")({
   head: () => ({

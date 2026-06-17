@@ -386,7 +386,9 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
           </ul>
         </section>
       )}
+      </>)}
 
+      {show("team") && (<>
       {/* Team */}
       <section id="team-members" className="rounded-2xl border bg-card p-6 shadow-card">
         <div className="flex flex-wrap items-center justify-between gap-3">

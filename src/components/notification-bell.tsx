@@ -95,6 +95,7 @@ export function NotificationBell() {
 
 
   return (
+    <>
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" size="icon" className="relative" aria-label="Notifications">
@@ -164,5 +165,11 @@ export function NotificationBell() {
         </div>
       </PopoverContent>
     </Popover>
+    <NotificationDetailDialog
+      notification={detail}
+      open={!!detail}
+      onOpenChange={(v) => !v && setDetail(null)}
+    />
+    </>
   );
 }

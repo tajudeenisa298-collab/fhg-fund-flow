@@ -87,7 +87,10 @@ import { BarChart3 } from "lucide-react";
 
 import { generateInviteCode, promoteManagedMember } from "@/lib/team.functions";
 
-export function LeaderView({ profile }: { profile: Profile }) {
+import type { DashboardSection } from "@/components/dashboard/dashboard-sub-nav";
+
+export function LeaderView({ profile, section = "all" }: { profile: Profile; section?: DashboardSection | "all" }) {
+  const show = (s: DashboardSection) => section === "all" || section === s;
   const { refresh, ngnRate } = useAuth();
   const createInviteCode = useServerFn(generateInviteCode);
   const [team, setTeam] = useState<Profile[]>([]);

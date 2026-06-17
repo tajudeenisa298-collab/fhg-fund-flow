@@ -23,6 +23,7 @@ import { Route as DevComponentsRouteImport } from './routes/dev.components'
 import { Route as DashboardTeamRouteImport } from './routes/dashboard.team'
 import { Route as DashboardOfficeRouteImport } from './routes/dashboard.office'
 import { Route as DashboardMoneyRouteImport } from './routes/dashboard.money'
+import { Route as DashboardAdminRouteImport } from './routes/dashboard.admin'
 import { Route as ApiPublicHooksWeeklyDigestRouteImport } from './routes/api/public/hooks/weekly-digest'
 import { Route as ApiPublicHooksRunUpkeepRouteImport } from './routes/api/public/hooks/run-upkeep'
 import { Route as ApiPublicHooksFinalizeTerminationsRouteImport } from './routes/api/public/hooks/finalize-terminations'
@@ -97,6 +98,11 @@ const DashboardMoneyRoute = DashboardMoneyRouteImport.update({
   path: '/money',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardAdminRoute = DashboardAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const ApiPublicHooksWeeklyDigestRoute =
   ApiPublicHooksWeeklyDigestRouteImport.update({
     id: '/api/public/hooks/weekly-digest',
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/money': typeof DashboardMoneyRoute
   '/dashboard/office': typeof DashboardOfficeRoute
   '/dashboard/team': typeof DashboardTeamRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/money': typeof DashboardMoneyRoute
   '/dashboard/office': typeof DashboardOfficeRoute
   '/dashboard/team': typeof DashboardTeamRoute
@@ -163,6 +171,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/money': typeof DashboardMoneyRoute
   '/dashboard/office': typeof DashboardOfficeRoute
   '/dashboard/team': typeof DashboardTeamRoute
@@ -184,6 +193,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/dashboard/admin'
     | '/dashboard/money'
     | '/dashboard/office'
     | '/dashboard/team'
@@ -202,6 +212,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/dashboard/admin'
     | '/dashboard/money'
     | '/dashboard/office'
     | '/dashboard/team'
@@ -221,6 +232,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/dashboard/admin'
     | '/dashboard/money'
     | '/dashboard/office'
     | '/dashboard/team'
@@ -347,6 +359,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardMoneyRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/admin': {
+      id: '/dashboard/admin'
+      path: '/admin'
+      fullPath: '/dashboard/admin'
+      preLoaderRoute: typeof DashboardAdminRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/api/public/hooks/weekly-digest': {
       id: '/api/public/hooks/weekly-digest'
       path: '/api/public/hooks/weekly-digest'
@@ -372,6 +391,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface DashboardRouteChildren {
+  DashboardAdminRoute: typeof DashboardAdminRoute
   DashboardMoneyRoute: typeof DashboardMoneyRoute
   DashboardOfficeRoute: typeof DashboardOfficeRoute
   DashboardTeamRoute: typeof DashboardTeamRoute
@@ -379,6 +399,7 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAdminRoute: DashboardAdminRoute,
   DashboardMoneyRoute: DashboardMoneyRoute,
   DashboardOfficeRoute: DashboardOfficeRoute,
   DashboardTeamRoute: DashboardTeamRoute,

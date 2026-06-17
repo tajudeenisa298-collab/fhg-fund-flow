@@ -25,6 +25,7 @@ export function NotificationBell() {
   const nav = useNavigate();
   const [items, setItems] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+  const [detail, setDetail] = useState<Notification | null>(null);
   const userId = session?.user?.id;
 
   const load = async () => {

@@ -21,6 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DevComponentsRouteImport } from './routes/dev.components'
 import { Route as DashboardTeamRouteImport } from './routes/dashboard.team'
+import { Route as DashboardStructureRouteImport } from './routes/dashboard.structure'
 import { Route as DashboardOfficeRouteImport } from './routes/dashboard.office'
 import { Route as DashboardMoneyRouteImport } from './routes/dashboard.money'
 import { Route as DashboardAdminRouteImport } from './routes/dashboard.admin'
@@ -88,6 +89,11 @@ const DashboardTeamRoute = DashboardTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardStructureRoute = DashboardStructureRouteImport.update({
+  id: '/structure',
+  path: '/structure',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardOfficeRoute = DashboardOfficeRouteImport.update({
   id: '/office',
   path: '/office',
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/money': typeof DashboardMoneyRoute
   '/dashboard/office': typeof DashboardOfficeRoute
+  '/dashboard/structure': typeof DashboardStructureRoute
   '/dashboard/team': typeof DashboardTeamRoute
   '/dev/components': typeof DevComponentsRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -153,6 +160,7 @@ export interface FileRoutesByTo {
   '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/money': typeof DashboardMoneyRoute
   '/dashboard/office': typeof DashboardOfficeRoute
+  '/dashboard/structure': typeof DashboardStructureRoute
   '/dashboard/team': typeof DashboardTeamRoute
   '/dev/components': typeof DevComponentsRoute
   '/dashboard': typeof DashboardIndexRoute
@@ -174,6 +182,7 @@ export interface FileRoutesById {
   '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/money': typeof DashboardMoneyRoute
   '/dashboard/office': typeof DashboardOfficeRoute
+  '/dashboard/structure': typeof DashboardStructureRoute
   '/dashboard/team': typeof DashboardTeamRoute
   '/dev/components': typeof DevComponentsRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -196,6 +205,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin'
     | '/dashboard/money'
     | '/dashboard/office'
+    | '/dashboard/structure'
     | '/dashboard/team'
     | '/dev/components'
     | '/dashboard/'
@@ -215,6 +225,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin'
     | '/dashboard/money'
     | '/dashboard/office'
+    | '/dashboard/structure'
     | '/dashboard/team'
     | '/dev/components'
     | '/dashboard'
@@ -235,6 +246,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin'
     | '/dashboard/money'
     | '/dashboard/office'
+    | '/dashboard/structure'
     | '/dashboard/team'
     | '/dev/components'
     | '/dashboard/'
@@ -345,6 +357,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardTeamRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/structure': {
+      id: '/dashboard/structure'
+      path: '/structure'
+      fullPath: '/dashboard/structure'
+      preLoaderRoute: typeof DashboardStructureRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/office': {
       id: '/dashboard/office'
       path: '/office'
@@ -394,6 +413,7 @@ interface DashboardRouteChildren {
   DashboardAdminRoute: typeof DashboardAdminRoute
   DashboardMoneyRoute: typeof DashboardMoneyRoute
   DashboardOfficeRoute: typeof DashboardOfficeRoute
+  DashboardStructureRoute: typeof DashboardStructureRoute
   DashboardTeamRoute: typeof DashboardTeamRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
@@ -402,6 +422,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAdminRoute: DashboardAdminRoute,
   DashboardMoneyRoute: DashboardMoneyRoute,
   DashboardOfficeRoute: DashboardOfficeRoute,
+  DashboardStructureRoute: DashboardStructureRoute,
   DashboardTeamRoute: DashboardTeamRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }

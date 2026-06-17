@@ -1,14 +1,15 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Wallet, Building2, Shield } from "lucide-react";
+import { LayoutDashboard, Users, Network, Wallet, Building2, Shield } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-export type DashboardSection = "overview" | "team" | "money" | "office" | "admin";
+export type DashboardSection = "overview" | "team" | "structure" | "money" | "office" | "admin";
 
 type Item = { to: string; label: string; section: DashboardSection; icon: LucideIcon };
 
 const ALL_ITEMS: Item[] = [
   { to: "/dashboard", label: "Overview", section: "overview", icon: LayoutDashboard },
   { to: "/dashboard/team", label: "Team", section: "team", icon: Users },
+  { to: "/dashboard/structure", label: "Structure", section: "structure", icon: Network },
   { to: "/dashboard/money", label: "Money", section: "money", icon: Wallet },
   { to: "/dashboard/office", label: "Office", section: "office", icon: Building2 },
   { to: "/dashboard/admin", label: "Admin", section: "admin", icon: Shield },
@@ -16,6 +17,7 @@ const ALL_ITEMS: Item[] = [
 
 export function sectionFromPath(pathname: string): DashboardSection {
   if (pathname.startsWith("/dashboard/team")) return "team";
+  if (pathname.startsWith("/dashboard/structure")) return "structure";
   if (pathname.startsWith("/dashboard/money")) return "money";
   if (pathname.startsWith("/dashboard/office")) return "office";
   if (pathname.startsWith("/dashboard/admin")) return "admin";

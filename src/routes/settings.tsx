@@ -57,6 +57,7 @@ function SettingsPage() {
       setWhatsapp(profile.whatsapp_number ?? "");
       setPayoutMethod(profile.payout_method ?? "bank_transfer");
       setLocale(profile.locale ?? "en-US");
+      setGender(profile.gender ?? "");
     }
   }, [profile]);
 

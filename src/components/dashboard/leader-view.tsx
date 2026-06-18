@@ -720,6 +720,12 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
         </MobileCollapsible>
       )}
 
+      {show("admin") && (
+        <MobileCollapsible title="Audit feed" defaultOpen>
+          <AdminAuditFeed />
+        </MobileCollapsible>
+      )}
+
       {show("office") && (
         <MobileCollapsible title="Monthly reconciliation">
           <ReconciliationSection />

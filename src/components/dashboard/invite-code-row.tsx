@@ -29,7 +29,7 @@ export function InviteCodeRow({
   const expiresMs = new Date(code.expires_at).getTime();
   const remaining = Math.max(0, Math.floor((expiresMs - now) / 1000));
   const expired = remaining === 0;
-  const used = !!code.used_by;
+  const used = code.is_used;
   const revoked = code.revoked;
 
   useEffect(() => {

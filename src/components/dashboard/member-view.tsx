@@ -154,7 +154,7 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
 
   const pending = requests.filter((r) => r.status === "pending").length;
   const visibleCodes = useMemo(
-    () => codes.filter((c) => !c.used_by && !c.revoked && new Date(c.expires_at).getTime() > Date.now()),
+    () => codes.filter((c) => !c.is_used && !c.revoked && new Date(c.expires_at).getTime() > Date.now()),
     [codes, tick],
   );
 

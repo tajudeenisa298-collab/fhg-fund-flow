@@ -189,7 +189,7 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
   const visibleCodes = useMemo(
     () =>
       codes.filter(
-        (c) => !c.used_by && !c.revoked && new Date(c.expires_at).getTime() > Date.now(),
+        (c) => !c.is_used && !c.revoked && new Date(c.expires_at).getTime() > Date.now(),
       ),
     [codes, tick],
   );

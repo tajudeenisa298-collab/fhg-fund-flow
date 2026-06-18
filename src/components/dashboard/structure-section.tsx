@@ -278,7 +278,7 @@ export function StructureSection({ profile }: { profile: Profile }) {
   );
   const totalBalance = useMemo(
     () =>
-      nodes.filter((n) => visibleIds.has(n.id)).reduce((s, n) => s + n.balance_usd, 0),
+      nodes.filter((n) => visibleIds.has(n.id) && !n.can_handle_funds).reduce((s, n) => s + n.balance_usd, 0),
     [nodes, visibleIds]
   );
 

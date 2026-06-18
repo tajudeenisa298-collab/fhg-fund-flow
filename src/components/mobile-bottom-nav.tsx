@@ -48,7 +48,11 @@ export function MobileBottomNav() {
     path.startsWith("/login") ||
     path.startsWith("/signup") ||
     path.startsWith("/forgot-password") ||
-    path.startsWith("/reset-password")
+    path.startsWith("/reset-password") ||
+    // Dashboard already shows its own section tab bar at the bottom on
+    // mobile (Team / Structure / Money / Office / Admin), so we hide this
+    // generic Home / Inbox / Settings bar there to avoid stacked nav bars.
+    path.startsWith("/dashboard")
   ) {
     return null;
   }

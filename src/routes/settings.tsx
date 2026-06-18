@@ -159,6 +159,7 @@ function SettingsPage() {
         whatsapp_number: trimmed || null,
         payout_method: payoutMethod,
         locale,
+        gender: gender || null,
       })
       .eq("id", session.user.id);
     setSavingPrefs(false);

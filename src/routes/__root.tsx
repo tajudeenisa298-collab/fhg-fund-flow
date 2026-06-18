@@ -11,6 +11,7 @@ import {
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
+import { ConfirmDialogHost } from "@/components/ui/confirm-dialog";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import "@/lib/i18n";
 import { initObservability } from "@/lib/observability";
@@ -132,6 +133,7 @@ function RootComponent() {
         </div>
         <MobileBottomNav />
         <Toaster richColors position="top-right" />
+        <ConfirmDialogHost />
       </AuthProvider>
     </QueryClientProvider>
   );

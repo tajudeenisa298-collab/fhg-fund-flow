@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
 import { Plus, Pause, Play, Trash2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,7 +84,13 @@ export function FundRulesSection({ leaderId }: { leaderId: string }) {
     load();
   };
   const remove = async (r: FundRule) => {
-    if (!confirm(`Delete "${r.name}"?`)) return;
+    const ok = await confirmDialog({
+      title: `Delete "${r.name}"?`,
+      description: "This rule will stop applying to future transactions. Past charges are kept.",
+      confirmLabel: "Delete",
+      destructive: true,
+    });
+    if (!ok) return;
     await supabase.from("fund_rules").delete().eq("id", r.id);
     load();
   };

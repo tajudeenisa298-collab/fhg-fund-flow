@@ -22,65 +22,63 @@ interface EmergencyAnnouncement {
   expires_at: string | null;
 }
 
-const DISMISSED_KEY = "fhg:emergency-dismissed";
-
-function readDismissed(): Set<string> {
-  if (typeof window === "undefined") return new Set();
-  try {
-    return new Set(JSON.parse(localStorage.getItem(DISMISSED_KEY) || "[]"));
-  } catch {
-    return new Set();
-  }
-}
-
-function writeDismissed(ids: Set<string>) {
-  try {
-    localStorage.setItem(DISMISSED_KEY, JSON.stringify([...ids]));
-  } catch {
-    /* ignore quota */
-  }
-}
-
 /**
- * Shows the most recent un-expired emergency announcement once per user,
- * persisted via localStorage. Closing it permanently dismisses it.
+ * Shows the most recent un-expired emergency announcement once per user.
+ * Dismissal is persisted in `announcement_dismissals` so the popup stays
+ * dismissed across devices and browsers.
  */
 export function EmergencyAnnouncementPopup() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const leaderId = profile?.leader_id ?? profile?.id ?? null;
+  const userId = user?.id ?? null;
   const [pending, setPending] = useState<EmergencyAnnouncement | null>(null);
 
   useEffect(() => {
-    if (!leaderId) return;
+    if (!leaderId || !userId) return;
     let cancelled = false;
-    const dismissed = readDismissed();
     const nowIso = new Date().toISOString();
 
-    supabase
-      .from("announcements")
-      .select("id, leader_id, title, body, created_at, expires_at, is_emergency")
-      .eq("leader_id", leaderId)
-      .eq("is_emergency", true)
-      .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-      .order("created_at", { ascending: false })
-      .limit(5)
-      .then(({ data }) => {
-        if (cancelled) return;
-        const fresh = (data ?? []).find((a) => !dismissed.has(a.id));
-        if (fresh) setPending(fresh as EmergencyAnnouncement);
-      });
+    (async () => {
+      const [{ data: announcements }, { data: dismissals }] = await Promise.all([
+        supabase
+          .from("announcements")
+          .select("id, leader_id, title, body, created_at, expires_at, is_emergency")
+          .eq("leader_id", leaderId)
+          .eq("is_emergency", true)
+          .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("announcement_dismissals")
+          .select("announcement_id")
+          .eq("user_id", userId),
+      ]);
+      if (cancelled) return;
+      const dismissed = new Set(
+        ((dismissals ?? []) as { announcement_id: string }[]).map((d) => d.announcement_id),
+      );
+      const fresh = (announcements ?? []).find((a) => !dismissed.has(a.id));
+      if (fresh) setPending(fresh as EmergencyAnnouncement);
+    })();
+
     return () => {
       cancelled = true;
     };
-  }, [leaderId]);
+  }, [leaderId, userId]);
 
   if (!pending) return null;
 
-  const close = () => {
-    const dismissed = readDismissed();
-    dismissed.add(pending.id);
-    writeDismissed(dismissed);
+  const close = async () => {
+    const id = pending.id;
     setPending(null);
+    if (userId) {
+      await supabase
+        .from("announcement_dismissals")
+        .upsert(
+          { user_id: userId, announcement_id: id },
+          { onConflict: "user_id,announcement_id" },
+        );
+    }
   };
 
   return (

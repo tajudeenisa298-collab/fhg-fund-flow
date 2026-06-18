@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Money } from "@/components/money";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -373,7 +374,14 @@ export function StructureSection({ profile }: { profile: Profile }) {
 
       <div className="rounded-2xl border bg-card p-3 shadow-card sm:p-5">
         {loading ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">Loading structure…</p>
+          <div className="space-y-3 py-6">
+            <Skeleton className="mx-auto h-20 w-64" />
+            <div className="flex justify-center gap-3">
+              <Skeleton className="h-16 w-40" />
+              <Skeleton className="h-16 w-40" />
+              <Skeleton className="h-16 w-40" />
+            </div>
+          </div>
         ) : !root ? (
           <p className="py-8 text-center text-sm text-muted-foreground">No data.</p>
         ) : rankFilter.size === 0 ? (

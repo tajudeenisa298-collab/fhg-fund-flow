@@ -131,16 +131,21 @@ function AnalyticsPage() {
     return Array.from(days.values()).sort((a, b) => a.day.localeCompare(b.day));
   }, [txns]);
 
-  /** Top contributors by net deposits */
+  /** Top contributors by net deposits (gross deposits minus bank fees per member) */
   const topContrib = useMemo(() => {
     const m = new Map<string, number>();
     for (const t of txns) {
-      if (t.type !== "deposit") continue;
-      m.set(t.member_id, (m.get(t.member_id) ?? 0) + Number(t.amount_usd));
+      const amt = Math.abs(Number(t.amount_usd) || 0);
+      if (t.type === "deposit") {
+        m.set(t.member_id, (m.get(t.member_id) ?? 0) + amt);
+      } else if (t.type === "bank_fee") {
+        m.set(t.member_id, (m.get(t.member_id) ?? 0) - amt);
+      }
     }
     const lookup = new Map(team.map((p) => [p.id, p.full_name]));
     return Array.from(m.entries())
       .map(([id, total]) => ({ id, name: lookup.get(id) ?? "Unknown", total }))
+      .filter((x) => x.total > 0)
       .sort((a, b) => b.total - a.total)
       .slice(0, 8);
   }, [txns, team]);
@@ -223,7 +228,9 @@ function AnalyticsPage() {
       .sort((a, b) => a.month.localeCompare(b.month));
   }, [office]);
 
-  if (loading || busy) {
+  // Hide content for non-leaders while the redirect runs to avoid a flash.
+  const isAllowed = !!session && roles.includes("leader");
+  if (loading || busy || !isAllowed) {
     return (
       <div className="min-h-screen bg-gradient-soft p-6">
         <div className="mx-auto max-w-6xl space-y-4">

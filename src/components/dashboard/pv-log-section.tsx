@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { CurrencyAmountInput } from "@/components/currency-amount-input";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
 import { fmtUsd } from "@/lib/format";
 import { ExportCsvButton } from "@/components/export-csv-button";
 
@@ -197,7 +198,13 @@ export function PvLogSection({
         "This entry has a linked deduction. Reverse the transaction from the member's history first.",
       );
     }
-    if (!confirm("Delete this PV entry?")) return;
+    const ok = await confirmDialog({
+      title: "Delete this PV entry?",
+      description: "Removes this PV record. It cannot be undone.",
+      confirmLabel: "Delete",
+      destructive: true,
+    });
+    if (!ok) return;
     const { error } = await supabase.from("pv_logs").delete().eq("id", id);
     if (error) return toast.error(error.message);
     load();

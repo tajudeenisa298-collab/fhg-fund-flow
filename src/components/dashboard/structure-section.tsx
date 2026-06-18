@@ -424,7 +424,7 @@ export function StructureSection({ profile }: { profile: Profile }) {
           </p>
         ) : (
           <div
-            className="org-tree-viewport overflow-auto"
+            className="org-tree-viewport max-h-[70vh] overflow-auto overscroll-contain"
             style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x pan-y pinch-zoom" }}
           >
             <div

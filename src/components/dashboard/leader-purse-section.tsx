@@ -17,19 +17,29 @@ import { ExportCsvButton } from "@/components/export-csv-button";
 
 export function LeaderPurseSection({ leaderId }: { leaderId: string }) {
   const [rows, setRows] = useState<LeaderPurseEntry[]>([]);
+  const [credits, setCredits] = useState(0);
+  const [debits, setDebits] = useState(0);
   const [open, setOpen] = useState(false);
 
   const load = useCallback(async () => {
-    const { data } = await supabase
-      .from("leader_purse_ledger").select("*").eq("leader_id", leaderId)
-      .order("created_at", { ascending: false }).limit(50);
-    setRows((data as LeaderPurseEntry[]) ?? []);
+    const [listRes, credRes, debRes] = await Promise.all([
+      supabase
+        .from("leader_purse_ledger").select("*").eq("leader_id", leaderId)
+        .order("created_at", { ascending: false }).limit(50),
+      supabase
+        .from("leader_purse_ledger").select("amount_usd.sum()")
+        .eq("leader_id", leaderId).eq("kind", "credit").single(),
+      supabase
+        .from("leader_purse_ledger").select("amount_usd.sum()")
+        .eq("leader_id", leaderId).eq("kind", "debit").single(),
+    ]);
+    setRows((listRes.data as LeaderPurseEntry[]) ?? []);
+    setCredits(Number((credRes.data as { sum: number | null } | null)?.sum ?? 0));
+    setDebits(Number((debRes.data as { sum: number | null } | null)?.sum ?? 0));
   }, [leaderId]);
 
   useEffect(() => { load(); }, [load]);
 
-  const credits = rows.filter((r) => r.kind === "credit").reduce((s, r) => s + Number(r.amount_usd), 0);
-  const debits = rows.filter((r) => r.kind === "debit").reduce((s, r) => s + Number(r.amount_usd), 0);
   const balance = credits - debits;
 
   return (

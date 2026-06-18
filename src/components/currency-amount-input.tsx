@@ -35,11 +35,20 @@ export function CurrencyAmountInput({
   rate?: number;
   disabled?: boolean;
 }) {
-  const { ngnRate } = useAuth();
-  const rate = rateProp ?? ngnRate ?? 1600;
-  const [currency, setCurrency] = useState<Currency>(defaultCurrency);
+  const { ngnRate, ngnRateReady } = useAuth();
+  const rateReady = rateProp !== undefined || ngnRateReady;
+  const rate = rateProp ?? ngnRate;
+  const [currency, setCurrency] = useState<Currency>(rateReady ? defaultCurrency : "USD");
   const [raw, setRaw] = useState<string>("");
   const [lastUsd, setLastUsd] = useState<number>(Number(valueUsd) || 0);
+
+  // Once the real rate arrives, switch to the originally requested default currency.
+  useEffect(() => {
+    if (rateReady && currency !== defaultCurrency && lastUsd === 0 && raw === "") {
+      setCurrency(defaultCurrency);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rateReady]);
 
   // Sync external valueUsd changes (e.g. defaults loaded async)
   useEffect(() => {
@@ -77,10 +86,11 @@ export function CurrencyAmountInput({
 
   const preview = useMemo(() => {
     if (!lastUsd) return null;
-    return currency === "USD"
-      ? `≈ ${fmtNgn(lastUsd, rate)}`
-      : `≈ ${fmtUsd(lastUsd)}`;
-  }, [lastUsd, currency, rate]);
+    if (currency === "USD") {
+      return rateReady ? `≈ ${fmtNgn(lastUsd, rate)}` : null;
+    }
+    return `≈ ${fmtUsd(lastUsd)}`;
+  }, [lastUsd, currency, rate, rateReady]);
 
   return (
     <div className="space-y-1">
@@ -97,17 +107,24 @@ export function CurrencyAmountInput({
           disabled={disabled}
           className="flex-1"
         />
-        <Select value={currency} onValueChange={(v) => handleCurrency(v as Currency)} disabled={disabled}>
+        <Select
+          value={currency}
+          onValueChange={(v) => handleCurrency(v as Currency)}
+          disabled={disabled || !rateReady}
+        >
           <SelectTrigger className="w-[92px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="NGN">NGN ₦</SelectItem>
+            <SelectItem value="NGN" disabled={!rateReady}>NGN ₦</SelectItem>
             <SelectItem value="USD">USD $</SelectItem>
           </SelectContent>
         </Select>
       </div>
       {preview && <p className="text-xs text-muted-foreground">{preview}</p>}
+      {!rateReady && (
+        <p className="text-xs text-muted-foreground">Loading exchange rate…</p>
+      )}
     </div>
   );
 }

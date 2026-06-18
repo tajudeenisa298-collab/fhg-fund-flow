@@ -878,6 +878,11 @@ function DepositDialog({
     if (!(grossUsd > 0)) return toast.error("Enter a valid amount");
     setBusy(true);
     void leaderId;
+    // Two-step ledger by design: deposit credits gross, bank_fee debits the fee.
+    // The `apply_transaction_to_balance` trigger handles both, so the net effect on
+    // member balance is grossUsd - feeUsd. Do NOT collapse into a single net deposit
+    // — keeping fees as their own ledger row preserves auditability and per-deposit
+    // fund rules (per_usd / per_deposit) that fire on the gross deposit amount.
     const { data: depId, error } = await supabase.rpc("create_managed_transaction", {
       _member_id: member.id,
       _type: "deposit",

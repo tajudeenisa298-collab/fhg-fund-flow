@@ -18,19 +18,29 @@ const fmtNgn = (n: number) =>
 
 export function OfficeSection({ leaderId }: { leaderId: string }) {
   const [rows, setRows] = useState<OfficeLedgerEntry[]>([]);
+  const [supportIn, setSupportIn] = useState(0);
+  const [expenseOut, setExpenseOut] = useState(0);
   const [open, setOpen] = useState(false);
 
   const load = useCallback(async () => {
-    const { data } = await supabase
-      .from("office_ledger").select("*").eq("leader_id", leaderId)
-      .order("created_at", { ascending: false }).limit(50);
-    setRows((data as OfficeLedgerEntry[]) ?? []);
+    const [listRes, credRes, debRes] = await Promise.all([
+      supabase
+        .from("office_ledger").select("*").eq("leader_id", leaderId)
+        .order("created_at", { ascending: false }).limit(50),
+      supabase
+        .from("office_ledger").select("amount_ngn.sum()")
+        .eq("leader_id", leaderId).eq("kind", "support_in").single(),
+      supabase
+        .from("office_ledger").select("amount_ngn.sum()")
+        .eq("leader_id", leaderId).eq("kind", "expense_out").single(),
+    ]);
+    setRows((listRes.data as OfficeLedgerEntry[]) ?? []);
+    setSupportIn(Number((credRes.data as { sum: number | null } | null)?.sum ?? 0));
+    setExpenseOut(Number((debRes.data as { sum: number | null } | null)?.sum ?? 0));
   }, [leaderId]);
 
   useEffect(() => { load(); }, [load]);
 
-  const supportIn = rows.filter((r) => r.kind === "support_in").reduce((s, r) => s + Number(r.amount_ngn), 0);
-  const expenseOut = rows.filter((r) => r.kind === "expense_out").reduce((s, r) => s + Number(r.amount_ngn), 0);
   const balance = supportIn - expenseOut;
 
   return (

@@ -528,9 +528,15 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
 }
 
 function StatusPill({ status, cancelled }: { status: WithdrawalRequest["status"]; cancelled?: boolean }) {
-  const label = cancelled ? "cancelled" : status;
+  const STATUS_LABELS: Record<string, string> = {
+    pending: "Pending",
+    approved: "Approved",
+    declined: "Declined",
+    awaiting_second_approval: "Awaiting 2nd approval",
+  };
+  const label = cancelled ? "Cancelled" : (STATUS_LABELS[status as string] ?? String(status));
   const styles =
-    status === "pending"
+    status === "pending" || (status as string) === "awaiting_second_approval"
       ? "bg-warning/15 text-warning"
       : status === "approved"
         ? "bg-success/15 text-success"
@@ -538,7 +544,7 @@ function StatusPill({ status, cancelled }: { status: WithdrawalRequest["status"]
           ? "bg-muted text-muted-foreground"
           : "bg-destructive/15 text-destructive";
   return (
-    <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium capitalize ${styles}`}>
+    <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${styles}`}>
       {label}
     </span>
   );

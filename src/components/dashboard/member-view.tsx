@@ -44,6 +44,7 @@ import { ProfileCompleteness } from "@/components/dashboard/profile-completeness
 import { BalanceProjection } from "@/components/dashboard/balance-projection";
 import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
 import { BankVerifier, type VerifiedBank } from "@/components/bank-verifier";
+import { ReportLeaderDialog } from "@/components/dashboard/report-leader-dialog";
 
 
 
@@ -371,10 +372,15 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
 
       {(sponsorName || leaderName) && (
         <section className="rounded-2xl border bg-card p-4 shadow-card">
-          <h2 className="text-sm font-semibold">My team relationships</h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Who introduced you to the business, and who handles your money.
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-semibold">My team relationships</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Who introduced you to the business, and who handles your money.
+              </p>
+            </div>
+            <ReportLeaderDialog />
+          </div>
           <dl className="mt-3 grid gap-3 sm:grid-cols-2">
             <div className="rounded-lg border bg-muted/30 p-3">
               <dt className="text-[10px] uppercase tracking-wide text-muted-foreground">Your sponsor</dt>

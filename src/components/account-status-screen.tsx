@@ -14,6 +14,9 @@ export function AccountStatusScreen({ profile }: { profile: Profile }) {
     ? new Date(new Date(profile.terminated_at).getTime() + 90 * 24 * 60 * 60 * 1000)
     : null;
   const pardonExpired = pardonDeadline ? pardonDeadline < new Date() : false;
+  const daysLeft = pardonDeadline
+    ? Math.max(0, Math.ceil((pardonDeadline.getTime() - Date.now()) / 86400000))
+    : 0;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-soft px-4 py-12">

@@ -750,6 +750,7 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
 
       {show("team") && (<>
         <OrganisationSection leaderId={profile.id} />
+        {!profile.sponsor_id && <OrgPendingWithdrawals leaderId={profile.id} />}
 
         <MobileCollapsible title="Team PV log">
           <PvLogSection ownerId={profile.id} scope="team" />

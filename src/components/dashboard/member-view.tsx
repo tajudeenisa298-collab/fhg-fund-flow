@@ -396,7 +396,14 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
                     size="sm"
                     className="mt-1 h-7 px-2 text-xs text-destructive hover:text-destructive"
                     onClick={async () => {
-                      if (!confirm("Cancel this withdrawal request?")) return;
+                      const ok = await confirmDialog({
+                        title: "Cancel this withdrawal request?",
+                        description: "Your leader will no longer see it. You can submit a new request anytime.",
+                        confirmLabel: "Cancel request",
+                        cancelLabel: "Keep it",
+                        destructive: true,
+                      });
+                      if (!ok) return;
                       const { error } = await supabase.rpc("cancel_withdrawal_request", { _id: r.id });
                       if (error) return toast.error(error.message);
                       toast.success("Request cancelled");

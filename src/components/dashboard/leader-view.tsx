@@ -1182,10 +1182,15 @@ function PromoteDialog({ member, onDone }: { member: Profile; onDone: () => void
                 onChange={(e) => setNote(e.target.value)}
               />
             </div>
+            {isDemotion && (
+              <p className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+                This is a demotion. {member.full_name} will drop from {member.rank} to {newRank}.
+              </p>
+            )}
           </div>
           <DialogFooter>
-            <Button onClick={submit} disabled={busy}>
-              {busy ? "Saving…" : "Apply"}
+            <Button onClick={submit} disabled={busy || isNoChange} variant={isDemotion ? "destructive" : "default"}>
+              {busy ? "Saving…" : isDemotion ? "Demote" : "Apply"}
             </Button>
           </DialogFooter>
         </DialogContent>

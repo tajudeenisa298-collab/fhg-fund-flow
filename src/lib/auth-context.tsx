@@ -154,6 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         activeRole,
         setActiveRole,
         ngnRate,
+        ngnRateReady,
         fxRates,
         loading,
         refresh,

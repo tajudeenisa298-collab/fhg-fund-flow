@@ -343,9 +343,9 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
                 </strong>{" "}
                 Verify now to avoid payout delays.
               </span>
-              <a href="/settings" className="text-xs font-medium underline underline-offset-2">
+              <Link to="/settings" className="text-xs font-medium underline underline-offset-2">
                 Go to settings →
-              </a>
+              </Link>
             </div>
           )}
         </div>

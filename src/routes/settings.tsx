@@ -13,6 +13,7 @@ import { AvatarUpload } from "@/components/avatar-upload";
 import { SecuritySection } from "@/components/settings/security-section";
 import { SUPPORTED_LOCALES } from "@/lib/format";
 import type { BankAccount } from "@/lib/types";
+import { WhatsappInput, validateWhatsappDigits } from "@/components/whatsapp-input";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -167,8 +168,11 @@ function SettingsPage() {
   const savePrefs = async () => {
     if (!session?.user) return;
     const trimmed = whatsapp.trim();
-    if (trimmed && !/^\+?[0-9]{7,15}$/.test(trimmed)) {
-      return toast.error("WhatsApp must be 7–15 digits, optional leading +");
+    if (trimmed) {
+      // Stored format: "+<dial><nsn>". Validate the NSN portion only.
+      const nsn = trimmed.replace(/^\+\d{1,4}/, "");
+      const err = validateWhatsappDigits(nsn);
+      if (err) return toast.error(err);
     }
     setSavingPrefs(true);
     const { error } = await supabase
@@ -417,14 +421,11 @@ function SettingsPage() {
               <label className="text-xs uppercase tracking-wide text-muted-foreground" htmlFor="whatsapp">
                 WhatsApp number
               </label>
-              <Input
+              <WhatsappInput
                 id="whatsapp"
-                inputMode="tel"
-                placeholder="+2348012345678"
                 value={whatsapp}
-                onChange={(e) => setWhatsapp(e.target.value)}
+                onChange={setWhatsapp}
                 className="mt-1"
-                maxLength={20}
               />
             </div>
             <div>

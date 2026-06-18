@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { WhatsappInput, validateWhatsappDigits } from "@/components/whatsapp-input";
 
 type LeaderOption = { id: string; full_name: string; rank: string };
 

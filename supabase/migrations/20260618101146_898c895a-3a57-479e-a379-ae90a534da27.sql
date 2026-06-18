@@ -1,0 +1,1 @@
+GRANT SELECT (used_by, used_at) ON public.invite_codes TO authenticated;

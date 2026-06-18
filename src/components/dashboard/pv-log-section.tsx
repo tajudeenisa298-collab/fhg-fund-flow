@@ -158,6 +158,16 @@ export function PvLogSection({
     if (!Number.isFinite(pvNum) || pvNum < 0) return toast.error("PV must be 0 or more");
     if (!/^\d{4}-\d{2}$/.test(month)) return toast.error("Pick a month");
     if (priceUsd < 0) return toast.error("Price cannot be negative");
+    if (scope === "team" && priceUsd > 0) {
+      const m = team.find((t) => t.id === targetMemberId);
+      const prevPrice = editing ? Number(editing.price_usd ?? 0) : 0;
+      const netCharge = priceUsd - prevPrice;
+      if (m && netCharge > Number(m.balance_usd)) {
+        return toast.error(
+          `${m.full_name} only has ${fmtUsd(Number(m.balance_usd))} available — cannot deduct ${fmtUsd(netCharge)}.`,
+        );
+      }
+    }
     setBusy(true);
     const { error } = await supabase.rpc("log_pv_with_deduction", {
       _member_id: targetMemberId,

@@ -727,15 +727,19 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
       )}
 
       {show("admin") && (
-        <MobileCollapsible title="Scheduled jobs">
-          <CronHealthSection />
-        </MobileCollapsible>
+        <SectionErrorBoundary name="Scheduled jobs">
+          <MobileCollapsible title="Scheduled jobs">
+            <CronHealthSection />
+          </MobileCollapsible>
+        </SectionErrorBoundary>
       )}
 
       {show("admin") && (
-        <MobileCollapsible title="Audit feed" defaultOpen>
-          <AdminAuditFeed />
-        </MobileCollapsible>
+        <SectionErrorBoundary name="Audit feed">
+          <MobileCollapsible title="Audit feed" defaultOpen>
+            <AdminAuditFeed />
+          </MobileCollapsible>
+        </SectionErrorBoundary>
       )}
 
       {show("office") && (
@@ -745,13 +749,17 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
       )}
 
       {show("admin") && (<>
-        <MobileCollapsible title="Announcements">
-          <AnnouncementsSection leaderId={profile.id} canManage />
-        </MobileCollapsible>
+        <SectionErrorBoundary name="Announcements">
+          <MobileCollapsible title="Announcements">
+            <AnnouncementsSection leaderId={profile.id} canManage />
+          </MobileCollapsible>
+        </SectionErrorBoundary>
 
-        <MobileCollapsible title="Resource library">
-          <ResourceLibrarySection leaderId={profile.id} canManage />
-        </MobileCollapsible>
+        <SectionErrorBoundary name="Resource library">
+          <MobileCollapsible title="Resource library">
+            <ResourceLibrarySection leaderId={profile.id} canManage />
+          </MobileCollapsible>
+        </SectionErrorBoundary>
       </>)}
 
       {show("team") && (<>

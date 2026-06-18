@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Users, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Money } from "@/components/money";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MemberDetailDialog } from "@/components/dashboard/member-detail-dialog";
 import type { Profile } from "@/lib/auth-context";
 

@@ -12,6 +12,7 @@ import type { LeaderPurseEntry } from "@/lib/types";
 import { fmtUsd, fmtDate } from "@/lib/format";
 import { Money } from "@/components/money";
 import { CurrencyAmountInput } from "@/components/currency-amount-input";
+import { ExportCsvButton } from "@/components/export-csv-button";
 
 
 export function LeaderPurseSection({ leaderId }: { leaderId: string }) {

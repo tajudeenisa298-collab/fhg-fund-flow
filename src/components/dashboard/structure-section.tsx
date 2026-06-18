@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useUrlState } from "@/hooks/use-url-state";
 import { ChevronDown, ChevronRight, Network, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Money } from "@/components/money";

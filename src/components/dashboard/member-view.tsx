@@ -43,6 +43,7 @@ import { printMemberStatement } from "@/lib/statement-pdf";
 import { ProfileCompleteness } from "@/components/dashboard/profile-completeness";
 import { BalanceProjection } from "@/components/dashboard/balance-projection";
 import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
+import { BankVerifier, type VerifiedBank } from "@/components/bank-verifier";
 
 
 

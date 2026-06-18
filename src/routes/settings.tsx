@@ -21,15 +21,19 @@ export const Route = createFileRoute("/settings")({
       { name: "description", content: "Manage your bank details and account preferences." },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    bank: s.bank === "edit" ? ("edit" as const) : undefined,
+  }),
   component: SettingsPage,
 });
 
 function SettingsPage() {
   const { session, profile, loading, refresh } = useAuth();
   const nav = useNavigate();
+  const search = Route.useSearch();
 
   const [bank, setBank] = useState<BankAccount | null>(null);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(search.bank === "edit");
   const [verified, setVerified] = useState<VerifiedBank | null>(null);
   const [saving, setSaving] = useState(false);
 

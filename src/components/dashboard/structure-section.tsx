@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Money } from "@/components/money";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,

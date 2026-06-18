@@ -39,13 +39,15 @@ export function AnomalyFlagsSection({ leaderId, team }: { leaderId: string; team
   }, [leaderId]);
 
   const flags = useMemo<Flag[]>(() => {
-    // group historical txns per member per kind
-    const byMember = new Map<string, { deposits: number[]; withdrawals: number[] }>();
+    // group historical txns per member per kind, keyed by txn id so we can exclude
+    // the exact row being scored (not every txn that happens to share its amount).
+    type Entry = { id: string; amt: number };
+    const byMember = new Map<string, { deposits: Entry[]; withdrawals: Entry[] }>();
     for (const t of txns) {
       const e = byMember.get(t.member_id) ?? { deposits: [], withdrawals: [] };
       const amt = Math.abs(Number(t.amount_usd) || 0);
-      if (DEPOSIT_TYPES.has(t.type)) e.deposits.push(amt);
-      else if (WITHDRAWAL_TYPES.has(t.type)) e.withdrawals.push(amt);
+      if (DEPOSIT_TYPES.has(t.type)) e.deposits.push({ id: t.id, amt });
+      else if (WITHDRAWAL_TYPES.has(t.type)) e.withdrawals.push({ id: t.id, amt });
       byMember.set(t.member_id, e);
     }
     const recent = txns.slice(0, 80); // most recent first
@@ -60,10 +62,10 @@ export function AnomalyFlagsSection({ leaderId, team }: { leaderId: string; team
           ? bucket.withdrawals
           : null;
       if (!series || series.length < 3) continue;
-      // exclude this txn from the historical average
-      const others = series.filter((v) => v !== amt);
+      // exclude this exact txn (by id) from the historical average
+      const others = series.filter((v) => v.id !== t.id);
       if (others.length < 2) continue;
-      const avg = others.reduce((a, b) => a + b, 0) / others.length;
+      const avg = others.reduce((a, b) => a + b.amt, 0) / others.length;
       if (avg <= 0) continue;
       const ratio = amt / avg;
       if (ratio >= 5) {

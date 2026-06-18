@@ -82,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const list = ((r as { role: AppRole }[]) ?? []).map((x) => x.role);
     setRoles(list);
     if (s?.usd_to_ngn) setNgnRate(Number(s.usd_to_ngn));
+    setNgnRateReady(true);
     if (s?.fx_rates && typeof s.fx_rates === "object")
       setFxRates({ ...(s.fx_rates as Record<string, number>) });
     setActiveRoleState((prev) => {

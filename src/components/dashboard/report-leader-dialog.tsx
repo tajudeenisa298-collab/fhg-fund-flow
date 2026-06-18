@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { WhatsappInput, validateWhatsappDigits } from "@/components/whatsapp-input";
 
 type LeaderOption = { id: string; full_name: string; rank: string };
 
@@ -73,7 +74,9 @@ export function ReportLeaderDialog() {
     if (description.trim().length < 10)
       return toast.error("Please describe what happened (at least 10 characters).");
     if (name.trim().length < 2) return toast.error("Your name is required.");
-    if (whatsapp.trim().length < 5) return toast.error("A WhatsApp number is required.");
+    const nsn = whatsapp.trim().replace(/^\+\d{1,4}/, "");
+    const waErr = validateWhatsappDigits(nsn);
+    if (waErr) return toast.error(waErr);
 
     const selected = leaders.find((l) => l.id === leaderId);
     setSubmitting(true);
@@ -196,14 +199,9 @@ export function ReportLeaderDialog() {
                   <Label>Your name</Label>
                   <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1 sm:col-span-2">
                   <Label>Your WhatsApp number</Label>
-                  <Input
-                    value={whatsapp}
-                    onChange={(e) => setWhatsapp(e.target.value)}
-                    placeholder="e.g. +234801234567"
-                    maxLength={32}
-                  />
+                  <WhatsappInput value={whatsapp} onChange={setWhatsapp} />
                 </div>
               </div>
 

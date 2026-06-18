@@ -67,19 +67,25 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
   const [tick, setTick] = useState(0);
   const [bankVerifiedAt, setBankVerifiedAt] = useState<string | null | undefined>(undefined);
   const [leaderName, setLeaderName] = useState<string | null>(null);
+  const [sponsorName, setSponsorName] = useState<string | null>(null);
+  const [reverifyOpen, setReverifyOpen] = useState(false);
   const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
   const [, forceTick] = useState(0);
   const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (!profile.leader_id) { setLeaderName(null); return; }
+    const ids = [profile.leader_id, profile.sponsor_id].filter(Boolean) as string[];
+    if (ids.length === 0) { setLeaderName(null); setSponsorName(null); return; }
     supabase
       .from("profiles")
-      .select("full_name")
-      .eq("id", profile.leader_id)
-      .maybeSingle()
-      .then(({ data }) => setLeaderName((data?.full_name as string) ?? null));
-  }, [profile.leader_id]);
+      .select("id, full_name")
+      .in("id", ids)
+      .then(({ data }) => {
+        const rows = (data ?? []) as Array<{ id: string; full_name: string }>;
+        setLeaderName(rows.find((r) => r.id === profile.leader_id)?.full_name ?? null);
+        setSponsorName(rows.find((r) => r.id === profile.sponsor_id)?.full_name ?? null);
+      });
+  }, [profile.leader_id, profile.sponsor_id]);
 
   useEffect(() => {
     if (cooldownUntil == null) return;

@@ -46,7 +46,7 @@ export function DownlineSection({ rootId }: { rootId: string }) {
   }, [people]);
 
   const totalDownline = people.length;
-  const totalBalance = people.reduce((s, p) => s + Number(p.balance_usd), 0);
+  const totalBalance = people.filter((p) => !p.can_handle_funds).reduce((s, p) => s + Number(p.balance_usd), 0);
 
   return (
     <section className="rounded-2xl border bg-card p-6 shadow-card">
@@ -107,7 +107,7 @@ function Tree({
                 {p.can_handle_funds && " · fund handler"}
               </p>
             </div>
-            <Money usd={p.balance_usd} size="sm" className="items-end" />
+            {!p.can_handle_funds && <Money usd={p.balance_usd} size="sm" className="items-end" />}
           </button>
           <Tree sponsorId={p.id} childrenOf={childrenOf} depth={depth + 1} onPick={onPick} />
         </li>

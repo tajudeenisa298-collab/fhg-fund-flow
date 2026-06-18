@@ -142,7 +142,9 @@ export function MemberDetailDialog({
                 Balances
               </h4>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <Stat label="Current balance" usd={member.balance_usd} />
+                {!member.can_handle_funds && (
+                  <Stat label="Current balance" usd={member.balance_usd} />
+                )}
                 <Stat label="Total deposits" usd={totalDeposits} />
                 <Stat label="Total withdrawn" usd={totalWithdrawn} />
                 <Stat label="Released on promo" usd={totalReleased} />

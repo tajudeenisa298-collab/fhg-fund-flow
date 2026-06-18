@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Money } from "@/components/money";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MemberDetailDialog } from "@/components/dashboard/member-detail-dialog";
+import { UserAvatar } from "@/components/user-avatar";
 import type { Profile } from "@/lib/auth-context";
 
 export function DownlineSection({ rootId }: { rootId: string }) {
@@ -111,6 +112,7 @@ function Tree({
             style={{ paddingLeft: `${depth * 20 + 16}px` }}
           >
             <ChevronRight className="size-3.5 text-muted-foreground" />
+            <UserAvatar name={p.full_name} avatarPath={p.avatar_url} className="size-8 shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium text-primary hover:underline">{p.full_name}</p>
               <p className="text-xs text-muted-foreground">

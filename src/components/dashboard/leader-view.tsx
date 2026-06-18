@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { UserAvatar } from "@/components/user-avatar";
 import {
   Dialog,
   DialogContent,
@@ -552,11 +553,16 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
                           />
                         </td>
                         <td className="px-4 py-3">
-                          <p className="font-medium text-primary hover:underline">
-                            {m.full_name}
-                            <MemberStatusBadge member={m} />
-                          </p>
-                          <p className="text-xs text-muted-foreground">{m.email}</p>
+                          <div className="flex items-center gap-3">
+                            <UserAvatar name={m.full_name} avatarPath={m.avatar_url} className="size-8 shrink-0" />
+                            <div className="min-w-0">
+                              <p className="truncate font-medium text-primary hover:underline">
+                                {m.full_name}
+                                <MemberStatusBadge member={m} />
+                              </p>
+                              <p className="truncate text-xs text-muted-foreground">{m.email}</p>
+                            </div>
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <div>{m.rank}</div>

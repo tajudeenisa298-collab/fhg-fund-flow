@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Money } from "@/components/money";
 import { fmtNgn } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
+import { UserAvatar } from "@/components/user-avatar";
 
 interface DownlineRow {
   id: string;
@@ -14,6 +15,7 @@ interface DownlineRow {
   rank: string;
   balance_usd: number;
   can_handle_funds: boolean;
+  avatar_url: string | null;
   depth: number;
 }
 
@@ -124,6 +126,7 @@ export function OrganisationSection({ leaderId }: { leaderId: string }) {
                   ) : (
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                   )}
+                  <UserAvatar name={sl.full_name} avatarPath={sl.avatar_url} className="size-9 shrink-0" />
                   <div className="min-w-0">
                     <p className="truncate font-medium">
                       {sl.full_name}
@@ -184,9 +187,12 @@ export function OrganisationSection({ leaderId }: { leaderId: string }) {
                           key={m.id}
                           className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm"
                         >
-                          <div className="min-w-0">
-                            <p className="truncate font-medium">{m.full_name}</p>
-                            <p className="truncate text-xs text-muted-foreground">{m.rank}</p>
+                          <div className="flex min-w-0 items-center gap-3">
+                            <UserAvatar name={m.full_name} avatarPath={m.avatar_url} className="size-7 shrink-0" />
+                            <div className="min-w-0">
+                              <p className="truncate font-medium">{m.full_name}</p>
+                              <p className="truncate text-xs text-muted-foreground">{m.rank}</p>
+                            </div>
                           </div>
                           <Money usd={m.balance_usd} size="sm" className="items-end" />
                         </li>

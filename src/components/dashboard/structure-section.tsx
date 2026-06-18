@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useUrlState } from "@/hooks/use-url-state";
 import { ChevronDown, ChevronRight, Network, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Money } from "@/components/money";
@@ -76,10 +77,13 @@ export function StructureSection({ profile }: { profile: Profile }) {
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [rankFilter, setRankFilter] = useState<Set<string>>(new Set(RANKS));
-  const [period, setPeriod] = useState<PeriodOption>("current");
+  const [periodRaw, setPeriodRaw] = useUrlState("period", "current");
+  const period = periodRaw as PeriodOption;
+  const setPeriod = (v: PeriodOption) => setPeriodRaw(v);
   const today = new Date();
-  const [customMonth, setCustomMonth] = useState<string>(
-    `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, "0")}`
+  const [customMonth, setCustomMonth] = useUrlState(
+    "month",
+    `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, "0")}`,
   );
 
   const range = useMemo(() => periodRange(period, customMonth), [period, customMonth]);

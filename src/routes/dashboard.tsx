@@ -9,6 +9,7 @@ import { MemberView } from "@/components/dashboard/member-view";
 import { LeaderView } from "@/components/dashboard/leader-view";
 import { StructureSection } from "@/components/dashboard/structure-section";
 import { NotificationBell } from "@/components/notification-bell";
+import { GlobalMemberSearch, GlobalMemberSearchTrigger } from "@/components/global-member-search";
 import { UserAvatar } from "@/components/user-avatar";
 import { AccountStatusScreen } from "@/components/account-status-screen";
 import { DashboardSubNav, sectionFromPath } from "@/components/dashboard/dashboard-sub-nav";
@@ -87,6 +88,7 @@ function DashboardPage() {
                 <p className="text-xs text-muted-foreground">{profile.email}</p>
               </div>
             </div>
+            <GlobalMemberSearchTrigger />
             <NotificationBell />
             <Button variant="outline" size="icon" asChild aria-label="Settings">
               <a href="/settings"><Settings className="size-4" /></a>
@@ -120,6 +122,7 @@ function DashboardPage() {
             stays mounted and data isn't re-fetched on every tab switch. */}
         <Outlet />
       </main>
+      <GlobalMemberSearch />
     </div>
   );
 }

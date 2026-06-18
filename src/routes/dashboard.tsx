@@ -92,7 +92,7 @@ function DashboardPage() {
             <GlobalMemberSearchTrigger />
             <NotificationBell />
             <Button variant="outline" size="icon" asChild aria-label="Settings">
-              <a href="/settings"><Settings className="size-4" /></a>
+              <Link to="/settings"><Settings className="size-4" /></Link>
             </Button>
             <Button
               variant="outline"

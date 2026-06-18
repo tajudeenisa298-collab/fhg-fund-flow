@@ -347,7 +347,7 @@ function SettingsPage() {
           )}
         </section>
 
-        <section className="rounded-2xl border bg-card p-6 shadow-card">
+        <section id="name" className="scroll-mt-24 rounded-2xl border bg-card p-6 shadow-card">
           <div className="flex items-start justify-between gap-3">
             <h2 className="text-lg font-semibold">Account</h2>
             {!editingName && (

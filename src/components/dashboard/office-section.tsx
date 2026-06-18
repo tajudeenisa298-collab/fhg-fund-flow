@@ -11,6 +11,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import type { OfficeLedgerEntry } from "@/lib/types";
 import { fmtDate } from "@/lib/format";
+import { ExportCsvButton } from "@/components/export-csv-button";
 
 const fmtNgn = (n: number) =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(n);
@@ -43,9 +44,22 @@ export function OfficeSection({ leaderId }: { leaderId: string }) {
             Auto-credited from per-deposit rules. Log expenses (electricity, rent…) below.
           </p>
         </div>
-        <Button size="sm" onClick={() => setOpen(true)}>
-          <Plus className="mr-1 size-4" /> Log expense
-        </Button>
+        <div className="flex items-center gap-2">
+          <ExportCsvButton
+            filename="office_ledger"
+            rows={rows}
+            getRow={(r) => ({
+              date: fmtDate(r.created_at),
+              kind: r.kind,
+              amount_ngn: r.amount_ngn,
+              category: r.category ?? "",
+              note: r.note ?? "",
+            })}
+          />
+          <Button size="sm" onClick={() => setOpen(true)}>
+            <Plus className="mr-1 size-4" /> Log expense
+          </Button>
+        </div>
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-3 text-sm">

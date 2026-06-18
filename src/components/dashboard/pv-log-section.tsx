@@ -22,6 +22,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { CurrencyAmountInput } from "@/components/currency-amount-input";
 import { fmtUsd } from "@/lib/format";
+import { ExportCsvButton } from "@/components/export-csv-button";
 
 interface PvRow {
   id: string;
@@ -221,6 +222,20 @@ export function PvLogSection({
             <p className="text-xs uppercase tracking-wide text-muted-foreground">YTD</p>
             <p className="text-lg font-semibold">{totals.ytd.toLocaleString()}</p>
           </div>
+          <ExportCsvButton
+            filename={scope === "team" ? "team_pv_log" : "pv_log"}
+            rows={rows}
+            getRow={(r) => {
+              const t = team.find((x) => x.id === r.member_id);
+              return {
+                period_month: r.period_month,
+                member: t?.full_name ?? r.member_id,
+                pv: r.pv,
+                price_usd: (r as { price_usd?: number }).price_usd ?? "",
+                note: (r as { note?: string | null }).note ?? "",
+              };
+            }}
+          />
           {canManage && (
             <Button onClick={startAdd}>
               <Plus className="mr-1 size-4" /> Log PV

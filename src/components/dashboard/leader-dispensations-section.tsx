@@ -24,6 +24,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 import { DateRangeFilter, EMPTY_RANGE, inRange, type DateRange } from "@/components/date-range-filter";
 import { DisputeThread } from "@/components/dashboard/dispute-thread";
+import { ExportCsvButton } from "@/components/export-csv-button";
 
 type Status = "pending" | "acknowledged" | "disputed";
 
@@ -137,7 +138,24 @@ export function LeaderDispensationsSection({ leaderId }: { leaderId: string }) {
             Track what you've paid out, what members confirmed, and what's in dispute.
           </p>
         </div>
-        <DateRangeFilter value={range} onChange={setRange} />
+        <div className="flex items-center gap-2">
+          <ExportCsvButton
+            filename="upkeep_dispensations"
+            rows={rows}
+            getRow={(r) => ({
+              date: fmtDate(r.created_at),
+              member: r.member_name ?? r.member_id,
+              amount_usd: r.amount_usd,
+              status: r.status,
+              note: r.note ?? "",
+              dispute_note: r.dispute_note ?? "",
+              resolved_at: r.resolved_at ? fmtDate(r.resolved_at) : "",
+              resolution_note: r.resolution_note ?? "",
+              credited: r.resolution_credit === true ? "yes" : r.resolution_credit === false ? "no" : "",
+            })}
+          />
+          <DateRangeFilter value={range} onChange={setRange} />
+        </div>
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as Status)} className="mt-4">

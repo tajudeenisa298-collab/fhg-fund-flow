@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronRight, Network, Users } from "lucide-react";
+import { ChevronDown, ChevronRight, Network, Users, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Money } from "@/components/money";
+import { fmtNgn } from "@/lib/format";
+import { useAuth } from "@/lib/auth-context";
 
 interface DownlineRow {
   id: string;
@@ -15,21 +17,34 @@ interface DownlineRow {
   depth: number;
 }
 
+interface SubLeaderSummary {
+  leader_id: string;
+  leader_name: string;
+  purse_balance_usd: number;
+  office_balance_ngn: number;
+  pending_withdrawal_count: number;
+  pending_upkeep_count: number;
+}
+
 export function OrganisationSection({ leaderId }: { leaderId: string }) {
+  const { ngnRate } = useAuth();
   const [rows, setRows] = useState<DownlineRow[]>([]);
+  const [summary, setSummary] = useState<Map<string, SubLeaderSummary>>(new Map());
   const [openTeam, setOpenTeam] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase.rpc("get_downline", { _root: leaderId });
+      const [{ data: tree, error: e1 }, { data: sum }] = await Promise.all([
+        supabase.rpc("get_downline", { _root: leaderId }),
+        supabase.rpc("get_org_subleader_summary", { _root: leaderId }),
+      ]);
       if (cancelled) return;
-      if (error) {
-        setRows([]);
-      } else {
-        setRows((data as DownlineRow[]) ?? []);
-      }
+      setRows(e1 ? [] : ((tree as DownlineRow[]) ?? []));
+      const map = new Map<string, SubLeaderSummary>();
+      ((sum as SubLeaderSummary[]) ?? []).forEach((s) => map.set(s.leader_id, s));
+      setSummary(map);
       setLoading(false);
     })();
     return () => {
@@ -39,11 +54,9 @@ export function OrganisationSection({ leaderId }: { leaderId: string }) {
 
   if (loading) return null;
 
-  // Sub-leaders = anyone in downline who handles funds themselves (excluding root)
   const subLeaders = rows.filter((r) => r.can_handle_funds && r.id !== leaderId);
   if (subLeaders.length === 0) return null;
 
-  // Members grouped by their fund handler
   const byHandler = new Map<string, DownlineRow[]>();
   for (const r of rows) {
     if (!r.can_handle_funds && r.leader_id && r.leader_id !== leaderId) {
@@ -54,9 +67,11 @@ export function OrganisationSection({ leaderId }: { leaderId: string }) {
   }
 
   const totalDownlineMembers = rows.filter((r) => !r.can_handle_funds).length;
-  const totalDownstreamBalance = rows
+  const totalManagedBalance = rows
     .filter((r) => !r.can_handle_funds)
     .reduce((s, r) => s + Number(r.balance_usd), 0);
+  const totalSubLeaderBalance = subLeaders.reduce((s, r) => s + Number(r.balance_usd), 0);
+  const totalDownstreamBalance = totalManagedBalance + totalSubLeaderBalance;
 
   return (
     <section className="rounded-2xl border bg-card p-6 shadow-card">
@@ -84,6 +99,7 @@ export function OrganisationSection({ leaderId }: { leaderId: string }) {
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">Held funds</p>
             <Money usd={totalDownstreamBalance} size="sm" className="items-end" />
+            <p className="text-[10px] text-muted-foreground">incl. sub-leader balances</p>
           </div>
         </div>
       </div>
@@ -92,7 +108,9 @@ export function OrganisationSection({ leaderId }: { leaderId: string }) {
         {subLeaders.map((sl) => {
           const members = byHandler.get(sl.id) ?? [];
           const teamBalance = members.reduce((s, m) => s + Number(m.balance_usd), 0);
+          const s = summary.get(sl.id);
           const isOpen = openTeam === sl.id;
+          const escalations = (s?.pending_withdrawal_count ?? 0) + (s?.pending_upkeep_count ?? 0);
           return (
             <div key={sl.id}>
               <button
@@ -107,9 +125,18 @@ export function OrganisationSection({ leaderId }: { leaderId: string }) {
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                   )}
                   <div className="min-w-0">
-                    <p className="truncate font-medium">{sl.full_name}</p>
+                    <p className="truncate font-medium">
+                      {sl.full_name}
+                      {escalations > 0 && (
+                        <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-medium text-warning">
+                          <AlertTriangle className="size-3" />
+                          {escalations} pending
+                        </span>
+                      )}
+                    </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {sl.rank} · depth {sl.depth}
+                      {sl.rank} · depth {sl.depth} · own balance{" "}
+                      <span className="font-mono text-foreground">${Number(sl.balance_usd).toLocaleString()}</span>
                     </p>
                   </div>
                 </div>
@@ -125,7 +152,27 @@ export function OrganisationSection({ leaderId }: { leaderId: string }) {
                 </div>
               </button>
               {isOpen && (
-                <div className="border-t bg-muted/20 px-4 py-3">
+                <div className="border-t bg-muted/20 px-4 py-3 space-y-3">
+                  {s && (
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 text-xs">
+                      <div className="rounded-lg border bg-card p-2">
+                        <p className="text-muted-foreground">Purse</p>
+                        <p className="font-mono font-semibold">${Number(s.purse_balance_usd).toLocaleString()}</p>
+                      </div>
+                      <div className="rounded-lg border bg-card p-2">
+                        <p className="text-muted-foreground">Office</p>
+                        <p className="font-mono font-semibold">{fmtNgn(s.office_balance_ngn / Math.max(ngnRate, 1), ngnRate)}</p>
+                      </div>
+                      <div className="rounded-lg border bg-card p-2">
+                        <p className="text-muted-foreground">Pending withdrawals</p>
+                        <p className="font-mono font-semibold">{s.pending_withdrawal_count}</p>
+                      </div>
+                      <div className="rounded-lg border bg-card p-2">
+                        <p className="text-muted-foreground">Pending upkeep</p>
+                        <p className="font-mono font-semibold">{s.pending_upkeep_count}</p>
+                      </div>
+                    </div>
+                  )}
                   {members.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
                       No members under this leader yet.
@@ -152,6 +199,10 @@ export function OrganisationSection({ leaderId }: { leaderId: string }) {
           );
         })}
       </div>
+      <p className="mt-3 text-[11px] text-muted-foreground">
+        Fund rules, upkeep plans and office ledger are scoped per fund handler — each sub-leader runs their own.
+        Use the per-team breakdown above to drill in.
+      </p>
     </section>
   );
 }

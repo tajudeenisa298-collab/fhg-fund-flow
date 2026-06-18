@@ -156,7 +156,10 @@ export function DispenseUpkeepDialog({
               />
             </div>
             <DialogFooter>
-              <Button type="submit" disabled={busy}>
+              <Button
+                type="submit"
+                disabled={busy || (purseBalance !== null && amountUsd > purseBalance)}
+              >
                 {busy ? "Sending…" : "Send upkeep"}
               </Button>
             </DialogFooter>

@@ -105,6 +105,7 @@ export function StructureSection({ profile }: { profile: Profile }) {
             balance_usd: number;
             avatar_url: string | null;
             sponsor_id: string | null;
+            can_handle_funds: boolean;
           }>).map((r) => ({
             id: r.id,
             full_name: r.full_name,
@@ -112,6 +113,7 @@ export function StructureSection({ profile }: { profile: Profile }) {
             balance_usd: Number(r.balance_usd),
             avatar_url: r.avatar_url,
             sponsor_id: r.sponsor_id,
+            can_handle_funds: !!r.can_handle_funds,
           }));
       const root: Node = {
         id: profile.id,
@@ -120,6 +122,7 @@ export function StructureSection({ profile }: { profile: Profile }) {
         balance_usd: Number(profile.balance_usd),
         avatar_url: profile.avatar_url ?? null,
         sponsor_id: null,
+        can_handle_funds: !!profile.can_handle_funds,
       };
       setNodes([root, ...list]);
       setLoading(false);

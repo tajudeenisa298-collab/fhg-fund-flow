@@ -28,6 +28,7 @@ import { DownlineSection } from "@/components/dashboard/downline-section";
 import { TeamFundRulesReadonly } from "@/components/dashboard/team-fund-rules-readonly";
 import { InviteCodeRow, type InviteCodeRowData } from "@/components/dashboard/invite-code-row";
 import { generateInviteCode } from "@/lib/team.functions";
+import { SectionErrorBoundary } from "@/components/section-error-boundary";
 import { CurrencyAmountInput } from "@/components/currency-amount-input";
 import { PendingUpkeepSection } from "@/components/dashboard/pending-upkeep-section";
 import { PvLogSection } from "@/components/dashboard/pv-log-section";
@@ -417,11 +418,12 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
       )}
 
       {show("admin") && (
-        // Member-scope PV entries never trigger fund deductions in the DB; only team-scope
-        // (leader entering PV for managed members) hits create_managed_transaction.
-        // Members can safely enter their own priceUsd without balance validation here.
-        <PvLogSection ownerId={profile.id} scope="self" />
-
+        <SectionErrorBoundary name="PV log">
+          {/* Member-scope PV entries never trigger fund deductions in the DB; only team-scope
+              (leader entering PV for managed members) hits create_managed_transaction.
+              Members can safely enter their own priceUsd without balance validation here. */}
+          <PvLogSection ownerId={profile.id} scope="self" />
+        </SectionErrorBoundary>
       )}
 
       {show("team") && (
@@ -563,11 +565,15 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
       )}
 
       {show("admin") && profile.leader_id && (
-        <AnnouncementsSection leaderId={profile.leader_id} canManage={false} />
+        <SectionErrorBoundary name="Announcements">
+          <AnnouncementsSection leaderId={profile.leader_id} canManage={false} />
+        </SectionErrorBoundary>
       )}
 
       {show("admin") && profile.leader_id && (
-        <ResourceLibrarySection leaderId={profile.leader_id} canManage={false} />
+        <SectionErrorBoundary name="Resource library">
+          <ResourceLibrarySection leaderId={profile.leader_id} canManage={false} />
+        </SectionErrorBoundary>
       )}
 
       {show("money") && (

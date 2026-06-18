@@ -72,6 +72,7 @@ import { MemberStatusMenu, MemberStatusBadge } from "@/components/dashboard/memb
 import { MemberStatusAuditSection } from "@/components/dashboard/member-status-audit-section";
 import { CronHealthSection } from "@/components/dashboard/cron-health-section";
 import { AdminAuditFeed } from "@/components/dashboard/admin-audit-feed";
+import { SectionErrorBoundary } from "@/components/section-error-boundary";
 import { MobileCollapsible } from "@/components/dashboard/mobile-collapsible";
 import { ReconciliationSection } from "@/components/dashboard/reconciliation-section";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
@@ -727,15 +728,19 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
       )}
 
       {show("admin") && (
-        <MobileCollapsible title="Scheduled jobs">
-          <CronHealthSection />
-        </MobileCollapsible>
+        <SectionErrorBoundary name="Scheduled jobs">
+          <MobileCollapsible title="Scheduled jobs">
+            <CronHealthSection />
+          </MobileCollapsible>
+        </SectionErrorBoundary>
       )}
 
       {show("admin") && (
-        <MobileCollapsible title="Audit feed" defaultOpen>
-          <AdminAuditFeed />
-        </MobileCollapsible>
+        <SectionErrorBoundary name="Audit feed">
+          <MobileCollapsible title="Audit feed" defaultOpen>
+            <AdminAuditFeed />
+          </MobileCollapsible>
+        </SectionErrorBoundary>
       )}
 
       {show("office") && (
@@ -745,13 +750,17 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
       )}
 
       {show("admin") && (<>
-        <MobileCollapsible title="Announcements">
-          <AnnouncementsSection leaderId={profile.id} canManage />
-        </MobileCollapsible>
+        <SectionErrorBoundary name="Announcements">
+          <MobileCollapsible title="Announcements">
+            <AnnouncementsSection leaderId={profile.id} canManage />
+          </MobileCollapsible>
+        </SectionErrorBoundary>
 
-        <MobileCollapsible title="Resource library">
-          <ResourceLibrarySection leaderId={profile.id} canManage />
-        </MobileCollapsible>
+        <SectionErrorBoundary name="Resource library">
+          <MobileCollapsible title="Resource library">
+            <ResourceLibrarySection leaderId={profile.id} canManage />
+          </MobileCollapsible>
+        </SectionErrorBoundary>
       </>)}
 
       {show("team") && (<>

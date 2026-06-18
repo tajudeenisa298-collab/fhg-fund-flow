@@ -1220,6 +1220,31 @@ export type Database = {
           withdrawals_usd: number
         }[]
       }
+      get_org_pending_withdrawals: {
+        Args: { _root: string }
+        Returns: {
+          amount_usd: number
+          created_at: string
+          description: string
+          id: string
+          leader_id: string
+          leader_name: string
+          member_id: string
+          member_name: string
+          status: string
+        }[]
+      }
+      get_org_subleader_summary: {
+        Args: { _root: string }
+        Returns: {
+          leader_id: string
+          leader_name: string
+          office_balance_ngn: number
+          pending_upkeep_count: number
+          pending_withdrawal_count: number
+          purse_balance_usd: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1282,6 +1307,7 @@ export type Database = {
         Returns: undefined
       }
       pardon_member: { Args: { _member_id: string }; Returns: undefined }
+      preview_reparent_count: { Args: { _member_id: string }; Returns: number }
       promote_member: {
         Args: {
           _grant_fund_handler?: boolean

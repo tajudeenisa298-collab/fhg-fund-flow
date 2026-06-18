@@ -62,6 +62,7 @@ import { LeaderPurseSection } from "@/components/dashboard/leader-purse-section"
 import { DownlineSection } from "@/components/dashboard/downline-section";
 import { RankUpkeepDefaultsSection } from "@/components/dashboard/rank-upkeep-defaults-section";
 import { OrganisationSection } from "@/components/dashboard/organisation-section";
+import { OrgPendingWithdrawals } from "@/components/dashboard/org-pending-withdrawals";
 import { PvLogSection } from "@/components/dashboard/pv-log-section";
 import { LeaderDispensationsSection } from "@/components/dashboard/leader-dispensations-section";
 import { AnnouncementsSection } from "@/components/dashboard/announcements-section";
@@ -749,6 +750,7 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
 
       {show("team") && (<>
         <OrganisationSection leaderId={profile.id} />
+        {!profile.sponsor_id && <OrgPendingWithdrawals leaderId={profile.id} />}
 
         <MobileCollapsible title="Team PV log">
           <PvLogSection ownerId={profile.id} scope="team" />
@@ -1098,20 +1100,33 @@ function PromoteDialog({ member, onDone }: { member: Profile; onDone: () => void
   const [grant, setGrant] = useState(false);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [reparentCount, setReparentCount] = useState<number | null>(null);
   const promote = useServerFn(promoteManagedMember);
 
   const willBecomeDirector = isDirectorOrAbove(newRank);
+  const willBecomeHandler = willBecomeDirector || grant;
   const newIdx = rankIndex(newRank);
   const isDemotion = newIdx >= 0 && newIdx < currentIdx;
   const isNoChange = newRank === member.rank;
 
+  useEffect(() => {
+    if (!open || !willBecomeHandler) { setReparentCount(null); return; }
+    supabase
+      .rpc("preview_reparent_count", { _member_id: member.id })
+      .then(({ data }) => setReparentCount(typeof data === "number" ? data : 0));
+  }, [open, willBecomeHandler, member.id]);
+
   const submit = async () => {
     if (isNoChange) return toast.error("Pick a different rank");
     const verb = isDemotion ? "Demote" : "Promote";
+    const reparentMsg = willBecomeHandler && reparentCount && reparentCount > 0
+      ? ` ${reparentCount} member${reparentCount === 1 ? "" : "s"} below them will be reassigned to ${member.full_name} as their new fund handler.`
+      : "";
     if (!window.confirm(
       `${verb} ${member.full_name} from ${member.rank} to ${newRank}?` +
         (isDemotion ? " This will reduce their rank." : "") +
-        (willBecomeDirector ? " They will manage their own team and their balance will be released." : "")
+        (willBecomeDirector ? " They will manage their own team and their balance will be released." : "") +
+        reparentMsg
     )) return;
     setBusy(true);
     const { error } = await promote({ data: { memberId: member.id, newRank, grantFundHandler: grant, note } })
@@ -1171,6 +1186,18 @@ function PromoteDialog({ member, onDone }: { member: Profile; onDone: () => void
                 As a Director-tier rank they'll manage their own team. Their managed balance
                 ({fmtUsd(member.balance_usd)}) will be released.
               </p>
+            )}
+
+            {willBecomeHandler && reparentCount !== null && reparentCount > 0 && (
+              <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs">
+                <p className="font-semibold text-warning">
+                  Reparent preview: {reparentCount} member{reparentCount === 1 ? "" : "s"} affected
+                </p>
+                <p className="mt-1 text-muted-foreground">
+                  Granting fund-handler access means every managed member currently below {member.full_name}'s
+                  sponsor chain becomes their responsibility. Past transactions stay with the previous handler.
+                </p>
+              </div>
             )}
 
             <div className="space-y-2">

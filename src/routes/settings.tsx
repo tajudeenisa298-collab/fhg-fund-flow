@@ -52,6 +52,20 @@ function SettingsPage() {
   }, [loading, session, nav]);
 
   useEffect(() => {
+    if (loading) return;
+    const hash = typeof window !== "undefined" ? window.location.hash.replace("#", "") : "";
+    if (!hash) return;
+    const t = setTimeout(() => {
+      const el = document.getElementById(hash);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        (el as HTMLElement).focus?.();
+      }
+    }, 150);
+    return () => clearTimeout(t);
+  }, [loading]);
+
+  useEffect(() => {
     if (profile) {
       setFullName(profile.full_name);
       setWhatsapp(profile.whatsapp_number ?? "");

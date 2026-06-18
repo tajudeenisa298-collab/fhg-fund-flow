@@ -6,6 +6,15 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       className="toaster group"
+      // Lift toasts above the mobile bottom-nav (~60px + safe area).
+      // sonner reads --mobile-offset for narrow viewports.
+      style={
+        {
+          "--mobile-offset":
+            "calc(72px + env(safe-area-inset-bottom))",
+        } as React.CSSProperties
+      }
+      mobileOffset={{ bottom: "calc(72px + env(safe-area-inset-bottom))" }}
       toastOptions={{
         classNames: {
           toast:

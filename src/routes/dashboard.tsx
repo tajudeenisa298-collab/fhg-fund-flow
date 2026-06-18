@@ -88,6 +88,7 @@ function DashboardPage() {
                 <p className="text-xs text-muted-foreground">{profile.email}</p>
               </div>
             </div>
+            <GlobalMemberSearchTrigger />
             <NotificationBell />
             <Button variant="outline" size="icon" asChild aria-label="Settings">
               <a href="/settings"><Settings className="size-4" /></a>

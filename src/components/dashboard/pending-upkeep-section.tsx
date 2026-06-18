@@ -163,9 +163,21 @@ export function PendingUpkeepSection({
                 </Button>
               </div>
             ) : (
-              <span className="rounded-full bg-destructive/15 px-2.5 py-1 text-xs font-medium text-destructive">
-                Disputed
-              </span>
+              <div className="flex flex-col items-end gap-1">
+                <span className="rounded-full bg-destructive/15 px-2.5 py-1 text-xs font-medium text-destructive">
+                  Disputed
+                </span>
+                {(() => {
+                  const days = Math.floor((Date.now() - new Date(d.created_at).getTime()) / 86400000);
+                  if (days < 1) return null;
+                  return (
+                    <span className={`text-[11px] ${days >= 3 ? "font-medium text-destructive" : "text-muted-foreground"}`}>
+                      Awaiting leader for {days} day{days === 1 ? "" : "s"}
+                      {days >= 3 ? " — consider following up" : ""}
+                    </span>
+                  );
+                })()}
+              </div>
             )}
             {d.status === "disputed" && (
               <div className="w-full">

@@ -14,6 +14,9 @@ export function AccountStatusScreen({ profile }: { profile: Profile }) {
     ? new Date(new Date(profile.terminated_at).getTime() + 90 * 24 * 60 * 60 * 1000)
     : null;
   const pardonExpired = pardonDeadline ? pardonDeadline < new Date() : false;
+  const daysLeft = pardonDeadline
+    ? Math.max(0, Math.ceil((pardonDeadline.getTime() - Date.now()) / 86400000))
+    : 0;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-soft px-4 py-12">
@@ -32,7 +35,7 @@ export function AccountStatusScreen({ profile }: { profile: Profile }) {
           {isTerminated
             ? finalized || pardonExpired
               ? "The 90-day pardon window has passed. Please contact your team leader if you believe this is in error."
-              : `You have until ${fmtDate(pardonDeadline!.toISOString())} to be pardoned by your team leader.`
+              : `Pardon window closes in ${daysLeft} day${daysLeft === 1 ? "" : "s"} (on ${fmtDate(pardonDeadline!.toISOString())}). After that, termination is permanent.`
             : isSuspended
             ? `Your access has been suspended until ${fmtDate(suspendedUntil!.toISOString())}.`
             : "Your account access is restricted."}

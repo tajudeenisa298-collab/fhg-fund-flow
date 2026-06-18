@@ -42,6 +42,18 @@ export function TeamFundRulesReadonly({ leaderId }: { leaderId: string | null })
           Automatic deductions and rank upkeep from your team leader.
         </p>
       </button>
+      {rules.some((r) => r.kind === "per_usd" && r.active) && (
+        <div className="mt-3 rounded-xl border bg-muted/30 p-3 text-xs">
+          <p className="font-medium text-foreground">Preview — for every $100 you deposit:</p>
+          <ul className="mt-1 space-y-0.5 text-muted-foreground">
+            {rules.filter((r) => r.kind === "per_usd" && r.active).map((r) => (
+              <li key={r.id}>
+                <span className="font-mono text-foreground">{ngn(Number(r.amount_ngn) * 100)}</span> goes to {r.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <ul className="mt-4 divide-y rounded-xl border">
         {rules.length === 0 && (
           <li className="px-4 py-6 text-center text-xs text-muted-foreground">

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { confirmDialog } from "@/components/ui/confirm-dialog";
 import { Wallet, TrendingUp, Clock, Plus, Download } from "lucide-react";
@@ -65,6 +66,38 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
   const [codes, setCodes] = useState<InviteCodeRowData[]>([]);
   const [tick, setTick] = useState(0);
   const [bankVerifiedAt, setBankVerifiedAt] = useState<string | null | undefined>(undefined);
+  const [leaderName, setLeaderName] = useState<string | null>(null);
+  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
+  const [, forceTick] = useState(0);
+  const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!profile.leader_id) { setLeaderName(null); return; }
+    supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", profile.leader_id)
+      .maybeSingle()
+      .then(({ data }) => setLeaderName((data?.full_name as string) ?? null));
+  }, [profile.leader_id]);
+
+  useEffect(() => {
+    if (cooldownUntil == null) return;
+    cooldownTimer.current = setInterval(() => {
+      if (Date.now() >= cooldownUntil) {
+        setCooldownUntil(null);
+        if (cooldownTimer.current) clearInterval(cooldownTimer.current);
+      } else {
+        forceTick((n) => n + 1);
+      }
+    }, 1000);
+    return () => {
+      if (cooldownTimer.current) clearInterval(cooldownTimer.current);
+    };
+  }, [cooldownUntil]);
+
+  const cooldownSeconds = cooldownUntil ? Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000)) : 0;
+
 
   useEffect(() => {
     supabase
@@ -149,6 +182,10 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
       toast.error("Amount exceeds your managed balance.");
       return;
     }
+    if (cooldownUntil && Date.now() < cooldownUntil) {
+      toast.error(`Please wait ${cooldownSeconds}s before trying again.`);
+      return;
+    }
     setSubmitting(true);
     const { error } = await supabase.from("withdrawal_requests").insert({
       member_id: profile.id,
@@ -158,9 +195,15 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
     });
     setSubmitting(false);
     if (error) {
-      toast.error(error.message);
+      if (/too many withdrawal requests/i.test(error.message)) {
+        setCooldownUntil(Date.now() + 60_000);
+        toast.error("You've hit the rate limit. Try again in 60 seconds.");
+      } else {
+        toast.error(error.message);
+      }
       return;
     }
+
     toast.success("Withdrawal request submitted");
     setOpen(false);
     setAmount(0);
@@ -268,8 +311,12 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
                 />
               </div>
               <DialogFooter>
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? "Submitting…" : "Submit request"}
+                <Button type="submit" disabled={submitting || (cooldownUntil != null && Date.now() < cooldownUntil)}>
+                  {cooldownUntil && Date.now() < cooldownUntil
+                    ? `Try again in ${cooldownSeconds}s`
+                    : submitting
+                      ? "Submitting…"
+                      : "Submit request"}
                 </Button>
               </DialogFooter>
             </form>
@@ -296,9 +343,9 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
                 </strong>{" "}
                 Verify now to avoid payout delays.
               </span>
-              <a href="/settings" className="text-xs font-medium underline underline-offset-2">
+              <Link to="/settings" className="text-xs font-medium underline underline-offset-2">
                 Go to settings →
-              </a>
+              </Link>
             </div>
           )}
         </div>
@@ -309,11 +356,18 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
           label="Managed balance"
           valueNode={<Money usd={profile.balance_usd} size="lg" />}
           icon={Wallet}
-          hint="Held by your leader"
+          hint={`Held by ${leaderName ?? "your leader"} · NGN preview uses today's rate (₦${ngnRate.toLocaleString()}/$1)`}
         />
         <StatCard label="Current rank" value={profile.rank} icon={TrendingUp} hint="Reach Director to unlock" />
         <StatCard label="Pending requests" value={String(pending)} icon={Clock} />
       </div>
+
+      {leaderName && (
+        <p className="text-xs text-muted-foreground">
+          Your current team leader: <span className="font-medium text-foreground">{leaderName}</span>.
+          Reach out to them for questions about deposits, withdrawals, or rank upkeep.
+        </p>
+      )}
 
       <OnboardingChecklist profile={profile} />
 

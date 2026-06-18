@@ -1282,6 +1282,9 @@ function ApproveDialog({
 
 
   const decline = async () => {
+    if (!window.confirm(
+      `Decline this ${fmtUsd(request.amount_usd)} withdrawal request? This cannot be undone — the member will need to submit a new request.`
+    )) return;
     setBusy(true);
     const { error } = await supabase.rpc("resolve_withdrawal_request", {
       _id: request.id,

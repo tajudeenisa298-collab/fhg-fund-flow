@@ -7,7 +7,7 @@ export interface InviteCodeRowData {
   id: string;
   code: string;
   expires_at: string;
-  used_by: string | null;
+  is_used: boolean;
   revoked: boolean;
 }
 

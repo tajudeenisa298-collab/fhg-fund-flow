@@ -28,7 +28,11 @@ import { DownlineSection } from "@/components/dashboard/downline-section";
 import { TeamFundRulesReadonly } from "@/components/dashboard/team-fund-rules-readonly";
 import { InviteCodeRow, type InviteCodeRowData } from "@/components/dashboard/invite-code-row";
 import { generateInviteCode } from "@/lib/team.functions";
-import { SectionErrorBoundary } from "@/components/section-error-boundary";
+import {
+  SectionErrorBoundary,
+  SectionErrorProvider,
+  SectionErrorSummary,
+} from "@/components/section-error-boundary";
 import { CurrencyAmountInput } from "@/components/currency-amount-input";
 import { PendingUpkeepSection } from "@/components/dashboard/pending-upkeep-section";
 import { PvLogSection } from "@/components/dashboard/pv-log-section";
@@ -565,15 +569,17 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
       )}
 
       {show("admin") && profile.leader_id && (
-        <SectionErrorBoundary name="Announcements">
-          <AnnouncementsSection leaderId={profile.leader_id} canManage={false} />
-        </SectionErrorBoundary>
-      )}
-
-      {show("admin") && profile.leader_id && (
-        <SectionErrorBoundary name="Resource library">
-          <ResourceLibrarySection leaderId={profile.leader_id} canManage={false} />
-        </SectionErrorBoundary>
+        <SectionErrorProvider>
+          <div className="space-y-6">
+            <SectionErrorSummary />
+            <SectionErrorBoundary name="Announcements">
+              <AnnouncementsSection leaderId={profile.leader_id} canManage={false} />
+            </SectionErrorBoundary>
+            <SectionErrorBoundary name="Resource library">
+              <ResourceLibrarySection leaderId={profile.leader_id} canManage={false} />
+            </SectionErrorBoundary>
+          </div>
+        </SectionErrorProvider>
       )}
 
       {show("money") && (

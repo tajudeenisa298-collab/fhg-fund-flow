@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useUrlState } from "@/hooks/use-url-state";
 import { ChevronDown, ChevronRight, Network, Filter, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -80,6 +80,9 @@ export function StructureSection({ profile }: { profile: Profile }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [rankFilter, setRankFilter] = useState<Set<string>>(new Set(RANKS));
   const [zoom, setZoom] = useState(1);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const treeRef = useRef<HTMLDivElement | null>(null);
+  const [naturalSize, setNaturalSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
   const [periodRaw, setPeriodRaw] = useUrlState("period", "current");
   const period = periodRaw as PeriodOption;
   const setPeriod = (v: PeriodOption) => setPeriodRaw(v);
@@ -284,6 +287,31 @@ export function StructureSection({ profile }: { profile: Profile }) {
     [nodes, visibleIds]
   );
 
+  // Measure natural (unscaled) tree size so the scroll container can pan correctly when zoomed.
+  useEffect(() => {
+    const el = treeRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const update = () => {
+      // offsetWidth/Height ignore transform — they are the natural layout box.
+      setNaturalSize({ w: el.offsetWidth, h: el.offsetHeight });
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [nodes, rankFilter, collapsed]);
+
+  const fitToScreen = () => {
+    const vp = viewportRef.current;
+    if (!vp || naturalSize.w === 0) {
+      setZoom(1);
+      return;
+    }
+    const pad = 24;
+    const scale = (vp.clientWidth - pad) / naturalSize.w;
+    setZoom(Math.max(0.4, Math.min(2, +scale.toFixed(2))));
+  };
+
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border bg-card p-4 shadow-card sm:p-6">
@@ -353,6 +381,36 @@ export function StructureSection({ profile }: { profile: Profile }) {
               </div>
             </PopoverContent>
           </Popover>
+          <div className="flex items-center gap-1 rounded-lg border bg-background/80 p-0.5">
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.max(0.4, +(z - 0.2).toFixed(2)))}
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Zoom out"
+            >
+              <ZoomOut className="size-4" />
+            </button>
+            <span className="min-w-[3ch] text-center text-[11px] font-medium tabular-nums text-muted-foreground">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.min(2, +(z + 0.2).toFixed(2)))}
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Zoom in"
+            >
+              <ZoomIn className="size-4" />
+            </button>
+            <button
+              type="button"
+              onClick={fitToScreen}
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Fit to screen"
+              title="Fit to screen"
+            >
+              <Maximize2 className="size-4" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -373,40 +431,7 @@ export function StructureSection({ profile }: { profile: Profile }) {
         </div>
       </div>
 
-      <div className="relative rounded-2xl border bg-card p-3 shadow-card sm:p-5">
-        {!loading && root && rankFilter.size > 0 && (
-          <div className="pointer-events-none absolute right-3 top-3 z-10 flex flex-col gap-1 sm:right-4 sm:top-4">
-            <div className="pointer-events-auto flex flex-col overflow-hidden rounded-lg border bg-background/95 shadow-sm backdrop-blur">
-              <button
-                type="button"
-                onClick={() => setZoom((z) => Math.min(2, +(z + 0.2).toFixed(2)))}
-                className="p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
-                aria-label="Zoom in"
-              >
-                <ZoomIn className="size-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setZoom((z) => Math.max(0.4, +(z - 0.2).toFixed(2)))}
-                className="border-t p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
-                aria-label="Zoom out"
-              >
-                <ZoomOut className="size-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setZoom(1)}
-                className="border-t p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
-                aria-label="Reset zoom"
-              >
-                <Maximize2 className="size-4" />
-              </button>
-            </div>
-            <p className="pointer-events-none text-center text-[10px] font-medium tabular-nums text-muted-foreground">
-              {Math.round(zoom * 100)}%
-            </p>
-          </div>
-        )}
+      <div className="rounded-2xl border bg-card p-3 shadow-card sm:p-5">
         {loading ? (
           <div className="space-y-3 py-6">
             <Skeleton className="mx-auto h-20 w-64" />
@@ -424,14 +449,24 @@ export function StructureSection({ profile }: { profile: Profile }) {
           </p>
         ) : (
           <div
+            ref={viewportRef}
             className="org-tree-viewport max-h-[70vh] overflow-auto overscroll-contain"
-            style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x pan-y pinch-zoom" }}
+            style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x pan-y" }}
           >
+            {/* Sized wrapper grows with zoom so the scroll container can pan to all nodes. */}
             <div
-              className="org-tree inline-block origin-top-left transition-transform"
-              style={{ transform: `scale(${zoom})` }}
+              style={{
+                width: naturalSize.w ? naturalSize.w * zoom : undefined,
+                height: naturalSize.h ? naturalSize.h * zoom : undefined,
+              }}
             >
-              <ul>{renderNode(root, 0)}</ul>
+              <div
+                ref={treeRef}
+                className="org-tree origin-top-left transition-transform"
+                style={{ transform: `scale(${zoom})`, transformOrigin: "top left" }}
+              >
+                <ul>{renderNode(root, 0)}</ul>
+              </div>
             </div>
           </div>
         )}

@@ -228,7 +228,9 @@ function AnalyticsPage() {
       .sort((a, b) => a.month.localeCompare(b.month));
   }, [office]);
 
-  if (loading || busy) {
+  // Hide content for non-leaders while the redirect runs to avoid a flash.
+  const isAllowed = !!session && roles.includes("leader");
+  if (loading || busy || !isAllowed) {
     return (
       <div className="min-h-screen bg-gradient-soft p-6">
         <div className="mx-auto max-w-6xl space-y-4">

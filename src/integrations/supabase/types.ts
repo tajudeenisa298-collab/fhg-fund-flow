@@ -344,6 +344,69 @@ export type Database = {
         }
         Relationships: []
       }
+      leader_reports: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          offence: Database["public"]["Enums"]["leader_offence"]
+          offence_custom: string | null
+          recipient_user_ids: string[]
+          reported_leader_id: string
+          reported_rank_at_time: string | null
+          reporter_id: string
+          reporter_name: string
+          reporter_whatsapp: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          offence: Database["public"]["Enums"]["leader_offence"]
+          offence_custom?: string | null
+          recipient_user_ids?: string[]
+          reported_leader_id: string
+          reported_rank_at_time?: string | null
+          reporter_id: string
+          reporter_name: string
+          reporter_whatsapp: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          offence?: Database["public"]["Enums"]["leader_offence"]
+          offence_custom?: string | null
+          recipient_user_ids?: string[]
+          reported_leader_id?: string
+          reported_rank_at_time?: string | null
+          reporter_id?: string
+          reporter_name?: string
+          reporter_whatsapp?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leader_reports_reported_leader_id_fkey"
+            columns: ["reported_leader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leader_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       login_devices: {
         Row: {
           device_hash: string
@@ -1391,6 +1454,18 @@ export type Database = {
         Args: { _id: string; _sha256: string }
         Returns: undefined
       }
+      submit_leader_report: {
+        Args: {
+          _description: string
+          _offence: string
+          _offence_custom: string
+          _reported_leader_id: string
+          _reported_rank: string
+          _reporter_name: string
+          _reporter_whatsapp: string
+        }
+        Returns: string
+      }
       suspend_member: {
         Args: { _member_id: string; _reason?: string; _until: string }
         Returns: undefined
@@ -1423,6 +1498,11 @@ export type Database = {
         | "custom_days"
       fund_kind: "per_usd" | "fixed"
       gender_kind: "male" | "female" | "other" | "prefer_not_to_say"
+      leader_offence:
+        | "funds_mismanagement"
+        | "dating"
+        | "sexual_harassment"
+        | "custom"
       member_status_action:
         | "suspended"
         | "terminated"
@@ -1439,6 +1519,7 @@ export type Database = {
         | "office"
         | "fund_rule_changed"
         | "fx_rate_changed"
+        | "leader_report"
       payout_method_kind: "bank_transfer" | "neolife_pv"
       txn_type:
         | "deposit"
@@ -1606,6 +1687,12 @@ export const Constants = {
       ],
       fund_kind: ["per_usd", "fixed"],
       gender_kind: ["male", "female", "other", "prefer_not_to_say"],
+      leader_offence: [
+        "funds_mismanagement",
+        "dating",
+        "sexual_harassment",
+        "custom",
+      ],
       member_status_action: [
         "suspended",
         "terminated",
@@ -1623,6 +1710,7 @@ export const Constants = {
         "office",
         "fund_rule_changed",
         "fx_rate_changed",
+        "leader_report",
       ],
       payout_method_kind: ["bank_transfer", "neolife_pv"],
       txn_type: [

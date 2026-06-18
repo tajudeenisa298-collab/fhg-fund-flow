@@ -230,7 +230,9 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
             <Link to="/analytics"><BarChart3 className="mr-1 size-4" /> Analytics</Link>
           </Button>
           <MoneySafetyButton onSaved={refresh} />
-          <NgnRateButton currentRate={ngnRate} onSaved={refresh} />
+          {!profile.sponsor_id && (
+            <NgnRateButton currentRate={ngnRate} onSaved={refresh} />
+          )}
         </div>
       </div>
       )}

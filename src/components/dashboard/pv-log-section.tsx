@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { CurrencyAmountInput } from "@/components/currency-amount-input";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
 import { fmtUsd } from "@/lib/format";
 import { ExportCsvButton } from "@/components/export-csv-button";
 

@@ -405,7 +405,7 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
           <ExportCsvButton
             filename="team_members"
             rows={team}
-            getRow={(m) => ({
+            getRow={(m: Profile) => ({
               full_name: m.full_name,
               email: m.email ?? "",
               whatsapp: m.whatsapp_number ?? "",

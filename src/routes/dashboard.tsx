@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Outlet, useRouterState, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Wallet, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";

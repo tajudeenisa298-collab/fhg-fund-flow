@@ -44,6 +44,16 @@ export function LeaderPurseSection({ leaderId }: { leaderId: string }) {
           </p>
         </div>
         <div className="flex gap-2">
+          <ExportCsvButton
+            filename="leader_purse"
+            rows={rows}
+            getRow={(r) => ({
+              date: fmtDate(r.created_at),
+              kind: r.kind,
+              amount_usd: r.amount_usd,
+              note: r.note ?? "",
+            })}
+          />
           <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
             Withdraw
           </Button>

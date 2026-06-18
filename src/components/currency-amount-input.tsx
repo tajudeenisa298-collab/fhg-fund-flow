@@ -86,10 +86,11 @@ export function CurrencyAmountInput({
 
   const preview = useMemo(() => {
     if (!lastUsd) return null;
-    return currency === "USD"
-      ? `≈ ${fmtNgn(lastUsd, rate)}`
-      : `≈ ${fmtUsd(lastUsd)}`;
-  }, [lastUsd, currency, rate]);
+    if (currency === "USD") {
+      return rateReady ? `≈ ${fmtNgn(lastUsd, rate)}` : null;
+    }
+    return `≈ ${fmtUsd(lastUsd)}`;
+  }, [lastUsd, currency, rate, rateReady]);
 
   return (
     <div className="space-y-1">
@@ -106,17 +107,24 @@ export function CurrencyAmountInput({
           disabled={disabled}
           className="flex-1"
         />
-        <Select value={currency} onValueChange={(v) => handleCurrency(v as Currency)} disabled={disabled}>
+        <Select
+          value={currency}
+          onValueChange={(v) => handleCurrency(v as Currency)}
+          disabled={disabled || !rateReady}
+        >
           <SelectTrigger className="w-[92px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="NGN">NGN ₦</SelectItem>
+            <SelectItem value="NGN" disabled={!rateReady}>NGN ₦</SelectItem>
             <SelectItem value="USD">USD $</SelectItem>
           </SelectContent>
         </Select>
       </div>
       {preview && <p className="text-xs text-muted-foreground">{preview}</p>}
+      {!rateReady && (
+        <p className="text-xs text-muted-foreground">Loading exchange rate…</p>
+      )}
     </div>
   );
 }

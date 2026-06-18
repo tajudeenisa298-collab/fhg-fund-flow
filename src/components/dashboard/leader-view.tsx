@@ -72,7 +72,11 @@ import { MemberStatusMenu, MemberStatusBadge } from "@/components/dashboard/memb
 import { MemberStatusAuditSection } from "@/components/dashboard/member-status-audit-section";
 import { CronHealthSection } from "@/components/dashboard/cron-health-section";
 import { AdminAuditFeed } from "@/components/dashboard/admin-audit-feed";
-import { SectionErrorBoundary } from "@/components/section-error-boundary";
+import {
+  SectionErrorBoundary,
+  SectionErrorProvider,
+  SectionErrorSummary,
+} from "@/components/section-error-boundary";
 import { MobileCollapsible } from "@/components/dashboard/mobile-collapsible";
 import { ReconciliationSection } from "@/components/dashboard/reconciliation-section";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
@@ -728,19 +732,31 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
       )}
 
       {show("admin") && (
-        <SectionErrorBoundary name="Scheduled jobs">
-          <MobileCollapsible title="Scheduled jobs">
-            <CronHealthSection />
-          </MobileCollapsible>
-        </SectionErrorBoundary>
-      )}
-
-      {show("admin") && (
-        <SectionErrorBoundary name="Audit feed">
-          <MobileCollapsible title="Audit feed" defaultOpen>
-            <AdminAuditFeed />
-          </MobileCollapsible>
-        </SectionErrorBoundary>
+        <SectionErrorProvider>
+          <div className="space-y-6">
+            <SectionErrorSummary />
+            <SectionErrorBoundary name="Scheduled jobs">
+              <MobileCollapsible title="Scheduled jobs">
+                <CronHealthSection />
+              </MobileCollapsible>
+            </SectionErrorBoundary>
+            <SectionErrorBoundary name="Audit feed">
+              <MobileCollapsible title="Audit feed" defaultOpen>
+                <AdminAuditFeed />
+              </MobileCollapsible>
+            </SectionErrorBoundary>
+            <SectionErrorBoundary name="Announcements">
+              <MobileCollapsible title="Announcements">
+                <AnnouncementsSection leaderId={profile.id} canManage />
+              </MobileCollapsible>
+            </SectionErrorBoundary>
+            <SectionErrorBoundary name="Resource library">
+              <MobileCollapsible title="Resource library">
+                <ResourceLibrarySection leaderId={profile.id} canManage />
+              </MobileCollapsible>
+            </SectionErrorBoundary>
+          </div>
+        </SectionErrorProvider>
       )}
 
       {show("office") && (
@@ -748,20 +764,6 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
           <ReconciliationSection />
         </MobileCollapsible>
       )}
-
-      {show("admin") && (<>
-        <SectionErrorBoundary name="Announcements">
-          <MobileCollapsible title="Announcements">
-            <AnnouncementsSection leaderId={profile.id} canManage />
-          </MobileCollapsible>
-        </SectionErrorBoundary>
-
-        <SectionErrorBoundary name="Resource library">
-          <MobileCollapsible title="Resource library">
-            <ResourceLibrarySection leaderId={profile.id} canManage />
-          </MobileCollapsible>
-        </SectionErrorBoundary>
-      </>)}
 
       {show("team") && (<>
         <OrganisationSection leaderId={profile.id} />

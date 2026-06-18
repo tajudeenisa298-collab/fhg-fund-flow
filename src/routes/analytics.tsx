@@ -46,15 +46,23 @@ type ProfileLite = {
   finalized_at: string | null;
 };
 
+// Expanded distinct palette so adjacent pie slices and bars never share a hue.
 const COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--success))",
-  "hsl(var(--warning))",
-  "hsl(var(--destructive))",
-  "hsl(var(--accent))",
   "hsl(217 91% 60%)",
+  "hsl(142 71% 45%)",
+  "hsl(38 92% 50%)",
+  "hsl(0 84% 60%)",
   "hsl(280 65% 60%)",
   "hsl(160 65% 45%)",
+  "hsl(15 86% 56%)",
+  "hsl(199 89% 48%)",
+  "hsl(48 96% 53%)",
+  "hsl(330 81% 60%)",
+  "hsl(258 90% 66%)",
+  "hsl(94 56% 45%)",
+  "hsl(20 70% 50%)",
+  "hsl(189 94% 43%)",
+  "hsl(310 70% 55%)",
 ];
 
 function monthKey(d: string | Date) {
@@ -79,7 +87,7 @@ function AnalyticsPage() {
   }, [loading, session, profile, roles, nav]);
 
   useEffect(() => {
-    if (!profile) return;
+    if (!profile?.id) return;
     setBusy(true);
     Promise.all([
       supabase
@@ -99,7 +107,11 @@ function AnalyticsPage() {
       setTeam((p as ProfileLite[]) ?? []);
       setBusy(false);
     });
-  }, [profile]);
+    // Only re-fetch when the actual user id changes, not on every auth-context
+    // refresh (which re-creates the `profile` object identity and used to
+    // cause the whole Analytics page to flicker / "refresh" periodically).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.id]);
 
   /** Daily series for last 60 days */
   const series = useMemo(() => {

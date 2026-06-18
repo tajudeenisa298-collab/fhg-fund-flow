@@ -133,6 +133,7 @@ function RootComponent() {
         </div>
         <MobileBottomNav />
         <Toaster richColors position="top-right" />
+        <ConfirmDialogHost />
       </AuthProvider>
     </QueryClientProvider>
   );

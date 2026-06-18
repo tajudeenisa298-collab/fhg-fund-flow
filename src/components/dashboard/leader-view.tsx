@@ -401,6 +401,20 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
               Add deposits, schedule upkeep, or change rank. Tick rows for bulk actions.
             </p>
           </div>
+          <ExportCsvButton
+            filename="team_members"
+            rows={team}
+            getRow={(m) => ({
+              full_name: m.full_name,
+              email: m.email ?? "",
+              whatsapp: m.whatsapp_number ?? "",
+              rank: m.rank,
+              balance_usd: m.balance_usd,
+              payout_method: m.payout_method,
+              suspended: m.suspended_until ? "yes" : "no",
+              terminated: m.terminated_at ? "yes" : "no",
+            })}
+          />
         </div>
 
         {team.length > 0 && (

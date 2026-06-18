@@ -66,6 +66,38 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
   const [codes, setCodes] = useState<InviteCodeRowData[]>([]);
   const [tick, setTick] = useState(0);
   const [bankVerifiedAt, setBankVerifiedAt] = useState<string | null | undefined>(undefined);
+  const [leaderName, setLeaderName] = useState<string | null>(null);
+  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
+  const [, forceTick] = useState(0);
+  const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!profile.leader_id) { setLeaderName(null); return; }
+    supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", profile.leader_id)
+      .maybeSingle()
+      .then(({ data }) => setLeaderName((data?.full_name as string) ?? null));
+  }, [profile.leader_id]);
+
+  useEffect(() => {
+    if (cooldownUntil == null) return;
+    cooldownTimer.current = setInterval(() => {
+      if (Date.now() >= cooldownUntil) {
+        setCooldownUntil(null);
+        if (cooldownTimer.current) clearInterval(cooldownTimer.current);
+      } else {
+        forceTick((n) => n + 1);
+      }
+    }, 1000);
+    return () => {
+      if (cooldownTimer.current) clearInterval(cooldownTimer.current);
+    };
+  }, [cooldownUntil]);
+
+  const cooldownSeconds = cooldownUntil ? Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000)) : 0;
+
 
   useEffect(() => {
     supabase

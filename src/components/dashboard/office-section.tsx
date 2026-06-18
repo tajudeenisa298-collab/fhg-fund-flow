@@ -11,6 +11,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import type { OfficeLedgerEntry } from "@/lib/types";
 import { fmtDate } from "@/lib/format";
+import { ExportCsvButton } from "@/components/export-csv-button";
 
 const fmtNgn = (n: number) =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(n);

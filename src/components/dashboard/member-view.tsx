@@ -629,6 +629,21 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
       </section>
       )}
 
+      <ReverifyDialog
+        open={reverifyOpen}
+        onOpenChange={setReverifyOpen}
+        userId={profile.id}
+        onSaved={() => {
+          setReverifyOpen(false);
+          // refresh banner state
+          supabase
+            .from("bank_accounts")
+            .select("verified_at")
+            .eq("user_id", profile.id)
+            .maybeSingle()
+            .then(({ data }) => setBankVerifiedAt((data?.verified_at as string | null) ?? null));
+        }}
+      />
     </div>
   );
 }

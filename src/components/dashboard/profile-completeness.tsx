@@ -9,6 +9,7 @@ interface Item {
   label: string;
   done: boolean;
   to?: string;
+  hash?: string;
 }
 
 export function ProfileCompleteness({ profile }: { profile: Profile }) {

@@ -122,6 +122,7 @@ function DashboardPage() {
             stays mounted and data isn't re-fetched on every tab switch. */}
         <Outlet />
       </main>
+      <GlobalMemberSearch />
     </div>
   );
 }

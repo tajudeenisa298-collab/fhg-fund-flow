@@ -61,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [activeRole, setActiveRoleState] = useState<AppRole>("member");
   const [ngnRate, setNgnRate] = useState<number>(1600);
+  const [ngnRateReady, setNgnRateReady] = useState(false);
   const [fxRates, setFxRates] = useState<Record<string, number>>({
     USD: 1, NGN: 1600, GBP: 1.27, EUR: 1.08,
   });

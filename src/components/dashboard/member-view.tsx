@@ -182,6 +182,10 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
       toast.error("Amount exceeds your managed balance.");
       return;
     }
+    if (cooldownUntil && Date.now() < cooldownUntil) {
+      toast.error(`Please wait ${cooldownSeconds}s before trying again.`);
+      return;
+    }
     setSubmitting(true);
     const { error } = await supabase.from("withdrawal_requests").insert({
       member_id: profile.id,
@@ -191,9 +195,15 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
     });
     setSubmitting(false);
     if (error) {
-      toast.error(error.message);
+      if (/too many withdrawal requests/i.test(error.message)) {
+        setCooldownUntil(Date.now() + 60_000);
+        toast.error("You've hit the rate limit. Try again in 60 seconds.");
+      } else {
+        toast.error(error.message);
+      }
       return;
     }
+
     toast.success("Withdrawal request submitted");
     setOpen(false);
     setAmount(0);

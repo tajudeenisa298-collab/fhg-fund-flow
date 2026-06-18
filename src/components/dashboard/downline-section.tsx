@@ -107,7 +107,7 @@ function Tree({
                 {p.can_handle_funds && " · fund handler"}
               </p>
             </div>
-            <Money usd={p.balance_usd} size="sm" className="items-end" />
+            {!p.can_handle_funds && <Money usd={p.balance_usd} size="sm" className="items-end" />}
           </button>
           <Tree sponsorId={p.id} childrenOf={childrenOf} depth={depth + 1} onPick={onPick} />
         </li>

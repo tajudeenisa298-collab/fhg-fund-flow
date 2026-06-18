@@ -84,7 +84,13 @@ export function FundRulesSection({ leaderId }: { leaderId: string }) {
     load();
   };
   const remove = async (r: FundRule) => {
-    if (!confirm(`Delete "${r.name}"?`)) return;
+    const ok = await confirmDialog({
+      title: `Delete "${r.name}"?`,
+      description: "This rule will stop applying to future transactions. Past charges are kept.",
+      confirmLabel: "Delete",
+      destructive: true,
+    });
+    if (!ok) return;
     await supabase.from("fund_rules").delete().eq("id", r.id);
     load();
   };

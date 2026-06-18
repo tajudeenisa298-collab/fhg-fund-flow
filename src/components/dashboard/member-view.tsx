@@ -477,6 +477,17 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
                     size="sm"
                     className="mt-1 h-7 px-2 text-xs text-destructive hover:text-destructive"
                     onClick={async () => {
+                      // Optimistic refresh: status may have flipped server-side while the page was idle.
+                      const { data: fresh } = await supabase
+                        .from("withdrawal_requests")
+                        .select("status")
+                        .eq("id", r.id)
+                        .maybeSingle();
+                      if (fresh && (fresh as { status: string }).status !== "pending") {
+                        toast.info("Your leader already actioned this request. Refreshing…");
+                        load();
+                        return;
+                      }
                       const ok = await confirmDialog({
                         title: "Cancel this withdrawal request?",
                         description: "Your leader will no longer see it. You can submit a new request anytime.",
@@ -486,7 +497,11 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
                       });
                       if (!ok) return;
                       const { error } = await supabase.rpc("cancel_withdrawal_request", { _id: r.id });
-                      if (error) return toast.error(error.message);
+                      if (error) {
+                        toast.error(error.message);
+                        load();
+                        return;
+                      }
                       toast.success("Request cancelled");
                       load();
                     }}

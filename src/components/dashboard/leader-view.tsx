@@ -62,6 +62,7 @@ import { LeaderPurseSection } from "@/components/dashboard/leader-purse-section"
 import { DownlineSection } from "@/components/dashboard/downline-section";
 import { RankUpkeepDefaultsSection } from "@/components/dashboard/rank-upkeep-defaults-section";
 import { OrganisationSection } from "@/components/dashboard/organisation-section";
+import { OrgPendingWithdrawals } from "@/components/dashboard/org-pending-withdrawals";
 import { PvLogSection } from "@/components/dashboard/pv-log-section";
 import { LeaderDispensationsSection } from "@/components/dashboard/leader-dispensations-section";
 import { AnnouncementsSection } from "@/components/dashboard/announcements-section";

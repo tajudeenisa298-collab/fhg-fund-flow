@@ -290,7 +290,7 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
       </div>
       </>)}
 
-      {show("overview") && (<>
+      {(show("overview") || show("money")) && (<>
       {/* Pending requests */}
       <section id="withdrawal-requests" className="rounded-2xl border bg-card p-6 shadow-card">
         <h2 className="text-base font-semibold">Withdrawal requests</h2>

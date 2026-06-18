@@ -80,6 +80,9 @@ export function StructureSection({ profile }: { profile: Profile }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [rankFilter, setRankFilter] = useState<Set<string>>(new Set(RANKS));
   const [zoom, setZoom] = useState(1);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const treeRef = useRef<HTMLDivElement | null>(null);
+  const [naturalSize, setNaturalSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
   const [periodRaw, setPeriodRaw] = useUrlState("period", "current");
   const period = periodRaw as PeriodOption;
   const setPeriod = (v: PeriodOption) => setPeriodRaw(v);

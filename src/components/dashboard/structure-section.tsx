@@ -215,43 +215,43 @@ export function StructureSection({ profile }: { profile: Profile }) {
     const pv = pvByMember[node.id] ?? 0;
     const isRoot = node.id === profile.id;
     return (
-      <li key={node.id} className="relative">
-        <div
-          className={`flex items-center gap-2 rounded-xl border bg-card p-2.5 shadow-sm ${
-            isRoot ? "border-primary/40 bg-primary/5" : ""
-          }`}
-        >
-          {kids.length > 0 ? (
-            <button
-              type="button"
-              onClick={() => toggleNode(node.id)}
-              className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label={isCollapsed ? "Expand" : "Collapse"}
-            >
-              {isCollapsed ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
-            </button>
-          ) : (
-            <span className="inline-block w-5" />
-          )}
-          <UserAvatar name={node.full_name} avatarPath={node.avatar_url} className="size-9 shrink-0" />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">
+      <li key={node.id}>
+        <div className="org-card">
+          <div
+            className={`relative inline-flex w-44 flex-col items-center gap-1.5 rounded-xl border bg-card px-3 py-3 shadow-sm sm:w-52 ${
+              isRoot ? "border-primary/60 bg-primary/5 ring-1 ring-primary/30" : ""
+            }`}
+          >
+            {kids.length > 0 && (
+              <button
+                type="button"
+                onClick={() => toggleNode(node.id)}
+                className="absolute -top-2 -right-2 z-10 rounded-full border bg-background p-0.5 text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground"
+                aria-label={isCollapsed ? `Expand ${node.full_name}'s downline` : `Collapse ${node.full_name}'s downline`}
+              >
+                {isCollapsed ? <ChevronRight className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+              </button>
+            )}
+            <UserAvatar name={node.full_name} avatarPath={node.avatar_url} className="size-12 shrink-0" />
+            <p className="line-clamp-1 max-w-full text-center text-sm font-semibold">
               {node.full_name}
-              {isRoot && <span className="ml-1.5 text-[10px] text-primary">(you)</span>}
+              {isRoot && <span className="ml-1 text-[10px] text-primary">(you)</span>}
             </p>
-            <p className="truncate text-xs text-muted-foreground">{node.rank}</p>
-          </div>
-          <div className="flex flex-col items-end gap-0.5 text-right">
-            <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold tabular-nums">
-              {pv.toLocaleString()} PV
-            </span>
-            {!node.can_handle_funds && <Money usd={node.balance_usd} size="sm" className="items-end" />}
+            <p className="line-clamp-1 max-w-full text-center text-[11px] text-muted-foreground">{node.rank}</p>
+            <div className="mt-1 flex flex-wrap items-center justify-center gap-1">
+              <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold tabular-nums">
+                {pv.toLocaleString()} PV
+              </span>
+              {!node.can_handle_funds && (
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold tabular-nums">
+                  <Money usd={node.balance_usd} size="sm" />
+                </span>
+              )}
+            </div>
           </div>
         </div>
         {kids.length > 0 && !isCollapsed && (
-          <ul className="ml-5 mt-2 space-y-2 border-l-2 border-dashed border-border pl-4">
-            {kids.map((k) => renderNode(k, depth + 1))}
-          </ul>
+          <ul>{kids.map((k) => renderNode(k, depth + 1))}</ul>
         )}
       </li>
     );

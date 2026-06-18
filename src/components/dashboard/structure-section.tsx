@@ -381,7 +381,9 @@ export function StructureSection({ profile }: { profile: Profile }) {
             No ranks selected — pick at least one rank to view the tree.
           </p>
         ) : (
-          <ul className="space-y-2">{renderNode(root, 0)}</ul>
+          <div className="org-tree">
+            <ul>{renderNode(root, 0)}</ul>
+          </div>
         )}
       </div>
     </section>

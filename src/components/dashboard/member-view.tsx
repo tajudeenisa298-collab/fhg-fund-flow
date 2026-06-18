@@ -43,6 +43,7 @@ import { printMemberStatement } from "@/lib/statement-pdf";
 import { ProfileCompleteness } from "@/components/dashboard/profile-completeness";
 import { BalanceProjection } from "@/components/dashboard/balance-projection";
 import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
+import { BankVerifier, type VerifiedBank } from "@/components/bank-verifier";
 
 
 
@@ -67,19 +68,25 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
   const [tick, setTick] = useState(0);
   const [bankVerifiedAt, setBankVerifiedAt] = useState<string | null | undefined>(undefined);
   const [leaderName, setLeaderName] = useState<string | null>(null);
+  const [sponsorName, setSponsorName] = useState<string | null>(null);
+  const [reverifyOpen, setReverifyOpen] = useState(false);
   const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
   const [, forceTick] = useState(0);
   const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (!profile.leader_id) { setLeaderName(null); return; }
+    const ids = [profile.leader_id, profile.sponsor_id].filter(Boolean) as string[];
+    if (ids.length === 0) { setLeaderName(null); setSponsorName(null); return; }
     supabase
       .from("profiles")
-      .select("full_name")
-      .eq("id", profile.leader_id)
-      .maybeSingle()
-      .then(({ data }) => setLeaderName((data?.full_name as string) ?? null));
-  }, [profile.leader_id]);
+      .select("id, full_name")
+      .in("id", ids)
+      .then(({ data }) => {
+        const rows = (data ?? []) as Array<{ id: string; full_name: string }>;
+        setLeaderName(rows.find((r) => r.id === profile.leader_id)?.full_name ?? null);
+        setSponsorName(rows.find((r) => r.id === profile.sponsor_id)?.full_name ?? null);
+      });
+  }, [profile.leader_id, profile.sponsor_id]);
 
   useEffect(() => {
     if (cooldownUntil == null) return;
@@ -343,9 +350,9 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
                 </strong>{" "}
                 Verify now to avoid payout delays.
               </span>
-              <Link to="/settings" className="text-xs font-medium underline underline-offset-2">
-                Go to settings →
-              </Link>
+              <Button size="sm" variant="outline" onClick={() => setReverifyOpen(true)}>
+                Re-verify now
+              </Button>
             </div>
           )}
         </div>
@@ -362,11 +369,32 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
         <StatCard label="Pending requests" value={String(pending)} icon={Clock} />
       </div>
 
-      {leaderName && (
-        <p className="text-xs text-muted-foreground">
-          Your current team leader: <span className="font-medium text-foreground">{leaderName}</span>.
-          Reach out to them for questions about deposits, withdrawals, or rank upkeep.
-        </p>
+      {(sponsorName || leaderName) && (
+        <section className="rounded-2xl border bg-card p-4 shadow-card">
+          <h2 className="text-sm font-semibold">My team relationships</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Who introduced you to the business, and who handles your money.
+          </p>
+          <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-lg border bg-muted/30 p-3">
+              <dt className="text-[10px] uppercase tracking-wide text-muted-foreground">Your sponsor</dt>
+              <dd className="mt-1 font-medium">{sponsorName ?? "—"}</dd>
+              <p className="mt-1 text-xs text-muted-foreground">
+                The person who invited you. Reach out to them for general guidance and rank coaching.
+              </p>
+            </div>
+            <div className="rounded-lg border bg-muted/30 p-3">
+              <dt className="text-[10px] uppercase tracking-wide text-muted-foreground">Your fund handler</dt>
+              <dd className="mt-1 font-medium">{leaderName ?? "Not assigned yet"}</dd>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Holds your balance and reviews deposits, withdrawals and upkeep.
+                {sponsorName && leaderName && sponsorName !== leaderName
+                  ? " (Different from your sponsor — your sponsor isn't a fund handler yet.)"
+                  : ""}
+              </p>
+            </div>
+          </dl>
+        </section>
       )}
 
       <OnboardingChecklist profile={profile} />
@@ -383,7 +411,11 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
       )}
 
       {show("admin") && (
+        // Member-scope PV entries never trigger fund deductions in the DB; only team-scope
+        // (leader entering PV for managed members) hits create_managed_transaction.
+        // Members can safely enter their own priceUsd without balance validation here.
         <PvLogSection ownerId={profile.id} scope="self" />
+
       )}
 
       {show("team") && (
@@ -394,7 +426,12 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-semibold">Invite codes</h2>
-              <p className="text-sm text-muted-foreground">Generate codes for people you personally sponsor.</p>
+              <p className="text-sm text-muted-foreground">
+                Generate codes for people you personally sponsor.
+                {leaderName ? (
+                  <> People you invite will be managed by <span className="font-medium text-foreground">{leaderName}</span> until you become a fund handler.</>
+                ) : null}
+              </p>
             </div>
             <Button onClick={generateCode}>
               <Plus className="mr-1 size-4" /> Generate code
@@ -450,6 +487,17 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
                     size="sm"
                     className="mt-1 h-7 px-2 text-xs text-destructive hover:text-destructive"
                     onClick={async () => {
+                      // Optimistic refresh: status may have flipped server-side while the page was idle.
+                      const { data: fresh } = await supabase
+                        .from("withdrawal_requests")
+                        .select("status")
+                        .eq("id", r.id)
+                        .maybeSingle();
+                      if (fresh && (fresh as { status: string }).status !== "pending") {
+                        toast.info("Your leader already actioned this request. Refreshing…");
+                        load();
+                        return;
+                      }
                       const ok = await confirmDialog({
                         title: "Cancel this withdrawal request?",
                         description: "Your leader will no longer see it. You can submit a new request anytime.",
@@ -459,7 +507,11 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
                       });
                       if (!ok) return;
                       const { error } = await supabase.rpc("cancel_withdrawal_request", { _id: r.id });
-                      if (error) return toast.error(error.message);
+                      if (error) {
+                        toast.error(error.message);
+                        load();
+                        return;
+                      }
                       toast.success("Request cancelled");
                       load();
                     }}
@@ -577,6 +629,21 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
       </section>
       )}
 
+      <ReverifyDialog
+        open={reverifyOpen}
+        onOpenChange={setReverifyOpen}
+        userId={profile.id}
+        onSaved={() => {
+          setReverifyOpen(false);
+          // refresh banner state
+          supabase
+            .from("bank_accounts")
+            .select("verified_at")
+            .eq("user_id", profile.id)
+            .maybeSingle()
+            .then(({ data }) => setBankVerifiedAt((data?.verified_at as string | null) ?? null));
+        }}
+      />
     </div>
   );
 }
@@ -601,5 +668,61 @@ function StatusPill({ status, cancelled }: { status: WithdrawalRequest["status"]
     <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${styles}`}>
       {label}
     </span>
+  );
+}
+
+function ReverifyDialog({
+  open, onOpenChange, userId, onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  userId: string;
+  onSaved: () => void;
+}) {
+  const [verified, setVerified] = useState<VerifiedBank | null>(null);
+  const [saving, setSaving] = useState(false);
+  const save = async () => {
+    if (!verified) return;
+    setSaving(true);
+    const { error } = await supabase.from("bank_accounts").upsert({
+      user_id: userId,
+      bank_name: verified.bank_name,
+      bank_code: verified.bank_code,
+      account_number: verified.account_number,
+      account_owner_name: verified.account_owner_name,
+      verified_at: new Date().toISOString(),
+    }, { onConflict: "user_id" });
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Bank details re-verified");
+    onSaved();
+  };
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Re-verify your bank details</DialogTitle>
+          <DialogDescription>
+            Confirm the account number with your bank. We'll re-check it via Paystack so payouts stay smooth.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <BankVerifier onVerified={setVerified} />
+          <p className="text-xs text-muted-foreground">
+            For larger changes (different account or holder name), use{" "}
+            <Link to="/settings" search={{ bank: "edit" as const }} className="underline">
+              full bank settings
+            </Link>{" "}
+            — those changes require an email OTP.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>Close</Button>
+          <Button onClick={save} disabled={!verified || saving}>
+            {saving ? "Saving…" : "Confirm & save"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

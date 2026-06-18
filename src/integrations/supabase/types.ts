@@ -1245,6 +1245,17 @@ export type Database = {
           purse_balance_usd: number
         }[]
       }
+      get_upline_safe: {
+        Args: { _member: string }
+        Returns: {
+          avatar_url: string
+          can_handle_funds: boolean
+          depth: number
+          full_name: string
+          id: string
+          rank: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

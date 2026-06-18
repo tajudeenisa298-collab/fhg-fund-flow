@@ -78,6 +78,7 @@ export function ProfileCompleteness({ profile }: { profile: Profile }) {
             {i.to && !i.done ? (
               <Link
                 to={i.to}
+                hash={i.hash}
                 className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-muted/60"
               >
                 <Circle className="size-4 shrink-0 text-muted-foreground" />

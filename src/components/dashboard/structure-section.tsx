@@ -28,6 +28,7 @@ interface Node {
   balance_usd: number;
   avatar_url: string | null;
   sponsor_id: string | null;
+  can_handle_funds: boolean;
 }
 
 type PeriodOption =

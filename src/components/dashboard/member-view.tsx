@@ -410,7 +410,11 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
       )}
 
       {show("admin") && (
+        // Member-scope PV entries never trigger fund deductions in the DB; only team-scope
+        // (leader entering PV for managed members) hits create_managed_transaction.
+        // Members can safely enter their own priceUsd without balance validation here.
         <PvLogSection ownerId={profile.id} scope="self" />
+
       )}
 
       {show("team") && (

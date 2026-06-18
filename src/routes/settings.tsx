@@ -44,6 +44,7 @@ function SettingsPage() {
   const [whatsapp, setWhatsapp] = useState("");
   const [payoutMethod, setPayoutMethod] = useState<"bank_transfer" | "neolife_pv">("bank_transfer");
   const [locale, setLocale] = useState<string>("en-US");
+  const [gender, setGender] = useState<"" | "male" | "female" | "other" | "prefer_not_to_say">("");
   const [savingPrefs, setSavingPrefs] = useState(false);
 
   useEffect(() => {

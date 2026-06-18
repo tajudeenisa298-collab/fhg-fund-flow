@@ -423,6 +423,23 @@ function SettingsPage() {
                 <option value="neolife_pv">NeoLife PV credit</option>
               </select>
             </div>
+            <div>
+              <label className="text-xs uppercase tracking-wide text-muted-foreground" htmlFor="gender">
+                Gender
+              </label>
+              <select
+                id="gender"
+                value={gender}
+                onChange={(e) => setGender(e.target.value as typeof gender)}
+                className="mt-1 h-10 w-full rounded-md border bg-background px-3 text-sm scroll-mt-24"
+              >
+                <option value="">Select…</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+                <option value="prefer_not_to_say">Prefer not to say</option>
+              </select>
+            </div>
             <div className="sm:col-span-2">
               <label className="text-xs uppercase tracking-wide text-muted-foreground" htmlFor="locale">
                 Language & region
@@ -449,7 +466,8 @@ function SettingsPage() {
                 savingPrefs ||
                 (whatsapp.trim() === (profile.whatsapp_number ?? "") &&
                   payoutMethod === (profile.payout_method ?? "bank_transfer") &&
-                  locale === (profile.locale ?? "en-US"))
+                  locale === (profile.locale ?? "en-US") &&
+                  (gender || null) === (profile.gender ?? null))
               }
             >
               {savingPrefs ? "Saving…" : "Save preferences"}

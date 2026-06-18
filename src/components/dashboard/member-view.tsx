@@ -368,11 +368,32 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
         <StatCard label="Pending requests" value={String(pending)} icon={Clock} />
       </div>
 
-      {leaderName && (
-        <p className="text-xs text-muted-foreground">
-          Your current team leader: <span className="font-medium text-foreground">{leaderName}</span>.
-          Reach out to them for questions about deposits, withdrawals, or rank upkeep.
-        </p>
+      {(sponsorName || leaderName) && (
+        <section className="rounded-2xl border bg-card p-4 shadow-card">
+          <h2 className="text-sm font-semibold">My team relationships</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Who introduced you to the business, and who handles your money.
+          </p>
+          <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-lg border bg-muted/30 p-3">
+              <dt className="text-[10px] uppercase tracking-wide text-muted-foreground">Your sponsor</dt>
+              <dd className="mt-1 font-medium">{sponsorName ?? "—"}</dd>
+              <p className="mt-1 text-xs text-muted-foreground">
+                The person who invited you. Reach out to them for general guidance and rank coaching.
+              </p>
+            </div>
+            <div className="rounded-lg border bg-muted/30 p-3">
+              <dt className="text-[10px] uppercase tracking-wide text-muted-foreground">Your fund handler</dt>
+              <dd className="mt-1 font-medium">{leaderName ?? "Not assigned yet"}</dd>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Holds your balance and reviews deposits, withdrawals and upkeep.
+                {sponsorName && leaderName && sponsorName !== leaderName
+                  ? " (Different from your sponsor — your sponsor isn't a fund handler yet.)"
+                  : ""}
+              </p>
+            </div>
+          </dl>
+        </section>
       )}
 
       <OnboardingChecklist profile={profile} />

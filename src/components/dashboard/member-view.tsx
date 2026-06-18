@@ -349,9 +349,9 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
                 </strong>{" "}
                 Verify now to avoid payout delays.
               </span>
-              <Link to="/settings" className="text-xs font-medium underline underline-offset-2">
-                Go to settings →
-              </Link>
+              <Button size="sm" variant="outline" onClick={() => setReverifyOpen(true)}>
+                Re-verify now
+              </Button>
             </div>
           )}
         </div>

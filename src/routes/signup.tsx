@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/password-input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Wallet, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -133,7 +134,7 @@ function SignupPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" required />
+              <PasswordInput id="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" required />
             </div>
 
             <div className="space-y-2">

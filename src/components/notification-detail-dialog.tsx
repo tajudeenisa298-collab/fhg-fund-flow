@@ -1,4 +1,3 @@
-import { useNavigate } from "@tanstack/react-router";
 import { ExternalLink } from "lucide-react";
 import {
   Dialog,
@@ -35,7 +34,6 @@ export function NotificationDetailDialog({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
-  const nav = useNavigate();
   if (!notification) return null;
   const kindLabel = KIND_LABEL[notification.kind] ?? notification.kind;
 
@@ -66,7 +64,11 @@ export function NotificationDetailDialog({
             <Button
               onClick={() => {
                 onOpenChange(false);
-                nav({ to: notification.link! });
+                // Use a raw assign so any link shape (path + query + hash) navigates
+                // reliably without typed-router validation rejecting it.
+                if (typeof window !== "undefined") {
+                  window.location.assign(notification.link!);
+                }
               }}
             >
               <ExternalLink className="mr-1.5 size-4" />

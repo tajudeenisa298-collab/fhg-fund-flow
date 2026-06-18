@@ -332,26 +332,29 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
       )}
 
       {show("team") && (
-      <section className="rounded-2xl border bg-card p-6 shadow-card">
+      <>
+        <DownlineSection rootId={profile.id} />
+        <section className="rounded-2xl border bg-card p-6 shadow-card">
 
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-base font-semibold">Invite codes</h2>
-            <p className="text-sm text-muted-foreground">Generate codes for people you personally sponsor.</p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold">Invite codes</h2>
+              <p className="text-sm text-muted-foreground">Generate codes for people you personally sponsor.</p>
+            </div>
+            <Button onClick={generateCode}>
+              <Plus className="mr-1 size-4" /> Generate code
+            </Button>
           </div>
-          <Button onClick={generateCode}>
-            <Plus className="mr-1 size-4" /> Generate code
-          </Button>
-        </div>
-        <div className="mt-4 divide-y rounded-xl border">
-          {visibleCodes.length === 0 && (
-            <p className="px-4 py-10 text-center text-sm text-muted-foreground">No active codes.</p>
-          )}
-          {visibleCodes.map((c) => (
-            <InviteCodeRow key={c.id} code={c} onExpired={() => setTick((t) => t + 1)} />
-          ))}
-        </div>
-      </section>
+          <div className="mt-4 divide-y rounded-xl border">
+            {visibleCodes.length === 0 && (
+              <p className="px-4 py-10 text-center text-sm text-muted-foreground">No active codes.</p>
+            )}
+            {visibleCodes.map((c) => (
+              <InviteCodeRow key={c.id} code={c} onExpired={() => setTick((t) => t + 1)} />
+            ))}
+          </div>
+        </section>
+      </>
       )}
 
       {show("money") && (

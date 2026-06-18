@@ -13,6 +13,7 @@ import { GlobalMemberSearch, GlobalMemberSearchTrigger } from "@/components/glob
 import { UserAvatar } from "@/components/user-avatar";
 import { AccountStatusScreen } from "@/components/account-status-screen";
 import { DashboardSubNav, sectionFromPath } from "@/components/dashboard/dashboard-sub-nav";
+import { EmergencyAnnouncementPopup } from "@/components/emergency-announcement-popup";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -123,6 +124,7 @@ function DashboardPage() {
         <Outlet />
       </main>
       <GlobalMemberSearch />
+      <EmergencyAnnouncementPopup />
     </div>
   );
 }

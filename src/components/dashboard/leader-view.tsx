@@ -1100,20 +1100,33 @@ function PromoteDialog({ member, onDone }: { member: Profile; onDone: () => void
   const [grant, setGrant] = useState(false);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [reparentCount, setReparentCount] = useState<number | null>(null);
   const promote = useServerFn(promoteManagedMember);
 
   const willBecomeDirector = isDirectorOrAbove(newRank);
+  const willBecomeHandler = willBecomeDirector || grant;
   const newIdx = rankIndex(newRank);
   const isDemotion = newIdx >= 0 && newIdx < currentIdx;
   const isNoChange = newRank === member.rank;
 
+  useEffect(() => {
+    if (!open || !willBecomeHandler) { setReparentCount(null); return; }
+    supabase
+      .rpc("preview_reparent_count", { _member_id: member.id })
+      .then(({ data }) => setReparentCount(typeof data === "number" ? data : 0));
+  }, [open, willBecomeHandler, member.id]);
+
   const submit = async () => {
     if (isNoChange) return toast.error("Pick a different rank");
     const verb = isDemotion ? "Demote" : "Promote";
+    const reparentMsg = willBecomeHandler && reparentCount && reparentCount > 0
+      ? ` ${reparentCount} member${reparentCount === 1 ? "" : "s"} below them will be reassigned to ${member.full_name} as their new fund handler.`
+      : "";
     if (!window.confirm(
       `${verb} ${member.full_name} from ${member.rank} to ${newRank}?` +
         (isDemotion ? " This will reduce their rank." : "") +
-        (willBecomeDirector ? " They will manage their own team and their balance will be released." : "")
+        (willBecomeDirector ? " They will manage their own team and their balance will be released." : "") +
+        reparentMsg
     )) return;
     setBusy(true);
     const { error } = await promote({ data: { memberId: member.id, newRank, grantFundHandler: grant, note } })

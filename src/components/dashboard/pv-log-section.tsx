@@ -22,6 +22,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { CurrencyAmountInput } from "@/components/currency-amount-input";
 import { fmtUsd } from "@/lib/format";
+import { ExportCsvButton } from "@/components/export-csv-button";
 
 interface PvRow {
   id: string;

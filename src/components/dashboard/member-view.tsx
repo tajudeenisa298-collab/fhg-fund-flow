@@ -425,7 +425,12 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-semibold">Invite codes</h2>
-              <p className="text-sm text-muted-foreground">Generate codes for people you personally sponsor.</p>
+              <p className="text-sm text-muted-foreground">
+                Generate codes for people you personally sponsor.
+                {leaderName ? (
+                  <> People you invite will be managed by <span className="font-medium text-foreground">{leaderName}</span> until you become a fund handler.</>
+                ) : null}
+              </p>
             </div>
             <Button onClick={generateCode}>
               <Plus className="mr-1 size-4" /> Generate code

@@ -670,3 +670,59 @@ function StatusPill({ status, cancelled }: { status: WithdrawalRequest["status"]
     </span>
   );
 }
+
+function ReverifyDialog({
+  open, onOpenChange, userId, onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  userId: string;
+  onSaved: () => void;
+}) {
+  const [verified, setVerified] = useState<VerifiedBank | null>(null);
+  const [saving, setSaving] = useState(false);
+  const save = async () => {
+    if (!verified) return;
+    setSaving(true);
+    const { error } = await supabase.from("bank_accounts").upsert({
+      user_id: userId,
+      bank_name: verified.bank_name,
+      bank_code: verified.bank_code,
+      account_number: verified.account_number,
+      account_owner_name: verified.account_owner_name,
+      verified_at: new Date().toISOString(),
+    }, { onConflict: "user_id" });
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Bank details re-verified");
+    onSaved();
+  };
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Re-verify your bank details</DialogTitle>
+          <DialogDescription>
+            Confirm the account number with your bank. We'll re-check it via Paystack so payouts stay smooth.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <BankVerifier onVerified={setVerified} />
+          <p className="text-xs text-muted-foreground">
+            For larger changes (different account or holder name), use{" "}
+            <Link to="/settings" search={{ bank: "edit" as const }} className="underline">
+              full bank settings
+            </Link>{" "}
+            — those changes require an email OTP.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>Close</Button>
+          <Button onClick={save} disabled={!verified || saving}>
+            {saving ? "Saving…" : "Confirm & save"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

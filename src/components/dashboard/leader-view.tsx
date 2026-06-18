@@ -72,6 +72,7 @@ import { MemberStatusMenu, MemberStatusBadge } from "@/components/dashboard/memb
 import { MemberStatusAuditSection } from "@/components/dashboard/member-status-audit-section";
 import { CronHealthSection } from "@/components/dashboard/cron-health-section";
 import { AdminAuditFeed } from "@/components/dashboard/admin-audit-feed";
+import { SectionErrorBoundary } from "@/components/section-error-boundary";
 import { MobileCollapsible } from "@/components/dashboard/mobile-collapsible";
 import { ReconciliationSection } from "@/components/dashboard/reconciliation-section";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";

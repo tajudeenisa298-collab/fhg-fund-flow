@@ -44,6 +44,7 @@ function SettingsPage() {
   const [whatsapp, setWhatsapp] = useState("");
   const [payoutMethod, setPayoutMethod] = useState<"bank_transfer" | "neolife_pv">("bank_transfer");
   const [locale, setLocale] = useState<string>("en-US");
+  const [gender, setGender] = useState<"" | "male" | "female" | "other" | "prefer_not_to_say">("");
   const [savingPrefs, setSavingPrefs] = useState(false);
 
   useEffect(() => {
@@ -51,11 +52,26 @@ function SettingsPage() {
   }, [loading, session, nav]);
 
   useEffect(() => {
+    if (loading) return;
+    const hash = typeof window !== "undefined" ? window.location.hash.replace("#", "") : "";
+    if (!hash) return;
+    const t = setTimeout(() => {
+      const el = document.getElementById(hash);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        (el as HTMLElement).focus?.();
+      }
+    }, 150);
+    return () => clearTimeout(t);
+  }, [loading]);
+
+  useEffect(() => {
     if (profile) {
       setFullName(profile.full_name);
       setWhatsapp(profile.whatsapp_number ?? "");
       setPayoutMethod(profile.payout_method ?? "bank_transfer");
       setLocale(profile.locale ?? "en-US");
+      setGender(profile.gender ?? "");
     }
   }, [profile]);
 
@@ -157,6 +173,7 @@ function SettingsPage() {
         whatsapp_number: trimmed || null,
         payout_method: payoutMethod,
         locale,
+        gender: gender || null,
       })
       .eq("id", session.user.id);
     setSavingPrefs(false);
@@ -190,7 +207,7 @@ function SettingsPage() {
       </header>
 
       <main className="mx-auto max-w-3xl space-y-6 px-4 py-8 md:px-6">
-        <section className="rounded-2xl border bg-card p-6 shadow-card">
+        <section id="bank-account" className="scroll-mt-24 rounded-2xl border bg-card p-6 shadow-card">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold">Bank account</h2>
@@ -330,7 +347,7 @@ function SettingsPage() {
           )}
         </section>
 
-        <section className="rounded-2xl border bg-card p-6 shadow-card">
+        <section id="name" className="scroll-mt-24 rounded-2xl border bg-card p-6 shadow-card">
           <div className="flex items-start justify-between gap-3">
             <h2 className="text-lg font-semibold">Account</h2>
             {!editingName && (
@@ -339,7 +356,7 @@ function SettingsPage() {
               </Button>
             )}
           </div>
-          <div className="mt-6">
+          <div id="avatar" className="mt-6 scroll-mt-24">
             <AvatarUpload />
           </div>
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -420,6 +437,23 @@ function SettingsPage() {
                 <option value="neolife_pv">NeoLife PV credit</option>
               </select>
             </div>
+            <div>
+              <label className="text-xs uppercase tracking-wide text-muted-foreground" htmlFor="gender">
+                Gender
+              </label>
+              <select
+                id="gender"
+                value={gender}
+                onChange={(e) => setGender(e.target.value as typeof gender)}
+                className="mt-1 h-10 w-full rounded-md border bg-background px-3 text-sm scroll-mt-24"
+              >
+                <option value="">Select…</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+                <option value="prefer_not_to_say">Prefer not to say</option>
+              </select>
+            </div>
             <div className="sm:col-span-2">
               <label className="text-xs uppercase tracking-wide text-muted-foreground" htmlFor="locale">
                 Language & region
@@ -446,7 +480,8 @@ function SettingsPage() {
                 savingPrefs ||
                 (whatsapp.trim() === (profile.whatsapp_number ?? "") &&
                   payoutMethod === (profile.payout_method ?? "bank_transfer") &&
-                  locale === (profile.locale ?? "en-US"))
+                  locale === (profile.locale ?? "en-US") &&
+                  (gender || null) === (profile.gender ?? null))
               }
             >
               {savingPrefs ? "Saving…" : "Save preferences"}

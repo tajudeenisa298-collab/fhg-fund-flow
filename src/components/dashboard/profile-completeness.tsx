@@ -9,6 +9,7 @@ interface Item {
   label: string;
   done: boolean;
   to?: string;
+  hash?: string;
 }
 
 export function ProfileCompleteness({ profile }: { profile: Profile }) {
@@ -24,11 +25,11 @@ export function ProfileCompleteness({ profile }: { profile: Profile }) {
   }, [profile.id]);
 
   const items: Item[] = [
-    { key: "name", label: "Add your full name", done: !!profile.full_name && profile.full_name.trim().length > 1, to: "/settings" },
-    { key: "avatar", label: "Upload a profile photo", done: !!profile.avatar_url, to: "/settings" },
-    { key: "gender", label: "Tell us your gender", done: !!profile.gender, to: "/settings" },
-    { key: "whatsapp", label: "Add WhatsApp number", done: !!profile.whatsapp_number, to: "/settings" },
-    { key: "bank", label: "Verify your bank account", done: !!hasBank, to: "/settings" },
+    { key: "name", label: "Add your full name", done: !!profile.full_name && profile.full_name.trim().length > 1, to: "/settings", hash: "name" },
+    { key: "avatar", label: "Upload a profile photo", done: !!profile.avatar_url, to: "/settings", hash: "avatar" },
+    { key: "gender", label: "Tell us your gender", done: !!profile.gender, to: "/settings", hash: "gender" },
+    { key: "whatsapp", label: "Add WhatsApp number", done: !!profile.whatsapp_number, to: "/settings", hash: "whatsapp" },
+    { key: "bank", label: "Verify your bank account", done: !!hasBank, to: "/settings", hash: "bank-account" },
   ];
 
   const done = items.filter((i) => i.done).length;
@@ -77,6 +78,7 @@ export function ProfileCompleteness({ profile }: { profile: Profile }) {
             {i.to && !i.done ? (
               <Link
                 to={i.to}
+                hash={i.hash}
                 className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-muted/60"
               >
                 <Circle className="size-4 shrink-0 text-muted-foreground" />

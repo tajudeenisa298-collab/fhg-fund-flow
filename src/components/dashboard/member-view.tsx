@@ -356,11 +356,18 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
           label="Managed balance"
           valueNode={<Money usd={profile.balance_usd} size="lg" />}
           icon={Wallet}
-          hint="Held by your leader"
+          hint={`Held by ${leaderName ?? "your leader"} · NGN preview uses today's rate (₦${ngnRate.toLocaleString()}/$1)`}
         />
         <StatCard label="Current rank" value={profile.rank} icon={TrendingUp} hint="Reach Director to unlock" />
         <StatCard label="Pending requests" value={String(pending)} icon={Clock} />
       </div>
+
+      {leaderName && (
+        <p className="text-xs text-muted-foreground">
+          Your current team leader: <span className="font-medium text-foreground">{leaderName}</span>.
+          Reach out to them for questions about deposits, withdrawals, or rank upkeep.
+        </p>
+      )}
 
       <OnboardingChecklist profile={profile} />
 

@@ -272,6 +272,7 @@ export type Database = {
           created_at: string
           expires_at: string
           id: string
+          is_used: boolean | null
           leader_id: string
           revoked: boolean
           used_at: string | null
@@ -282,6 +283,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          is_used?: boolean | null
           leader_id: string
           revoked?: boolean
           used_at?: string | null
@@ -292,6 +294,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          is_used?: boolean | null
           leader_id?: string
           revoked?: boolean
           used_at?: string | null
@@ -1169,6 +1172,10 @@ export type Database = {
         Returns: undefined
       }
       finalize_terminated_members: { Args: never; Returns: number }
+      get_balance_as_of: {
+        Args: { _as_of: string; _member_id: string }
+        Returns: number
+      }
       get_cron_health: {
         Args: never
         Returns: {

@@ -245,7 +245,7 @@ export function StructureSection({ profile }: { profile: Profile }) {
             <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold tabular-nums">
               {pv.toLocaleString()} PV
             </span>
-            <Money usd={node.balance_usd} size="sm" className="items-end" />
+            {!node.can_handle_funds && <Money usd={node.balance_usd} size="sm" className="items-end" />}
           </div>
         </div>
         {kids.length > 0 && !isCollapsed && (

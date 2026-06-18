@@ -730,3 +730,50 @@ function ReverifyDialog({
     </Dialog>
   );
 }
+
+function AsOfBalanceCard({ memberId }: { memberId: string }) {
+  const [date, setDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
+  const [result, setResult] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const check = async () => {
+    setLoading(true);
+    setResult(null);
+    const ts = new Date(`${date}T23:59:59.999Z`).toISOString();
+    const { data, error } = await supabase.rpc("get_balance_as_of", {
+      _member_id: memberId,
+      _as_of: ts,
+    });
+    setLoading(false);
+    if (error) { toast.error(error.message); return; }
+    setResult(Number(data));
+  };
+  return (
+    <section className="rounded-2xl border bg-card p-6 shadow-card">
+      <h2 className="text-base font-semibold">Balance on a past date</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Reconstruct your managed balance as it stood at the end of any past day. Useful for disputes or reconciling statements.
+      </p>
+      <div className="mt-4 flex flex-wrap items-end gap-3">
+        <div className="space-y-1">
+          <Label htmlFor="asof">Date</Label>
+          <Input
+            id="asof"
+            type="date"
+            value={date}
+            max={new Date().toISOString().slice(0, 10)}
+            onChange={(e) => { setDate(e.target.value); setResult(null); }}
+          />
+        </div>
+        <Button onClick={check} disabled={loading || !date}>
+          {loading ? "Calculating…" : "Check balance"}
+        </Button>
+        {result !== null && (
+          <p className="text-sm">
+            On <span className="font-medium">{fmtDate(`${date}T23:59:59Z`)}</span> your balance was{" "}
+            <span className="font-mono font-semibold">{fmtUsd(result)}</span>.
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}

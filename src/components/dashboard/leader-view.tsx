@@ -1101,8 +1101,18 @@ function PromoteDialog({ member, onDone }: { member: Profile; onDone: () => void
   const promote = useServerFn(promoteManagedMember);
 
   const willBecomeDirector = isDirectorOrAbove(newRank);
+  const newIdx = rankIndex(newRank);
+  const isDemotion = newIdx >= 0 && newIdx < currentIdx;
+  const isNoChange = newRank === member.rank;
 
   const submit = async () => {
+    if (isNoChange) return toast.error("Pick a different rank");
+    const verb = isDemotion ? "Demote" : "Promote";
+    if (!window.confirm(
+      `${verb} ${member.full_name} from ${member.rank} to ${newRank}?` +
+        (isDemotion ? " This will reduce their rank." : "") +
+        (willBecomeDirector ? " They will manage their own team and their balance will be released." : "")
+    )) return;
     setBusy(true);
     const { error } = await promote({ data: { memberId: member.id, newRank, grantFundHandler: grant, note } })
       .then(() => ({ error: null as string | null }))

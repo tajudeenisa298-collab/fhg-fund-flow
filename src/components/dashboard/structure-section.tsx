@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useUrlState } from "@/hooks/use-url-state";
-import { ChevronDown, ChevronRight, Network, Filter } from "lucide-react";
+import { ChevronDown, ChevronRight, Network, Filter, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Money } from "@/components/money";
 import { Button } from "@/components/ui/button";
@@ -79,6 +79,7 @@ export function StructureSection({ profile }: { profile: Profile }) {
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [rankFilter, setRankFilter] = useState<Set<string>>(new Set(RANKS));
+  const [zoom, setZoom] = useState(1);
   const [periodRaw, setPeriodRaw] = useUrlState("period", "current");
   const period = periodRaw as PeriodOption;
   const setPeriod = (v: PeriodOption) => setPeriodRaw(v);
@@ -372,7 +373,40 @@ export function StructureSection({ profile }: { profile: Profile }) {
         </div>
       </div>
 
-      <div className="rounded-2xl border bg-card p-3 shadow-card sm:p-5">
+      <div className="relative rounded-2xl border bg-card p-3 shadow-card sm:p-5">
+        {!loading && root && rankFilter.size > 0 && (
+          <div className="pointer-events-none absolute right-3 top-3 z-10 flex flex-col gap-1 sm:right-4 sm:top-4">
+            <div className="pointer-events-auto flex flex-col overflow-hidden rounded-lg border bg-background/95 shadow-sm backdrop-blur">
+              <button
+                type="button"
+                onClick={() => setZoom((z) => Math.min(2, +(z + 0.2).toFixed(2)))}
+                className="p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+                aria-label="Zoom in"
+              >
+                <ZoomIn className="size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setZoom((z) => Math.max(0.4, +(z - 0.2).toFixed(2)))}
+                className="border-t p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+                aria-label="Zoom out"
+              >
+                <ZoomOut className="size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setZoom(1)}
+                className="border-t p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+                aria-label="Reset zoom"
+              >
+                <Maximize2 className="size-4" />
+              </button>
+            </div>
+            <p className="pointer-events-none text-center text-[10px] font-medium tabular-nums text-muted-foreground">
+              {Math.round(zoom * 100)}%
+            </p>
+          </div>
+        )}
         {loading ? (
           <div className="space-y-3 py-6">
             <Skeleton className="mx-auto h-20 w-64" />
@@ -389,8 +423,16 @@ export function StructureSection({ profile }: { profile: Profile }) {
             No ranks selected — pick at least one rank to view the tree.
           </p>
         ) : (
-          <div className="org-tree">
-            <ul>{renderNode(root, 0)}</ul>
+          <div
+            className="org-tree-viewport overflow-auto"
+            style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x pan-y pinch-zoom" }}
+          >
+            <div
+              className="org-tree inline-block origin-top-left transition-transform"
+              style={{ transform: `scale(${zoom})` }}
+            >
+              <ul>{renderNode(root, 0)}</ul>
+            </div>
           </div>
         )}
       </div>

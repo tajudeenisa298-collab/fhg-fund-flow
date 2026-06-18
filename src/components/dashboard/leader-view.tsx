@@ -230,7 +230,9 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
             <Link to="/analytics"><BarChart3 className="mr-1 size-4" /> Analytics</Link>
           </Button>
           <MoneySafetyButton onSaved={refresh} />
-          <NgnRateButton currentRate={ngnRate} onSaved={refresh} />
+          {!profile.sponsor_id && (
+            <NgnRateButton currentRate={ngnRate} onSaved={refresh} />
+          )}
         </div>
       </div>
       )}
@@ -647,6 +649,9 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
                       size="icon"
                       title="Delete"
                       onClick={async () => {
+                        if (!window.confirm(
+                          `Delete this upkeep plan (${fmtUsd(p.amount_usd)} · ${FREQ_LABEL[p.frequency]})? This cannot be undone. Past dispensations are kept.`
+                        )) return;
                         const { error } = await supabase.from("upkeep_plans").delete().eq("id", p.id);
                         if (error) return toast.error(error.message);
                         toast.success("Plan deleted");
@@ -1096,8 +1101,18 @@ function PromoteDialog({ member, onDone }: { member: Profile; onDone: () => void
   const promote = useServerFn(promoteManagedMember);
 
   const willBecomeDirector = isDirectorOrAbove(newRank);
+  const newIdx = rankIndex(newRank);
+  const isDemotion = newIdx >= 0 && newIdx < currentIdx;
+  const isNoChange = newRank === member.rank;
 
   const submit = async () => {
+    if (isNoChange) return toast.error("Pick a different rank");
+    const verb = isDemotion ? "Demote" : "Promote";
+    if (!window.confirm(
+      `${verb} ${member.full_name} from ${member.rank} to ${newRank}?` +
+        (isDemotion ? " This will reduce their rank." : "") +
+        (willBecomeDirector ? " They will manage their own team and their balance will be released." : "")
+    )) return;
     setBusy(true);
     const { error } = await promote({ data: { memberId: member.id, newRank, grantFundHandler: grant, note } })
       .then(() => ({ error: null as string | null }))
@@ -1167,10 +1182,15 @@ function PromoteDialog({ member, onDone }: { member: Profile; onDone: () => void
                 onChange={(e) => setNote(e.target.value)}
               />
             </div>
+            {isDemotion && (
+              <p className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+                This is a demotion. {member.full_name} will drop from {member.rank} to {newRank}.
+              </p>
+            )}
           </div>
           <DialogFooter>
-            <Button onClick={submit} disabled={busy}>
-              {busy ? "Saving…" : "Apply"}
+            <Button onClick={submit} disabled={busy || isNoChange} variant={isDemotion ? "destructive" : "default"}>
+              {busy ? "Saving…" : isDemotion ? "Demote" : "Apply"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1277,6 +1297,9 @@ function ApproveDialog({
 
 
   const decline = async () => {
+    if (!window.confirm(
+      `Decline this ${fmtUsd(request.amount_usd)} withdrawal request? This cannot be undone — the member will need to submit a new request.`
+    )) return;
     setBusy(true);
     const { error } = await supabase.rpc("resolve_withdrawal_request", {
       _id: request.id,

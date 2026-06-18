@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Outlet, useRouterState, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Wallet, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -92,7 +92,7 @@ function DashboardPage() {
             <GlobalMemberSearchTrigger />
             <NotificationBell />
             <Button variant="outline" size="icon" asChild aria-label="Settings">
-              <a href="/settings"><Settings className="size-4" /></a>
+              <Link to="/settings"><Settings className="size-4" /></Link>
             </Button>
             <Button
               variant="outline"

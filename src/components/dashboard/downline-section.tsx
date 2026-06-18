@@ -13,12 +13,16 @@ import type { Profile } from "@/lib/auth-context";
 export function DownlineSection({ rootId }: { rootId: string }) {
   const [people, setPeople] = useState<Profile[]>([]);
   const [detail, setDetail] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const load = () => {
     // Fetch everyone visible (RLS already restricts to downline + self)
     supabase
       .from("profiles").select("*").neq("id", rootId)
-      .then(({ data }) => setPeople((data as Profile[]) ?? []));
+      .then(({ data }) => {
+        setPeople((data as Profile[]) ?? []);
+        setLoading(false);
+      });
   };
 
   useEffect(() => {

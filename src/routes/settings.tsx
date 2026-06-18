@@ -356,7 +356,7 @@ function SettingsPage() {
               </Button>
             )}
           </div>
-          <div className="mt-6">
+          <div id="avatar" className="mt-6 scroll-mt-24">
             <AvatarUpload />
           </div>
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">

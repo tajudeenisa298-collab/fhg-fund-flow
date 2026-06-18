@@ -35,7 +35,7 @@ export function AccountStatusScreen({ profile }: { profile: Profile }) {
           {isTerminated
             ? finalized || pardonExpired
               ? "The 90-day pardon window has passed. Please contact your team leader if you believe this is in error."
-              : `You have until ${fmtDate(pardonDeadline!.toISOString())} to be pardoned by your team leader.`
+              : `Pardon window closes in ${daysLeft} day${daysLeft === 1 ? "" : "s"} (on ${fmtDate(pardonDeadline!.toISOString())}). After that, termination is permanent.`
             : isSuspended
             ? `Your access has been suspended until ${fmtDate(suspendedUntil!.toISOString())}.`
             : "Your account access is restricted."}

@@ -649,6 +649,9 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
                       size="icon"
                       title="Delete"
                       onClick={async () => {
+                        if (!window.confirm(
+                          `Delete the "${p.title}" upkeep plan? This cannot be undone. Past dispensations are kept.`
+                        )) return;
                         const { error } = await supabase.from("upkeep_plans").delete().eq("id", p.id);
                         if (error) return toast.error(error.message);
                         toast.success("Plan deleted");

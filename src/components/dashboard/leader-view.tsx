@@ -103,9 +103,11 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
   const [purse, setPurse] = useState<LeaderPurseEntry[]>([]);
   const [rankDefaults, setRankDefaults] = useState<RankUpkeepDefault[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [teamSearch, setTeamSearch] = useState("");
-  const [teamRankFilter, setTeamRankFilter] = useState<string>("all");
-  const [teamSort, setTeamSort] = useState<"name" | "balance_desc" | "balance_asc" | "recent">("name");
+  const [teamSearch, setTeamSearch] = useUrlState("q", "");
+  const [teamRankFilter, setTeamRankFilter] = useUrlState("rank", "all");
+  const [teamSortRaw, setTeamSortRaw] = useUrlState("sort", "name");
+  const teamSort = teamSortRaw as "name" | "balance_desc" | "balance_asc" | "recent";
+  const setTeamSort = (v: typeof teamSort) => setTeamSortRaw(v);
   const [savedView, setSavedView] = useState<SavedView>("all");
   const [bankIds, setBankIds] = useState<Set<string>>(new Set());
   // Open ApproveDialog automatically when arriving from a notification link

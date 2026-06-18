@@ -10,7 +10,6 @@ import {
   BarChart3,
   Receipt,
   Smartphone,
-  Check,
   Star,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
@@ -68,10 +67,6 @@ const FAQS = [
     a: "Team leaders and directors in FHG / NeoLife who hold member funds and want a clean record instead of spreadsheets and screenshots.",
   },
   {
-    q: "How much does it cost?",
-    a: "Free for the foundational plan. We may add paid tiers later for very large teams — existing teams stay grandfathered.",
-  },
-  {
     q: "Where is my money?",
     a: "Funds are held by your leader exactly as they were before. The app is a transparent ledger on top — it doesn't move money on its own.",
   },
@@ -105,7 +100,6 @@ function Landing() {
         <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
           <a href="#features" className="hover:text-foreground">Features</a>
           <a href="#testimonials" className="hover:text-foreground">Testimonials</a>
-          <a href="#pricing" className="hover:text-foreground">Pricing</a>
           <a href="#faq" className="hover:text-foreground">FAQ</a>
         </nav>
         <div className="flex items-center gap-2">
@@ -142,7 +136,7 @@ function Landing() {
               <Link to="/login">I already have one</Link>
             </Button>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">Free during foundation rollout · No card required</p>
+          <p className="mt-3 text-xs text-muted-foreground">No card required · Sign up in under a minute</p>
         </section>
 
         {/* MOCK SCREENSHOT */}
@@ -192,42 +186,6 @@ function Landing() {
           </div>
         </section>
 
-        {/* PRICING */}
-        <section id="pricing" className="mt-24">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Simple pricing</h2>
-            <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-              Free while we grow with the foundation. We'll never charge per member.
-            </p>
-          </div>
-          <div className="mx-auto mt-10 grid max-w-3xl gap-6 md:grid-cols-2">
-            <PricingCard
-              name="Foundation"
-              price="Free"
-              period="for now"
-              cta="Get started"
-              highlight
-              perks={[
-                "Unlimited members",
-                "Real-time ledger & receipts",
-                "Leader analytics",
-                "Weekly email digests",
-              ]}
-            />
-            <PricingCard
-              name="Team Plus"
-              price="Coming soon"
-              period=""
-              cta="Join waitlist"
-              perks={[
-                "Multi-leader org charts",
-                "Custom reporting exports",
-                "Priority support",
-                "Audit log retention",
-              ]}
-            />
-          </div>
-        </section>
 
         {/* FAQ */}
         <section id="faq" className="mt-24">
@@ -268,7 +226,6 @@ function Landing() {
           <p>© {new Date().getFullYear()} FHG Funds. Built for the foundation, by the foundation.</p>
           <div className="flex gap-4">
             <a href="#features" className="hover:text-foreground">Features</a>
-            <a href="#pricing" className="hover:text-foreground">Pricing</a>
             <a href="#faq" className="hover:text-foreground">FAQ</a>
           </div>
         </div>
@@ -277,31 +234,6 @@ function Landing() {
   );
 }
 
-function PricingCard({
-  name, price, period, cta, perks, highlight,
-}: { name: string; price: string; period: string; cta: string; perks: string[]; highlight?: boolean }) {
-  return (
-    <div className={`flex h-full flex-col rounded-2xl border bg-card p-6 shadow-card ${highlight ? "ring-2 ring-primary" : ""}`}>
-      <h3 className="text-sm font-semibold text-muted-foreground">{name}</h3>
-      <p className="mt-3 flex items-end gap-2">
-        <span className="text-3xl font-bold tracking-tight">{price}</span>
-        {period && <span className="text-sm text-muted-foreground">{period}</span>}
-      </p>
-      <ul className="mt-6 space-y-2 text-sm">
-        {perks.map((p) => (
-          <li key={p} className="flex items-start gap-2">
-            <Check className="mt-0.5 size-4 shrink-0 text-success" /> {p}
-          </li>
-        ))}
-      </ul>
-      <div className="mt-auto pt-6">
-        <Button asChild className="w-full" variant={highlight ? "default" : "outline"}>
-          <Link to="/signup">{cta}</Link>
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 function DashboardPreview() {
   return (

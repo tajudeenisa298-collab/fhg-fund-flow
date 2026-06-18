@@ -71,7 +71,13 @@ export function DownlineSection({ rootId }: { rootId: string }) {
       </div>
 
       <div className="mt-4 rounded-xl border">
-        {totalDownline === 0 ? (
+        {loading ? (
+          <div className="space-y-2 p-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-11/12" />
+            <Skeleton className="h-10 w-10/12" />
+          </div>
+        ) : totalDownline === 0 ? (
           <p className="px-4 py-10 text-center text-sm text-muted-foreground">
             No one yet — share your invite code to start your downline.
           </p>

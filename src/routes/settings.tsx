@@ -207,7 +207,7 @@ function SettingsPage() {
       </header>
 
       <main className="mx-auto max-w-3xl space-y-6 px-4 py-8 md:px-6">
-        <section className="rounded-2xl border bg-card p-6 shadow-card">
+        <section id="bank-account" className="scroll-mt-24 rounded-2xl border bg-card p-6 shadow-card">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold">Bank account</h2>

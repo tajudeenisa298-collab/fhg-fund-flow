@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Send } from "lucide-react";
+import { Send, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { CurrencyAmountInput } from "@/components/currency-amount-input";
+import { fmtUsd } from "@/lib/format";
 import type { Profile } from "@/lib/auth-context";
 
 export function DispenseUpkeepDialog({
@@ -31,6 +32,26 @@ export function DispenseUpkeepDialog({
   const [note, setNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [purseBalance, setPurseBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setPurseBalance(null);
+    supabase
+      .from("leader_purse_ledger")
+      .select("amount_usd.sum()")
+      .eq("leader_id", leaderId)
+      .single()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const sum = Number((data as { sum: number | null } | null)?.sum ?? 0);
+        setPurseBalance(sum);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, leaderId]);
 
   const reset = () => {
     setAmountUsd(0);

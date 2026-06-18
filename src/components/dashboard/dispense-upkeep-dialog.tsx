@@ -111,6 +111,22 @@ export function DispenseUpkeepDialog({
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">
+            <div className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
+              purseBalance !== null && amountUsd > purseBalance
+                ? "border-destructive/40 bg-destructive/10 text-destructive"
+                : "bg-muted/40 text-muted-foreground"
+            }`}>
+              <Wallet className="size-4" />
+              <span>
+                Your purse:{" "}
+                <span className="font-mono font-semibold text-foreground">
+                  {purseBalance === null ? "…" : fmtUsd(purseBalance)}
+                </span>
+                {purseBalance !== null && amountUsd > purseBalance && (
+                  <span className="ml-2 font-medium">— not enough to send {fmtUsd(amountUsd)}</span>
+                )}
+              </span>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="up-amt">Amount</Label>
               <CurrencyAmountInput

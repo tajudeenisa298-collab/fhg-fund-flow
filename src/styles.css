@@ -123,3 +123,56 @@
   .shadow-elegant { box-shadow: var(--shadow-elegant); }
   .shadow-card { box-shadow: var(--shadow-card); }
 }
+
+/* Org-chart tree (Structure section) — classic top-down hierarchy */
+.org-tree { overflow-x: auto; padding: 8px 4px 4px; }
+.org-tree ul {
+  display: flex;
+  justify-content: center;
+  padding-top: 20px;
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+}
+.org-tree li {
+  list-style: none;
+  position: relative;
+  padding: 20px 8px 0;
+  text-align: center;
+}
+.org-tree li::before,
+.org-tree li::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 50%;
+  border-top: 2px solid var(--color-border);
+  width: 50%;
+  height: 20px;
+}
+.org-tree li::after {
+  right: auto;
+  left: 50%;
+  border-left: 2px solid var(--color-border);
+}
+.org-tree li:only-child::before,
+.org-tree li:only-child::after { display: none; }
+.org-tree li:only-child { padding-top: 0; }
+.org-tree li:first-child::before,
+.org-tree li:last-child::after { border: 0 none; }
+.org-tree li:last-child::before {
+  border-right: 2px solid var(--color-border);
+  border-radius: 0 6px 0 0;
+}
+.org-tree li:first-child::after { border-radius: 6px 0 0 0; }
+.org-tree ul ul::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  border-left: 2px solid var(--color-border);
+  width: 0;
+  height: 20px;
+}
+.org-tree .org-card { display: inline-block; text-align: left; }

@@ -573,6 +573,10 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
       )}
 
       {show("money") && (
+        <AsOfBalanceCard memberId={profile.id} />
+      )}
+
+      {show("money") && (
       <section className="rounded-2xl border bg-card p-6 shadow-card">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <h2 className="text-base font-semibold">Transaction history</h2>

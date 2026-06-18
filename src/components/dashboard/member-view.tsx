@@ -311,8 +311,12 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
                 />
               </div>
               <DialogFooter>
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? "Submitting…" : "Submit request"}
+                <Button type="submit" disabled={submitting || (cooldownUntil != null && Date.now() < cooldownUntil)}>
+                  {cooldownUntil && Date.now() < cooldownUntil
+                    ? `Try again in ${cooldownSeconds}s`
+                    : submitting
+                      ? "Submitting…"
+                      : "Submit request"}
                 </Button>
               </DialogFooter>
             </form>

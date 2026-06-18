@@ -44,6 +44,8 @@ interface AuthContextValue {
   setActiveRole: (r: AppRole) => void;
   /** USD → NGN rate, app-wide setting */
   ngnRate: number;
+  /** True once `usd_to_ngn` has been loaded from app_settings (vs the initial fallback). */
+  ngnRateReady: boolean;
   /** Multi-currency rates (per 1 USD) */
   fxRates: Record<string, number>;
   loading: boolean;

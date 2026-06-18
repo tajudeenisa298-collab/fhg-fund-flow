@@ -1188,6 +1188,18 @@ function PromoteDialog({ member, onDone }: { member: Profile; onDone: () => void
               </p>
             )}
 
+            {willBecomeHandler && reparentCount !== null && reparentCount > 0 && (
+              <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs">
+                <p className="font-semibold text-warning">
+                  Reparent preview: {reparentCount} member{reparentCount === 1 ? "" : "s"} affected
+                </p>
+                <p className="mt-1 text-muted-foreground">
+                  Granting fund-handler access means every managed member currently below {member.full_name}'s
+                  sponsor chain becomes their responsibility. Past transactions stay with the previous handler.
+                </p>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="promo-note">Note (optional)</Label>
               <Textarea

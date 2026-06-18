@@ -79,9 +79,9 @@ export function ReportLeaderDialog() {
     setSubmitting(true);
     const { error } = await supabase.rpc("submit_leader_report", {
       _reported_leader_id: leaderId,
-      _reported_rank: selected?.rank ?? null,
+      _reported_rank: selected?.rank ?? "",
       _offence: offence,
-      _offence_custom: offence === "custom" ? offenceCustom.trim() : null,
+      _offence_custom: offence === "custom" ? offenceCustom.trim() : "",
       _description: description.trim(),
       _reporter_name: name.trim(),
       _reporter_whatsapp: whatsapp.trim(),

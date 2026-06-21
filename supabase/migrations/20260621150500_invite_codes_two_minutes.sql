@@ -1,3 +1,6 @@
+ALTER TABLE public.invite_codes
+  ALTER COLUMN expires_at SET DEFAULT (now() + interval '2 minutes');
+
 CREATE OR REPLACE FUNCTION public.generate_invite_code()
 RETURNS TABLE (
   id uuid,
@@ -47,5 +50,4 @@ $$;
 
 REVOKE ALL ON FUNCTION public.generate_invite_code() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.generate_invite_code() TO authenticated;
-
 GRANT EXECUTE ON FUNCTION public.validate_invite_code(text) TO anon, authenticated;

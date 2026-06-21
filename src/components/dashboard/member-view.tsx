@@ -188,7 +188,7 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
         const row = invite as InviteCodeRowData;
         setCodes((current) => [row, ...current.filter((c) => c.id !== row.id)]);
       }
-      toast.success("Invite code created - valid for 7 days");
+      toast.success("Invite code created - valid for 2 minutes");
       await load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not create invite code");
@@ -461,7 +461,7 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
             <div>
               <h2 className="text-base font-semibold">Invite codes</h2>
               <p className="text-sm text-muted-foreground">
-                Generate codes for people you personally sponsor. Each code is valid for 7 days or until someone uses it.
+                Generate codes for people you personally sponsor. Each code is valid for 2 minutes or until someone uses it.
                 {leaderName ? (
                   <> People you invite will be managed by <span className="font-medium text-foreground">{leaderName}</span> until you become a fund handler.</>
                 ) : null}

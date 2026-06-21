@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { deviceHash } from "@/lib/device-fingerprint";
 
 export type AppRole = "member" | "leader";
 
@@ -95,9 +96,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           supabase.auth.mfa.listFactors(),
         ]);
         const verifiedFactors = factors?.totp?.filter((f) => f.status === "verified") ?? [];
+        let trustedDevice = false;
+        if (verifiedFactors.length > 0) {
+          try {
+            const hash = await deviceHash();
+            const { data: device } = await supabase
+              .from("login_devices")
+              .select("mfa_trusted_until")
+              .eq("user_id", userId)
+              .eq("device_hash", hash)
+              .maybeSingle();
+            trustedDevice = !!device?.mfa_trusted_until && new Date(device.mfa_trusted_until) > new Date();
+          } catch {
+            trustedDevice = false;
+          }
+        }
         setFundHandlerMfaSetupRequired(verifiedFactors.length === 0);
         setFundHandlerMfaRequired(
           verifiedFactors.length > 0 &&
+            !trustedDevice &&
             aal?.nextLevel === "aal2" &&
             aal?.currentLevel !== "aal2",
         );

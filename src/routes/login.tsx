@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/password-input";
@@ -43,6 +44,7 @@ function LoginPage() {
   const [challenge, setChallenge] = useState<null | { factorId: string; challengeId: string }>(null);
   const [enrollState, setEnrollState] =
     useState<null | { factorId: string; qr: string; secret: string }>(null);
+  const [trustMfaDevice, setTrustMfaDevice] = useState(true);
 
   useEffect(() => {
     if (authLoading || !session) return;
@@ -59,7 +61,17 @@ function LoginPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, session, fundHandlerMfaRequired, fundHandlerMfaSetupRequired, nav]);
 
-  const recordDeviceAndEnter = async () => {
+  const isCurrentDeviceTrustedForMfa = async () => {
+    const hash = await deviceHash();
+    const { data } = await supabase
+      .from("login_devices")
+      .select("mfa_trusted_until")
+      .eq("device_hash", hash)
+      .maybeSingle();
+    return !!data?.mfa_trusted_until && new Date(data.mfa_trusted_until) > new Date();
+  };
+
+  const recordDeviceAndEnter = async (trustForMfa = false) => {
     try {
       const hash = await deviceHash();
       await supabase.rpc("record_login_device", {
@@ -67,6 +79,9 @@ function LoginPage() {
         _ua: navigator.userAgent,
         _label: deviceLabel(),
       });
+      if (trustForMfa) {
+        await supabase.rpc("trust_login_device_for_mfa", { _hash: hash, _days: 30 });
+      }
     } catch {
       // non-fatal
     }
@@ -109,7 +124,7 @@ function LoginPage() {
     if (error) return toast.error(error.message);
     setMfaCode("");
     setChallenge(null);
-    await recordDeviceAndEnter();
+    await recordDeviceAndEnter(trustMfaDevice);
   };
 
   const startEnroll = async () => {
@@ -148,7 +163,7 @@ function LoginPage() {
     if (error) return toast.error(error.message);
     setMfaCode("");
     setEnrollState(null);
-    await recordDeviceAndEnter();
+    await recordDeviceAndEnter(trustMfaDevice);
   };
 
   const requiresFundHandlerSecurity = async () => {
@@ -186,6 +201,11 @@ function LoginPage() {
       }
       const factor = factors.totp.find((f) => f.status === "verified");
       if (factor) {
+        if (await isCurrentDeviceTrustedForMfa()) {
+          setLoading(false);
+          await recordDeviceAndEnter();
+          return;
+        }
         const { data, error: challengeErr } = await supabase.auth.mfa.challenge({ factorId: factor.id });
         setLoading(false);
         if (challengeErr) return toast.error(challengeErr.message);
@@ -281,6 +301,16 @@ function LoginPage() {
                   className="tracking-[0.5em] text-center font-mono text-lg"
                 />
               </div>
+              <label className="flex items-start gap-2 rounded-lg border bg-card p-3 text-sm">
+                <Checkbox
+                  checked={trustMfaDevice}
+                  onCheckedChange={(v) => setTrustMfaDevice(Boolean(v))}
+                  className="mt-0.5"
+                />
+                <span>
+                  Do not ask for an authenticator code on this device for 30 days.
+                </span>
+              </label>
               <Button type="submit" className="w-full" disabled={loading || mfaCode.length !== 6}>
                 {loading ? "Verifying..." : "Verify & continue"}
               </Button>
@@ -333,6 +363,16 @@ function LoginPage() {
                       className="tracking-[0.5em] text-center font-mono text-lg"
                     />
                   </div>
+                  <label className="flex items-start gap-2 rounded-lg border bg-card p-3 text-sm">
+                    <Checkbox
+                      checked={trustMfaDevice}
+                      onCheckedChange={(v) => setTrustMfaDevice(Boolean(v))}
+                      className="mt-0.5"
+                    />
+                    <span>
+                      Do not ask for an authenticator code on this device for 30 days.
+                    </span>
+                  </label>
                   <Button type="submit" className="w-full" disabled={loading || mfaCode.length !== 6}>
                     {loading ? "Enabling..." : "Enable & continue"}
                   </Button>

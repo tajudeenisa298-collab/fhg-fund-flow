@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ShieldCheck, Smartphone, KeyRound, Mail, Trash2 } from "lucide-react";
+import { ShieldCheck, Smartphone, KeyRound, Mail, Trash2, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { deviceHash } from "@/lib/device-fingerprint";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +24,8 @@ interface Device {
   label: string | null;
   first_seen_at: string;
   last_seen_at: string;
+  mfa_trusted_at: string | null;
+  mfa_trusted_until: string | null;
 }
 
 interface Factor {
@@ -55,6 +58,8 @@ export function SecuritySection() {
 
   // devices
   const [devices, setDevices] = useState<Device[]>([]);
+  const [currentHash, setCurrentHash] = useState<string | null>(null);
+  const [signingOutAll, setSigningOutAll] = useState(false);
 
   const loadFactors = async () => {
     const { data, error } = await supabase.auth.mfa.listFactors();
@@ -76,6 +81,7 @@ export function SecuritySection() {
   useEffect(() => {
     loadFactors();
     loadDevices();
+    deviceHash().then(setCurrentHash).catch(() => setCurrentHash(null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user.id]);
 
@@ -162,10 +168,26 @@ export function SecuritySection() {
   };
 
   const revokeDevice = async (id: string) => {
+    const device = devices.find((d) => d.id === id);
+    const isCurrent = !!device && !!currentHash && device.device_hash === currentHash;
     const { error } = await supabase.from("login_devices").delete().eq("id", id);
     if (error) return toast.error(error.message);
-    toast.success("Device removed from your list");
+    if (isCurrent) {
+      toast.success("This device was removed. Signing out here now.");
+      await supabase.auth.signOut();
+      window.location.href = "/login";
+      return;
+    }
+    toast.success("Device removed. It will need authentication again.");
     await loadDevices();
+  };
+
+  const signOutEverywhere = async () => {
+    if (!confirm("Sign out this account on every device? You will need to log in again.")) return;
+    setSigningOutAll(true);
+    await supabase.auth.signOut({ scope: "global" });
+    setSigningOutAll(false);
+    window.location.href = "/login";
   };
 
   const verifiedFactors = factors.filter((f) => f.status === "verified");
@@ -326,11 +348,26 @@ export function SecuritySection() {
 
       {/* Devices */}
       <div className="mt-6 border-t pt-6">
-        <h3 className="font-medium">Recent sign-in devices</h3>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="font-medium">Signed-in devices</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {devices.length === 1
+                ? "1 device has signed in to this account."
+                : `${devices.length} devices have signed in to this account.`}
+            </p>
+          </div>
+          {devices.length > 0 && (
+            <Button variant="outline" size="sm" onClick={signOutEverywhere} disabled={signingOutAll}>
+              <LogOut className="mr-1 size-3.5" />
+              {signingOutAll ? "Signing out..." : "Sign out everywhere"}
+            </Button>
+          )}
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          We log each browser/device that signs in to your account. Removing a
-          device clears it from this list — to actually sign it out, change your
-          password.
+          Removing a device clears its remembered authentication. Removing the current
+          device also signs this browser out. Use "Sign out everywhere" to force every
+          browser to log in again.
         </p>
         {devices.length === 0 ? (
           <p className="mt-3 text-sm text-muted-foreground">No devices recorded yet.</p>
@@ -342,17 +379,33 @@ export function SecuritySection() {
                 className="flex items-center justify-between rounded-lg border bg-card px-3 py-2 text-sm"
               >
                 <div>
-                  <div className="font-medium">{d.label ?? "Unknown device"}</div>
-                  <div className="text-xs text-muted-foreground">
-                    Last seen {new Date(d.last_seen_at).toLocaleString()} ·
-                    first seen {new Date(d.first_seen_at).toLocaleDateString()}
+                  <div className="flex flex-wrap items-center gap-2 font-medium">
+                    <span>{d.label ?? "Unknown device"}</span>
+                    {currentHash === d.device_hash && (
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] uppercase text-primary">
+                        Current
+                      </span>
+                    )}
+                    {d.mfa_trusted_until && new Date(d.mfa_trusted_until) > new Date() && (
+                      <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] uppercase text-success">
+                        MFA remembered
+                      </span>
+                    )}
                   </div>
+                  <div className="text-xs text-muted-foreground">
+                    Last seen {new Date(d.last_seen_at).toLocaleString()} - first seen {new Date(d.first_seen_at).toLocaleDateString()}
+                  </div>
+                  {d.mfa_trusted_until && (
+                    <div className="text-xs text-muted-foreground">
+                      Authenticator remembered until {new Date(d.mfa_trusted_until).toLocaleString()}
+                    </div>
+                  )}
                 </div>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => revokeDevice(d.id)}
-                  title="Remove from list"
+                  title={currentHash === d.device_hash ? "Remove and sign out here" : "Remove remembered device"}
                 >
                   <Trash2 className="size-4" />
                 </Button>
@@ -361,7 +414,6 @@ export function SecuritySection() {
           </ul>
         )}
       </div>
-
       <AlertDialog
         open={!!unenrollTarget}
         onOpenChange={(o) => !o && setUnenrollTarget(null)}

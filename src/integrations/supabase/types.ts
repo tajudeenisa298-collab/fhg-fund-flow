@@ -414,6 +414,8 @@ export type Database = {
           id: string
           label: string | null
           last_seen_at: string
+          mfa_trusted_at: string | null
+          mfa_trusted_until: string | null
           user_agent: string | null
           user_id: string
         }
@@ -423,6 +425,8 @@ export type Database = {
           id?: string
           label?: string | null
           last_seen_at?: string
+          mfa_trusted_at?: string | null
+          mfa_trusted_until?: string | null
           user_agent?: string | null
           user_id: string
         }
@@ -432,6 +436,8 @@ export type Database = {
           id?: string
           label?: string | null
           last_seen_at?: string
+          mfa_trusted_at?: string | null
+          mfa_trusted_until?: string | null
           user_agent?: string | null
           user_id?: string
         }
@@ -1407,6 +1413,10 @@ export type Database = {
       record_login_device: {
         Args: { _hash: string; _label: string; _ua: string }
         Returns: boolean
+      }
+      trust_login_device_for_mfa: {
+        Args: { _days?: number; _hash: string }
+        Returns: undefined
       }
       record_office_expense: {
         Args: { _amount_ngn: number; _category: string; _note?: string }

@@ -48,6 +48,10 @@ interface AuthContextValue {
   ngnRateReady: boolean;
   /** Multi-currency rates (per 1 USD) */
   fxRates: Record<string, number>;
+  /** Fund handlers with verified MFA must finish the second factor before fund tools open. */
+  fundHandlerMfaRequired: boolean;
+  /** Fund handlers without a verified factor must set one up before fund tools open. */
+  fundHandlerMfaSetupRequired: boolean;
   loading: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -65,6 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [fxRates, setFxRates] = useState<Record<string, number>>({
     USD: 1, NGN: 1600, GBP: 1.27, EUR: 1.08,
   });
+  const [fundHandlerMfaRequired, setFundHandlerMfaRequired] = useState(false);
+  const [fundHandlerMfaSetupRequired, setFundHandlerMfaSetupRequired] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = async (userId: string) => {
@@ -81,6 +87,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const list = ((r as { role: AppRole }[]) ?? []).map((x) => x.role);
     setRoles(list);
+    const handlesFunds = !!prof?.can_handle_funds || list.includes("leader");
+    if (handlesFunds) {
+      try {
+        const [{ data: aal }, { data: factors }] = await Promise.all([
+          supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+          supabase.auth.mfa.listFactors(),
+        ]);
+        const verifiedFactors = factors?.totp?.filter((f) => f.status === "verified") ?? [];
+        setFundHandlerMfaSetupRequired(verifiedFactors.length === 0);
+        setFundHandlerMfaRequired(
+          verifiedFactors.length > 0 &&
+            aal?.nextLevel === "aal2" &&
+            aal?.currentLevel !== "aal2",
+        );
+      } catch {
+        setFundHandlerMfaRequired(false);
+        setFundHandlerMfaSetupRequired(false);
+      }
+    } else {
+      setFundHandlerMfaRequired(false);
+      setFundHandlerMfaSetupRequired(false);
+    }
     if (s?.usd_to_ngn) setNgnRate(Number(s.usd_to_ngn));
     setNgnRateReady(true);
     if (s?.fx_rates && typeof s.fx_rates === "object")
@@ -98,6 +126,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       else {
         setProfile(null);
         setRoles([]);
+        setFundHandlerMfaRequired(false);
+        setFundHandlerMfaSetupRequired(false);
       }
     });
     supabase.auth.getSession().then(async ({ data: { session: s } }) => {
@@ -156,6 +186,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ngnRate,
         ngnRateReady,
         fxRates,
+        fundHandlerMfaRequired,
+        fundHandlerMfaSetupRequired,
         loading,
         refresh,
         signOut: async () => {

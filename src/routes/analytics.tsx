@@ -74,7 +74,14 @@ function dayKey(d: string) {
 }
 
 function AnalyticsPage() {
-  const { session, profile, roles, loading } = useAuth();
+  const {
+    session,
+    profile,
+    roles,
+    loading,
+    fundHandlerMfaRequired,
+    fundHandlerMfaSetupRequired,
+  } = useAuth();
   const nav = useNavigate();
   const [txns, setTxns] = useState<Txn[]>([]);
   const [office, setOffice] = useState<OfficeRow[]>([]);
@@ -84,7 +91,10 @@ function AnalyticsPage() {
   useEffect(() => {
     if (!loading && !session) nav({ to: "/login" });
     if (!loading && profile && !roles.includes("leader")) nav({ to: "/dashboard" });
-  }, [loading, session, profile, roles, nav]);
+    if (!loading && profile && (fundHandlerMfaRequired || fundHandlerMfaSetupRequired)) {
+      nav({ to: "/dashboard" });
+    }
+  }, [loading, session, profile, roles, fundHandlerMfaRequired, fundHandlerMfaSetupRequired, nav]);
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -229,7 +239,11 @@ function AnalyticsPage() {
   }, [office]);
 
   // Hide content for non-leaders while the redirect runs to avoid a flash.
-  const isAllowed = !!session && roles.includes("leader");
+  const isAllowed =
+    !!session &&
+    roles.includes("leader") &&
+    !fundHandlerMfaRequired &&
+    !fundHandlerMfaSetupRequired;
   if (loading || busy || !isAllowed) {
     return (
       <div className="min-h-screen bg-gradient-soft p-6">

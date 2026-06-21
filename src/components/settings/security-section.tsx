@@ -172,7 +172,7 @@ export function SecuritySection() {
   const mfaEnabled = verifiedFactors.length > 0;
 
   return (
-    <section className="rounded-2xl border bg-card p-6 shadow-card">
+    <section id="security" className="scroll-mt-24 rounded-2xl border bg-card p-6 shadow-card">
       <div className="flex items-start gap-3">
         <ShieldCheck className="size-5 text-primary" />
         <div>

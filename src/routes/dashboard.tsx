@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Outlet, useRouterState, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { Wallet, LogOut, Settings } from "lucide-react";
+import { Wallet, LogOut, Settings, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth, isAccountBlocked } from "@/lib/auth-context";
@@ -26,7 +26,17 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function DashboardPage() {
-  const { session, profile, roles, activeRole, setActiveRole, loading, signOut } = useAuth();
+  const {
+    session,
+    profile,
+    roles,
+    activeRole,
+    setActiveRole,
+    loading,
+    signOut,
+    fundHandlerMfaRequired,
+    fundHandlerMfaSetupRequired,
+  } = useAuth();
   const nav = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const section = sectionFromPath(pathname);
@@ -41,6 +51,18 @@ function DashboardPage() {
 
   if (isAccountBlocked(profile)) {
     return <AccountStatusScreen profile={profile} />;
+  }
+
+  if (fundHandlerMfaRequired || fundHandlerMfaSetupRequired) {
+    return (
+      <FundHandlerSecurityGate
+        mode={fundHandlerMfaRequired ? "verify" : "setup"}
+        onSignOut={async () => {
+          await signOut();
+          nav({ to: "/" });
+        }}
+      />
+    );
   }
 
   const showSwitcher = roles.length > 1;
@@ -112,6 +134,40 @@ function DashboardPage() {
       </main>
       <GlobalMemberSearch />
       <EmergencyAnnouncementPopup />
+    </div>
+  );
+}
+
+function FundHandlerSecurityGate({
+  mode,
+  onSignOut,
+}: {
+  mode: "verify" | "setup";
+  onSignOut: () => Promise<void>;
+}) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-soft px-4">
+      <section className="w-full max-w-md rounded-2xl border bg-card p-6 text-center shadow-card">
+        <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-primary/10">
+          <ShieldCheck className="size-6 text-primary" />
+        </div>
+        <h1 className="mt-4 text-xl font-semibold">Extra security required</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {mode === "verify"
+            ? "This fund-handling account must finish two-factor authentication before opening fund tools."
+            : "This fund-handling account must set up two-factor authentication before opening fund tools."}
+        </p>
+        <div className="mt-6 flex flex-col gap-2">
+          <Button asChild>
+            <Link to={mode === "verify" ? "/login" : "/settings"} hash={mode === "setup" ? "security" : undefined}>
+              {mode === "verify" ? "Verify again" : "Set up authenticator"}
+            </Link>
+          </Button>
+          <Button variant="outline" onClick={onSignOut}>
+            Sign out
+          </Button>
+        </div>
+      </section>
     </div>
   );
 }

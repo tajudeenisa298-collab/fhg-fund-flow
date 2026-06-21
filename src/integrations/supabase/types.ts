@@ -351,8 +351,12 @@ export type Database = {
           id: string
           offence: Database["public"]["Enums"]["leader_offence"]
           offence_custom: string | null
+          proof_file_name: string | null
+          proof_path: string | null
           recipient_user_ids: string[]
-          reported_leader_id: string
+          reported_leader_id: string | null
+          reported_name_text: string | null
+          reported_nickname: string | null
           reported_rank_at_time: string | null
           reporter_id: string
           reporter_name: string
@@ -366,8 +370,12 @@ export type Database = {
           id?: string
           offence: Database["public"]["Enums"]["leader_offence"]
           offence_custom?: string | null
+          proof_file_name?: string | null
+          proof_path?: string | null
           recipient_user_ids?: string[]
-          reported_leader_id: string
+          reported_leader_id?: string | null
+          reported_name_text?: string | null
+          reported_nickname?: string | null
           reported_rank_at_time?: string | null
           reporter_id: string
           reporter_name: string
@@ -381,8 +389,12 @@ export type Database = {
           id?: string
           offence?: Database["public"]["Enums"]["leader_offence"]
           offence_custom?: string | null
+          proof_file_name?: string | null
+          proof_path?: string | null
           recipient_user_ids?: string[]
-          reported_leader_id?: string
+          reported_leader_id?: string | null
+          reported_name_text?: string | null
+          reported_nickname?: string | null
           reported_rank_at_time?: string | null
           reporter_id?: string
           reporter_name?: string
@@ -1469,8 +1481,11 @@ export type Database = {
           _description: string
           _offence: string
           _offence_custom: string
-          _reported_leader_id: string
-          _reported_rank: string
+          _proof_path: string
+          _reported_leader_id: string | null
+          _reported_name: string
+          _reported_nickname: string
+          _reported_status: string
           _reporter_name: string
           _reporter_whatsapp: string
         }
@@ -1512,6 +1527,13 @@ export type Database = {
         | "funds_mismanagement"
         | "dating"
         | "sexual_harassment"
+        | "sexual_assault"
+        | "abuse_or_harassment"
+        | "threats_or_intimidation"
+        | "fraud_or_scam"
+        | "discrimination"
+        | "privacy_breach"
+        | "policy_violation"
         | "custom"
       member_status_action:
         | "suspended"
@@ -1701,6 +1723,13 @@ export const Constants = {
         "funds_mismanagement",
         "dating",
         "sexual_harassment",
+        "sexual_assault",
+        "abuse_or_harassment",
+        "threats_or_intimidation",
+        "fraud_or_scam",
+        "discrimination",
+        "privacy_breach",
+        "policy_violation",
         "custom",
       ],
       member_status_action: [

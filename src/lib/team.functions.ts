@@ -6,7 +6,7 @@ export const generateInviteCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { generateInviteCodeServer } = await import("@/lib/team.server");
-    return generateInviteCodeServer(context.userId);
+    return generateInviteCodeServer(context.supabase);
   });
 
 export const validateInviteCode = createServerFn({ method: "GET" })

@@ -41,7 +41,13 @@ export function InviteCodeRow({
 
   const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
   const ss = String(remaining % 60).padStart(2, "0");
-  const urgent = remaining < 60;
+  const urgent = remaining < 60 * 60;
+  const remainingLabel =
+    remaining >= 86400
+      ? `${Math.floor(remaining / 86400)}d ${Math.floor((remaining % 86400) / 3600)}h`
+      : remaining >= 3600
+        ? `${Math.floor(remaining / 3600)}h ${Math.floor((remaining % 3600) / 60)}m`
+        : `${mm}:${ss}`;
 
   return (
     <div className="flex items-center justify-between gap-3 px-4 py-3">
@@ -52,7 +58,7 @@ export function InviteCodeRow({
             urgent ? "bg-destructive/15 text-destructive" : "bg-success/15 text-success"
           }`}
         >
-          {mm}:{ss}
+          {remainingLabel}
         </span>
       </div>
       <Button

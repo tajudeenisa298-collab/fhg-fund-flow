@@ -1,49 +1,44 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Database } from "@/integrations/supabase/types";
 import { RANKS, isDirectorOrAbove } from "@/lib/ranks";
+import { createClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-export async function generateInviteCodeServer(leaderId: string) {
-  // Cryptographically secure random suffix (6 base36 chars)
-  const bytes = new Uint8Array(8);
-  crypto.getRandomValues(bytes);
-  const suffix = Array.from(bytes)
-    .map((b) => b.toString(36).padStart(2, "0"))
-    .join("")
-    .toUpperCase()
-    .slice(0, 6);
-  const code = `FHG-${suffix}`;
-  // 2 minutes — short-lived, must be redeemed quickly
-  const expires_at = new Date(Date.now() + 2 * 60 * 1000).toISOString();
+function createPublicServerSupabase() {
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
+  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+    throw new Error("Missing Supabase public environment variables");
+  }
 
-  const { error } = await supabaseAdmin
-    .from("invite_codes")
-    .insert({ code, leader_id: leaderId, expires_at });
-  if (error) throw new Error("Could not create invite code");
-  return { code, expires_at };
+  return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: {
+      storage: undefined,
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
 }
 
+export async function generateInviteCodeServer(supabase: SupabaseClient<Database>) {
+  const { data, error } = await supabase.rpc("generate_invite_code" as never);
+  if (error) throw new Error(error.message || "Could not create invite code");
+
+  const invite = Array.isArray(data) ? data[0] : data;
+  if (!invite) throw new Error("Could not create invite code");
+  return invite;
+}
 
 export async function validateInviteCodeServer(code: string) {
   const clean = code.trim().toUpperCase();
   if (!clean) return { valid: false, sponsor_name: null as string | null };
 
-  const { data, error } = await supabaseAdmin
-    .from("invite_codes")
-    .select("leader_id")
-    .eq("code", clean)
-    .is("used_by", null)
-    .eq("revoked", false)
-    .gt("expires_at", new Date().toISOString())
-    .maybeSingle();
+  const supabase = createPublicServerSupabase();
+  const { data, error } = await supabase.rpc("validate_invite_code" as never, { _code: clean } as never);
+  const invite = Array.isArray(data) ? data[0] : data;
 
-  if (error || !data) return { valid: false, sponsor_name: null as string | null };
-
-  const { data: sponsor } = await supabaseAdmin
-    .from("profiles")
-    .select("full_name")
-    .eq("id", data.leader_id)
-    .maybeSingle();
-
-  return { valid: true, sponsor_name: sponsor?.full_name ?? "Sponsor" };
+  if (error || !invite) return { valid: false, sponsor_name: null as string | null };
+  return { valid: true, sponsor_name: (invite as { leader_name?: string }).leader_name ?? "Sponsor" };
 }
 
 export async function promoteManagedMemberServer(input: {

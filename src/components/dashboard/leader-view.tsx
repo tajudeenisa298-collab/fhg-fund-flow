@@ -92,6 +92,7 @@ import { MoneySafetyButton } from "@/components/dashboard/money-safety-button";
 import { AnomalyFlagsSection } from "@/components/dashboard/anomaly-flags-section";
 import { ReferralLeaderboard } from "@/components/dashboard/referral-leaderboard";
 import { DashboardViewSkeleton } from "@/components/dashboard/loading-screens";
+import { DashboardQuickActions } from "@/components/dashboard/dashboard-quick-actions";
 import { Link } from "@tanstack/react-router";
 import { BarChart3 } from "lucide-react";
 
@@ -324,6 +325,8 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
       )}
 
       {show("overview") && (<>
+      <DashboardQuickActions role="leader" />
+
       <PendingActionsChips
         leaderId={profile.id}
         pendingRequests={pendingRequests.length}

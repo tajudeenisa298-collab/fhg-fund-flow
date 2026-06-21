@@ -161,19 +161,21 @@ function ResultItem({ m, onPick }: { m: Profile; onPick: (p: Profile) => void })
 }
 
 /** Trigger button (shown in the header). */
-export function GlobalMemberSearchTrigger() {
+export function GlobalMemberSearchTrigger({ label = false }: { label?: boolean }) {
   const onClick = () => {
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }));
   };
   return (
     <Button
       variant="outline"
-      size="icon"
+      size={label ? "sm" : "icon"}
       onClick={onClick}
       aria-label="Search members (⌘K)"
       title="Search members (⌘K)"
+      className={label ? "h-9" : undefined}
     >
       <Search className="size-4" />
+      {label && <span>Search</span>}
     </Button>
   );
 }

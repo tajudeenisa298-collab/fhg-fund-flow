@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ShieldAlert, Upload } from "lucide-react";
+import { CheckCircle2, LockKeyhole, MessageCircle, ShieldAlert, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,7 +61,13 @@ function proofExtension(fileName: string) {
   return ext || "bin";
 }
 
-export function ReportLeaderDialog() {
+export function ReportLeaderDialog({
+  compact = false,
+  featured = false,
+}: {
+  compact?: boolean;
+  featured?: boolean;
+}) {
   const { profile } = useAuth();
   const [open, setOpen] = useState(false);
   const [leaders, setLeaders] = useState<LeaderOption[]>([]);
@@ -187,15 +193,23 @@ export function ReportLeaderDialog() {
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <ShieldAlert className="size-4" /> Report a leader
+        <Button
+          variant={featured ? "default" : "outline"}
+          size={compact ? "sm" : "sm"}
+          className={`gap-2 ${featured ? "shadow-elegant" : ""}`}
+        >
+          <ShieldAlert className="size-4" />
+          {compact ? "Report" : "Report a leader"}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-2xl">
         {submitted ? (
           <>
             <DialogHeader>
-              <DialogTitle>Report submitted</DialogTitle>
+              <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-success/15">
+                <CheckCircle2 className="size-6 text-success" />
+              </div>
+              <DialogTitle className="text-center">Report submitted</DialogTitle>
               <DialogDescription>
                 Thank you. You will be contacted within 24 hours through the WhatsApp details
                 you provided.
@@ -218,6 +232,21 @@ export function ReportLeaderDialog() {
                 appropriate leaders above them, and someone will contact you within 24 hours.
               </DialogDescription>
             </DialogHeader>
+
+            <div className="grid gap-2 rounded-xl border bg-primary/5 p-3 text-sm sm:grid-cols-3">
+              <div className="flex items-start gap-2">
+                <LockKeyhole className="mt-0.5 size-4 text-primary" />
+                <span>Private to the right leaders</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <ShieldAlert className="mt-0.5 size-4 text-primary" />
+                <span>Reported person is not notified</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <MessageCircle className="mt-0.5 size-4 text-primary" />
+                <span>Follow-up within 24 hours</span>
+              </div>
+            </div>
 
             <div className="space-y-3">
               <div className="space-y-1">

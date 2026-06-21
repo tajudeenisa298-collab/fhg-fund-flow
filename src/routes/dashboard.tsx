@@ -14,6 +14,7 @@ import { AccountStatusScreen } from "@/components/account-status-screen";
 import { DashboardSubNav, sectionFromPath } from "@/components/dashboard/dashboard-sub-nav";
 import { EmergencyAnnouncementPopup } from "@/components/emergency-announcement-popup";
 import { DashboardBootSkeleton } from "@/components/dashboard/loading-screens";
+import { ReportLeaderDialog } from "@/components/dashboard/report-leader-dialog";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -98,10 +99,21 @@ function DashboardPage() {
                 <p className="text-xs text-muted-foreground">{profile.email}</p>
               </div>
             </div>
-            <GlobalMemberSearchTrigger />
+            <div className="hidden sm:block">
+              <GlobalMemberSearchTrigger label />
+            </div>
+            <div className="sm:hidden">
+              <GlobalMemberSearchTrigger />
+            </div>
             <NotificationBell />
-            <Button variant="outline" size="icon" asChild aria-label="Settings">
-              <Link to="/settings"><Settings className="size-4" /></Link>
+            <div className="hidden lg:block">
+              <ReportLeaderDialog compact />
+            </div>
+            <Button variant="outline" size="sm" asChild aria-label="Settings" className="h-9">
+              <Link to="/settings">
+                <Settings className="size-4" />
+                <span className="hidden sm:inline">Settings</span>
+              </Link>
             </Button>
             <Button
               variant="outline"

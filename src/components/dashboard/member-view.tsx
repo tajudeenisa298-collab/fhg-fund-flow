@@ -52,6 +52,7 @@ import { BankVerifier, type VerifiedBank } from "@/components/bank-verifier";
 import { ReportLeaderDialog } from "@/components/dashboard/report-leader-dialog";
 import { historicalLocalBalance } from "@/lib/historical-money";
 import { DashboardViewSkeleton } from "@/components/dashboard/loading-screens";
+import { DashboardQuickActions } from "@/components/dashboard/dashboard-quick-actions";
 
 
 
@@ -353,6 +354,8 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
         </div>
       </div>
 
+      <DashboardQuickActions role="member" />
+
 
       {(!profile.leader_id || bankNeedsAttention) && (
         <div className="space-y-2">
@@ -399,7 +402,7 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
                 Who introduced you to the business, and who handles your money.
               </p>
             </div>
-            <ReportLeaderDialog />
+            <ReportLeaderDialog compact />
           </div>
           <dl className="mt-3 grid gap-3 sm:grid-cols-2">
             <div className="rounded-lg border bg-muted/30 p-3">
@@ -599,10 +602,6 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
 
       {show("money") && (
         <TeamFundRulesReadonly leaderId={profile.leader_id} />
-      )}
-
-      {show("team") && (
-        <DownlineSection rootId={profile.id} />
       )}
 
       {show("money") && (

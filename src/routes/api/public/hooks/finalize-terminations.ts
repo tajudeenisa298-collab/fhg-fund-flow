@@ -6,7 +6,9 @@ import { createClient } from "@supabase/supabase-js";
  * 90-day pardon window has passed: stamps profiles.finalized_at and revokes
  * user_roles so the account can no longer act in the app.
  *
- * Requires an `apikey` header matching the Supabase publishable (anon) key.
+ * Requires a shared secret in the `apikey` or bearer token header. Prefer
+ * CRON_SECRET in production; the publishable key fallback keeps existing
+ * pg_cron jobs working until the secret is added there too.
  */
 export const Route = createFileRoute("/api/public/hooks/finalize-terminations")({
   server: {
@@ -16,7 +18,7 @@ export const Route = createFileRoute("/api/public/hooks/finalize-terminations")(
           request.headers.get("apikey") ??
           request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ??
           "";
-        const expected = process.env.SUPABASE_PUBLISHABLE_KEY ?? "";
+        const expected = process.env.CRON_SECRET ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? "";
         if (!expected || !provided || !timingSafeEqualStr(provided, expected)) {
           return new Response(JSON.stringify({ ok: false }), {
             status: 401,

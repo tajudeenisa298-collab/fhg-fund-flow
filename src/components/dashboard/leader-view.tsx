@@ -119,6 +119,7 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
   const [rankDefaults, setRankDefaults] = useState<RankUpkeepDefault[]>([]);
   const [txns, setTxns] = useState<Transaction[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [generatingInvite, setGeneratingInvite] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [teamSearch, setTeamSearch] = useUrlState("q", "");
   const [teamRankFilter, setTeamRankFilter] = useUrlState("rank", "all");
@@ -270,6 +271,8 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
   );
 
   const generateCode = async () => {
+    if (generatingInvite) return;
+    setGeneratingInvite(true);
     try {
       const invite = await createInviteCode();
       if (invite && typeof invite === "object" && "id" in invite) {
@@ -280,6 +283,8 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
       await load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not create invite code");
+    } finally {
+      setGeneratingInvite(false);
     }
   };
 
@@ -786,8 +791,8 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
               Each code is valid for 2 minutes or until someone uses it.
             </p>
           </div>
-          <Button onClick={generateCode}>
-            <Plus className="mr-1 size-4" /> Generate code
+          <Button onClick={generateCode} disabled={generatingInvite}>
+            <Plus className="mr-1 size-4" /> {generatingInvite ? "Generating..." : "Generate code"}
           </Button>
         </div>
         <div className="mt-4 divide-y rounded-xl border">

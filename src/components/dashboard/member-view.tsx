@@ -81,6 +81,7 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
   const [reverifyOpen, setReverifyOpen] = useState(false);
   const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [generatingInvite, setGeneratingInvite] = useState(false);
   const [, forceTick] = useState(0);
   const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -182,6 +183,8 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
   );
 
   const generateCode = async () => {
+    if (generatingInvite) return;
+    setGeneratingInvite(true);
     try {
       const invite = await createInviteCode();
       if (invite && typeof invite === "object" && "id" in invite) {
@@ -192,6 +195,8 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
       await load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not create invite code");
+    } finally {
+      setGeneratingInvite(false);
     }
   };
 
@@ -467,8 +472,8 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
                 ) : null}
               </p>
             </div>
-            <Button onClick={generateCode}>
-              <Plus className="mr-1 size-4" /> Generate code
+            <Button onClick={generateCode} disabled={generatingInvite}>
+              <Plus className="mr-1 size-4" /> {generatingInvite ? "Generating..." : "Generate code"}
             </Button>
           </div>
           <div className="mt-4 divide-y rounded-xl border">

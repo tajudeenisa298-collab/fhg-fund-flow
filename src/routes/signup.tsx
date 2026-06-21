@@ -18,7 +18,7 @@ import { validateInviteCode } from "@/lib/team.functions";
 export const Route = createFileRoute("/signup")({
   head: () => ({
     meta: [
-      { title: "Sign up — FHG Funds" },
+      { title: "Sign up - FHG Funds" },
       { name: "description", content: "Create your FHG Funds account and start growing your team." },
     ],
   }),
@@ -42,6 +42,8 @@ function SignupPage() {
   const [inviteCode, setInviteCode] = useState("");
   const [sponsorName, setSponsorName] = useState<string | null>(null);
   const [rootSignupAvailable, setRootSignupAvailable] = useState(false);
+  const [rootSignupChecked, setRootSignupChecked] = useState(false);
+  const [rootSignupCheckFailed, setRootSignupCheckFailed] = useState(false);
   const [validating, setValidating] = useState(false);
   const [loading, setLoading] = useState(false);
   const [verifiedBank, setVerifiedBank] = useState<VerifiedBank | null>(null);
@@ -53,9 +55,19 @@ function SignupPage() {
 
   useEffect(() => {
     let cancelled = false;
-    supabase.rpc("is_root_signup_available").then(({ data }) => {
-      if (!cancelled) setRootSignupAvailable(Boolean(data));
-    });
+    supabase
+      .rpc("is_root_signup_available")
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        setRootSignupCheckFailed(Boolean(error));
+        setRootSignupAvailable(Boolean(data));
+      })
+      .catch(() => {
+        if (!cancelled) setRootSignupCheckFailed(true);
+      })
+      .finally(() => {
+        if (!cancelled) setRootSignupChecked(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -79,6 +91,8 @@ function SignupPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!rootSignupChecked) return toast.error("Still checking signup setup. Please try again in a moment.");
+    if (rootSignupCheckFailed) return toast.error("Could not check signup setup. Refresh the page and try again.");
     if (!gender) return toast.error("Please select your gender");
     const parsed = baseSchema.safeParse({ full_name, email, password, gender });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
@@ -185,7 +199,7 @@ function SignupPage() {
                   No invite needed yet. This first account becomes the root Director.
                 </p>
               )}
-              {validating && <p className="text-xs text-muted-foreground">Checking code…</p>}
+              {validating && <p className="text-xs text-muted-foreground">Checking code...</p>}
               {!validating && sponsorName && (
                 <p className="flex items-center gap-1.5 text-xs text-success">
                   <CheckCircle2 className="size-3.5" /> Sponsored by {sponsorName}
@@ -200,14 +214,14 @@ function SignupPage() {
               <div>
                 <p className="text-sm font-medium">Bank details (optional)</p>
                 <p className="text-xs text-muted-foreground">
-                  Verified automatically — needed for withdrawals. You can also add them later.
+                  Verified automatically - needed for withdrawals. You can also add them later.
                 </p>
               </div>
               <BankVerifier onVerified={setVerifiedBank} />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating account…" : "Create account"}
+            <Button type="submit" className="w-full" disabled={loading || !rootSignupChecked}>
+              {!rootSignupChecked ? "Checking setup..." : loading ? "Creating account..." : "Create account"}
             </Button>
           </form>
 

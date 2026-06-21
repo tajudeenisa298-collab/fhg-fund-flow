@@ -3,6 +3,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { RANKS, isDirectorOrAbove } from "@/lib/ranks";
 import { createClient } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { randomUUID } from "node:crypto";
 
 function createPublicServerSupabase() {
   const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -20,13 +21,37 @@ function createPublicServerSupabase() {
   });
 }
 
-export async function generateInviteCodeServer(supabase: SupabaseClient<Database>) {
-  const { data, error } = await supabase.rpc("generate_invite_code" as never);
-  if (error) throw new Error(error.message || "Could not create invite code");
+export async function generateInviteCodeServer(callerId: string) {
+  const { data: profile, error: profileError } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("id", callerId)
+    .maybeSingle();
 
-  const invite = Array.isArray(data) ? data[0] : data;
-  if (!invite) throw new Error("Could not create invite code");
-  return invite;
+  if (profileError) throw profileError;
+  if (!profile) {
+    throw new Error("Your account profile is not ready yet. Sign out, sign back in, then try again.");
+  }
+
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const code = `FHG-${randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+    const { data, error } = await supabaseAdmin
+      .from("invite_codes")
+      .insert({
+        code,
+        leader_id: callerId,
+        expires_at: new Date(Date.now() + 2 * 60 * 1000).toISOString(),
+      })
+      .select("id, code, expires_at")
+      .single();
+
+    if (!error && data) return data;
+    if (error?.code !== "23505") {
+      throw new Error(error?.message || "Could not create invite code");
+    }
+  }
+
+  throw new Error("Could not create a unique invite code. Please try again.");
 }
 
 export async function validateInviteCodeServer(code: string) {

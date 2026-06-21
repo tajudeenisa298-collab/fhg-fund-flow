@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fmtDate } from "@/lib/format";
 import type { Announcement } from "@/lib/types";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
+import { removeRealtimeChannelsByTopicPrefix } from "@/lib/realtime";
 
 interface AnnouncementRow extends Announcement {
   expires_at: string | null;
@@ -53,6 +54,7 @@ export function AnnouncementsSection({
   useEffect(() => {
     if (!leaderId) return;
     load();
+    removeRealtimeChannelsByTopicPrefix(supabase, `announcements:${leaderId}`);
     const ch = supabase
       .channel(`announcements:${leaderId}:${channelId.current}`)
       .on(

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtDate } from "@/lib/format";
 import { ExportCsvButton } from "@/components/export-csv-button";
+import { removeRealtimeChannelsByTopicPrefix } from "@/lib/realtime";
 
 interface AuditRow {
   id: string;
@@ -65,6 +66,7 @@ export function AdminAuditFeed() {
 
   useEffect(() => {
     load();
+    removeRealtimeChannelsByTopicPrefix(supabase, "admin-audit-feed");
     const ch = supabase
       .channel(`admin-audit-feed:${channelId.current}`)
       .on(

@@ -23,7 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-import { Money } from "@/components/money";
+import { HistoricalMoney, Money } from "@/components/money";
 import { UserAvatar } from "@/components/user-avatar";
 import { fmtDate } from "@/lib/format";
 import type { Profile } from "@/lib/auth-context";
@@ -31,6 +31,7 @@ import type { Transaction, WithdrawalRequest, BankAccount } from "@/lib/types";
 import { MemberStatusBadge } from "@/components/dashboard/member-status-menu";
 import { MemberNotesSection } from "@/components/dashboard/member-notes-section";
 import { LeaderMemberActions } from "@/components/dashboard/leader-member-actions";
+import { historicalLocalBalance } from "@/lib/historical-money";
 
 const REVERSIBLE_TYPES = new Set(["deposit", "fund_deduction", "bank_fee"]);
 
@@ -107,6 +108,7 @@ export function MemberDetailDialog({
   const pendingAmt = reqs.filter((r) => r.status === "pending").reduce((s, r) => s + Number(r.amount_usd), 0);
   const approvedAmt = reqs.filter((r) => r.status === "approved").reduce((s, r) => s + Number(r.amount_usd), 0);
   const declinedAmt = reqs.filter((r) => r.status === "declined").reduce((s, r) => s + Number(r.amount_usd), 0);
+  const currentLocalBalance = txns.length > 0 ? historicalLocalBalance(txns) : null;
 
   // Fund-rule breakdown by name (deductions)
   const byRule = new Map<string, number>();
@@ -143,7 +145,7 @@ export function MemberDetailDialog({
               </h4>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {!member.can_handle_funds && (
-                  <Stat label="Current balance" usd={member.balance_usd} />
+                  <Stat label="Current balance" usd={member.balance_usd} localNgn={currentLocalBalance} />
                 )}
                 <Stat label="Total deposits" usd={totalDeposits} />
                 <Stat label="Total withdrawn" usd={totalWithdrawn} />
@@ -402,11 +404,11 @@ export function MemberDetailDialog({
   );
 }
 
-function Stat({ label, usd }: { label: string; usd: number | string }) {
+function Stat({ label, usd, localNgn }: { label: string; usd: number | string; localNgn?: number | null }) {
   return (
     <div className="rounded-xl border bg-card/50 p-3">
       <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
-      <Money usd={usd} size="sm" />
+      <HistoricalMoney usd={usd} localNgn={localNgn} size="sm" />
     </div>
   );
 }

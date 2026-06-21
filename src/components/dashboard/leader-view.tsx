@@ -40,7 +40,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, type Profile } from "@/lib/auth-context";
 import { fmtUsd, fmtNgn, fmtDate } from "@/lib/format";
-import { Money } from "@/components/money";
+import { HistoricalMoney, Money, formatNgnAmount } from "@/components/money";
 import {
   FREQ_LABEL,
   type UpkeepFrequency,
@@ -49,6 +49,7 @@ import {
   type OfficeLedgerEntry,
   type LeaderPurseEntry,
   type RankUpkeepDefault,
+  type Transaction,
 } from "@/lib/types";
 import { RANKS, isDirectorOrAbove, rankIndex } from "@/lib/ranks";
 import { DispenseUpkeepDialog } from "@/components/dashboard/dispense-upkeep-dialog";
@@ -98,6 +99,7 @@ import { generateInviteCode, promoteManagedMember } from "@/lib/team.functions";
 import type { DashboardSection } from "@/components/dashboard/dashboard-sub-nav";
 import { useUrlState } from "@/hooks/use-url-state";
 import { ExportCsvButton } from "@/components/export-csv-button";
+import { historicalLocalBalancesByMember } from "@/lib/historical-money";
 
 export function LeaderView({ profile, section = "all" }: { profile: Profile; section?: DashboardSection | "all" }) {
   const show = (s: DashboardSection) => section === "all" || section === s;
@@ -112,6 +114,7 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
   const [office, setOffice] = useState<OfficeLedgerEntry[]>([]);
   const [purse, setPurse] = useState<LeaderPurseEntry[]>([]);
   const [rankDefaults, setRankDefaults] = useState<RankUpkeepDefault[]>([]);
+  const [txns, setTxns] = useState<Transaction[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [teamSearch, setTeamSearch] = useUrlState("q", "");
   const [teamRankFilter, setTeamRankFilter] = useUrlState("rank", "all");
@@ -128,7 +131,16 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
   });
 
   const load = useCallback(async () => {
-    const [{ data: t }, { data: c }, { data: r }, { data: p }, { data: o }, { data: pu }, { data: rd }] =
+    const [
+      { data: t },
+      { data: c },
+      { data: r },
+      { data: p },
+      { data: o },
+      { data: pu },
+      { data: rd },
+      { data: tr },
+    ] =
       await Promise.all([
         supabase.from("profiles").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
         supabase.from("invite_codes").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
@@ -137,6 +149,7 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
         supabase.from("office_ledger").select("*").eq("leader_id", profile.id),
         supabase.from("leader_purse_ledger").select("*").eq("leader_id", profile.id),
         supabase.from("rank_upkeep_defaults").select("*").eq("leader_id", profile.id).order("rank"),
+        supabase.from("transactions").select("*").eq("leader_id", profile.id),
       ]);
     setTeam((t as Profile[]) ?? []);
     setCodes((c as InviteCodeRowData[]) ?? []);
@@ -145,6 +158,7 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
     setOffice((o as OfficeLedgerEntry[]) ?? []);
     setPurse((pu as LeaderPurseEntry[]) ?? []);
     setRankDefaults((rd as RankUpkeepDefault[]) ?? []);
+    setTxns((tr as Transaction[]) ?? []);
   }, [profile.id]);
 
   useEffect(() => {
@@ -186,6 +200,23 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
   const totalManaged = team.reduce((s, m) => s + Number(m.balance_usd), 0);
   const totalDebts = team.reduce((s, m) => (Number(m.balance_usd) < 0 ? s + Math.abs(Number(m.balance_usd)) : s), 0);
   const totalCredits = team.reduce((s, m) => (Number(m.balance_usd) > 0 ? s + Number(m.balance_usd) : s), 0);
+  const localBalances = useMemo(
+    () => historicalLocalBalancesByMember(txns, ngnRate),
+    [txns, ngnRate],
+  );
+  const getLocalBalance = useCallback(
+    (member: Profile) => localBalances.get(member.id) ?? Number(member.balance_usd) * ngnRate,
+    [localBalances, ngnRate],
+  );
+  const totalLocalManaged = team.reduce((s, m) => s + getLocalBalance(m), 0);
+  const totalLocalDebts = team.reduce(
+    (s, m) => (Number(m.balance_usd) < 0 ? s + Math.abs(getLocalBalance(m)) : s),
+    0,
+  );
+  const totalLocalCredits = team.reduce(
+    (s, m) => (Number(m.balance_usd) > 0 ? s + getLocalBalance(m) : s),
+    0,
+  );
   const officeIn = office.filter((r) => r.kind === "support_in").reduce((s, r) => s + Number(r.amount_ngn), 0);
   const officeOut = office.filter((r) => r.kind === "expense_out").reduce((s, r) => s + Number(r.amount_ngn), 0);
   const officeBalNgn = officeIn - officeOut;
@@ -263,18 +294,24 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
         <StatCard label="Total members" value={String(team.length)} icon={Users} />
         <StatCard
           label="Total funds held"
-          valueNode={<Money usd={totalManaged - totalDebts} size="lg" />}
+          valueNode={
+            <HistoricalMoney
+              usd={totalManaged - totalDebts}
+              localNgn={totalLocalManaged - totalLocalDebts}
+              size="lg"
+            />
+          }
           icon={Wallet}
           hint={totalDebts > 0 ? `Net of ${fmtUsd(totalDebts)} debts` : undefined}
         />
         <StatCard
           label="Total credit balance"
-          valueNode={<Money usd={totalCredits} size="lg" />}
+          valueNode={<HistoricalMoney usd={totalCredits} localNgn={totalLocalCredits} size="lg" />}
           icon={ArrowUpRight}
         />
         <StatCard
           label="Total debts"
-          valueNode={<Money usd={totalDebts} size="lg" />}
+          valueNode={<HistoricalMoney usd={totalDebts} localNgn={totalLocalDebts} size="lg" />}
           icon={ArrowUpRight}
         />
         <StatCard
@@ -297,7 +334,7 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
           label="Total expenses"
           valueNode={<Money usd={purseDebit + officeOut / Math.max(ngnRate, 1)} size="lg" />}
           icon={ArrowUpRight}
-          hint={`Withdrawals + office`}
+          hint={`Withdrawals + office (${formatNgnAmount(officeOut)} office total)`}
         />
         <StatCard label="Pending requests" value={String(pendingRequests.length)} icon={Plus} />
         <StatCard label="Active codes" value={String(visibleCodes.length)} icon={Plus} />
@@ -578,7 +615,12 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
                           )}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <Money usd={m.balance_usd} size="sm" className="items-end" />
+                          <HistoricalMoney
+                            usd={m.balance_usd}
+                            localNgn={getLocalBalance(m)}
+                            size="sm"
+                            className="items-end"
+                          />
                         </td>
                         <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                           <div className="flex flex-wrap items-center justify-end gap-2">
@@ -887,6 +929,7 @@ function DepositDialog({
   leaderId: string;
   onDone: () => void;
 }) {
+  const { ngnRate } = useAuth();
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [fee, setFee] = useState("");
@@ -911,7 +954,9 @@ function DepositDialog({
       _member_id: member.id,
       _type: "deposit",
       _amount_usd: Number(grossUsd.toFixed(2)),
-      _currency: "USD",
+      _currency: "NGN",
+      _exchange_rate: ngnRate,
+      _local_amount: Number((grossUsd * ngnRate).toFixed(2)),
       _note: note.trim() || undefined,
     });
     if (error) { setBusy(false); return toast.error(error.message); }
@@ -920,7 +965,9 @@ function DepositDialog({
         _member_id: member.id,
         _type: "bank_fee",
         _amount_usd: Number(feeUsd.toFixed(2)),
-        _currency: "USD",
+        _currency: "NGN",
+        _exchange_rate: ngnRate,
+        _local_amount: Number((feeUsd * ngnRate).toFixed(2)),
         _note: `Bank fee on $${amount}`,
         _parent_txn_id: depId as unknown as string,
       });

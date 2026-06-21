@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fmtDate } from "@/lib/format";
 import type { Resource, ResourceKind } from "@/lib/types";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
+import { removeRealtimeChannelsByTopicPrefix } from "@/lib/realtime";
 
 const KIND_ICON: Record<ResourceKind, typeof LinkIcon> = {
   link: LinkIcon,
@@ -68,6 +69,7 @@ export function ResourceLibrarySection({
   useEffect(() => {
     if (!leaderId) return;
     load();
+    removeRealtimeChannelsByTopicPrefix(supabase, `resources:${leaderId}`);
     const ch = supabase
       .channel(`resources:${leaderId}:${channelId.current}`)
       .on(

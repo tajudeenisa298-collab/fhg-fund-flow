@@ -38,11 +38,12 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        // Mobile: full-screen sheet with safe-area padding and internal scroll.
-        // sm+: original centered modal.
+        // Center in the visible viewport on all screen sizes. The modal itself scrolls
+        // so mobile browser chrome and keyboards do not push it off-screen.
         "fixed z-50 bg-background shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-        "inset-x-0 bottom-0 top-0 flex max-h-[100dvh] w-full flex-col gap-4 overflow-y-auto border-0 p-5 pt-12 [padding-bottom:max(1.25rem,env(safe-area-inset-bottom))] data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-        "sm:left-[50%] sm:top-[50%] sm:bottom-auto sm:right-auto sm:inset-x-auto sm:grid sm:max-h-[85vh] sm:max-w-lg sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg sm:border sm:p-6 sm:pt-6 sm:[padding-bottom:1.5rem] sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:slide-out-to-left-1/2 sm:data-[state=closed]:slide-out-to-top-[48%] sm:data-[state=open]:slide-in-from-left-1/2 sm:data-[state=open]:slide-in-from-top-[48%]",
+        "left-[50%] top-[50%] flex max-h-[min(90dvh,calc(100dvh-2rem))] w-[calc(100vw-2rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] flex-col gap-4 overflow-y-auto rounded-lg border p-5 [padding-bottom:max(1.25rem,env(safe-area-inset-bottom))]",
+        "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
+        "sm:grid sm:max-h-[85vh] sm:p-6 sm:[padding-bottom:1.5rem]",
         className,
       )}
       {...props}

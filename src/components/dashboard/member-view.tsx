@@ -21,7 +21,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, type Profile } from "@/lib/auth-context";
 import { fmtUsd, fmtNgn, fmtDate, fmtMoney } from "@/lib/format";
-import { Money } from "@/components/money";
+import { HistoricalMoney, Money } from "@/components/money";
 import type { Transaction, WithdrawalRequest } from "@/lib/types";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { DownlineSection } from "@/components/dashboard/downline-section";
@@ -50,6 +50,7 @@ import { BalanceProjection } from "@/components/dashboard/balance-projection";
 import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
 import { BankVerifier, type VerifiedBank } from "@/components/bank-verifier";
 import { ReportLeaderDialog } from "@/components/dashboard/report-leader-dialog";
+import { historicalLocalBalance } from "@/lib/historical-money";
 
 
 
@@ -168,6 +169,10 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
   const filteredTxns = useMemo(() => txns.filter((t) => inRange(t.created_at, txnRange)), [txns, txnRange]);
   const requestsPage = usePagedList(requests);
   const txnsPage = usePagedList(filteredTxns);
+  const lockedLocalBalance = useMemo(
+    () => (txns.length > 0 ? historicalLocalBalance(txns, ngnRate) : Number(profile.balance_usd) * ngnRate),
+    [txns, ngnRate, profile.balance_usd],
+  );
 
   const generateCode = async () => {
     try {
@@ -367,9 +372,9 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           label="Managed balance"
-          valueNode={<Money usd={profile.balance_usd} size="lg" />}
+          valueNode={<HistoricalMoney usd={profile.balance_usd} localNgn={lockedLocalBalance} size="lg" />}
           icon={Wallet}
-          hint={`Held by ${leaderName ?? "your leader"} · NGN preview uses today's rate (₦${ngnRate.toLocaleString()}/$1)`}
+          hint={`Held by ${leaderName ?? "your leader"} · NGN value is locked from each transaction's saved rate`}
         />
         <StatCard label="Current rank" value={profile.rank} icon={TrendingUp} hint="Reach Director to unlock" />
         <StatCard label="Pending requests" value={String(pending)} icon={Clock} />

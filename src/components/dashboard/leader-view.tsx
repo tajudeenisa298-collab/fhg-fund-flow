@@ -90,6 +90,7 @@ import { CsvImportDialog } from "@/components/dashboard/csv-import-dialog";
 import { MoneySafetyButton } from "@/components/dashboard/money-safety-button";
 import { AnomalyFlagsSection } from "@/components/dashboard/anomaly-flags-section";
 import { ReferralLeaderboard } from "@/components/dashboard/referral-leaderboard";
+import { DashboardViewSkeleton } from "@/components/dashboard/loading-screens";
 import { Link } from "@tanstack/react-router";
 import { BarChart3 } from "lucide-react";
 
@@ -115,6 +116,7 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
   const [purse, setPurse] = useState<LeaderPurseEntry[]>([]);
   const [rankDefaults, setRankDefaults] = useState<RankUpkeepDefault[]>([]);
   const [txns, setTxns] = useState<Transaction[]>([]);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [teamSearch, setTeamSearch] = useUrlState("q", "");
   const [teamRankFilter, setTeamRankFilter] = useUrlState("rank", "all");
@@ -131,17 +133,17 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
   });
 
   const load = useCallback(async () => {
-    const [
-      { data: t },
-      { data: c },
-      { data: r },
-      { data: p },
-      { data: o },
-      { data: pu },
-      { data: rd },
-      { data: tr },
-    ] =
-      await Promise.all([
+    try {
+      const [
+        { data: t },
+        { data: c },
+        { data: r },
+        { data: p },
+        { data: o },
+        { data: pu },
+        { data: rd },
+        { data: tr },
+      ] = await Promise.all([
         supabase.from("profiles").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
         supabase.from("invite_codes").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
         supabase.from("withdrawal_requests").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
@@ -151,14 +153,17 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
         supabase.from("rank_upkeep_defaults").select("*").eq("leader_id", profile.id).order("rank"),
         supabase.from("transactions").select("*").eq("leader_id", profile.id),
       ]);
-    setTeam((t as Profile[]) ?? []);
-    setCodes((c as InviteCodeRowData[]) ?? []);
-    setRequests((r as WithdrawalRequest[]) ?? []);
-    setPlans((p as UpkeepPlan[]) ?? []);
-    setOffice((o as OfficeLedgerEntry[]) ?? []);
-    setPurse((pu as LeaderPurseEntry[]) ?? []);
-    setRankDefaults((rd as RankUpkeepDefault[]) ?? []);
-    setTxns((tr as Transaction[]) ?? []);
+      setTeam((t as Profile[]) ?? []);
+      setCodes((c as InviteCodeRowData[]) ?? []);
+      setRequests((r as WithdrawalRequest[]) ?? []);
+      setPlans((p as UpkeepPlan[]) ?? []);
+      setOffice((o as OfficeLedgerEntry[]) ?? []);
+      setPurse((pu as LeaderPurseEntry[]) ?? []);
+      setRankDefaults((rd as RankUpkeepDefault[]) ?? []);
+      setTxns((tr as Transaction[]) ?? []);
+    } finally {
+      setInitialLoading(false);
+    }
   }, [profile.id]);
 
   useEffect(() => {
@@ -252,6 +257,10 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
   const memberById = (id: string) => team.find((m) => m.id === id);
 
   const rankLabel = isDirectorOrAbove(profile.rank) ? profile.rank : "Team Leader";
+
+  if (initialLoading) {
+    return <DashboardViewSkeleton section={section} />;
+  }
 
   return (
     <div className="space-y-6">

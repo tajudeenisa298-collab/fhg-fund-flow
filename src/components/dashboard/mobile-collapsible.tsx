@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 
 /**
@@ -15,23 +15,32 @@ export function MobileCollapsible({
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 767px)");
+    const sync = () => setIsMobile(mql.matches);
+    sync();
+    mql.addEventListener("change", sync);
+    return () => mql.removeEventListener("change", sync);
+  }, []);
+
+  if (isMobile === false) return <>{children}</>;
+
   return (
-    <>
-      <div className="md:hidden">
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          className="flex w-full items-center justify-between rounded-2xl border bg-card px-4 py-3 text-left shadow-card"
-          aria-expanded={open}
-        >
-          <span className="text-sm font-semibold">{title}</span>
-          <ChevronDown
-            className={`size-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
-          />
-        </button>
-        {open && <div className="mt-3">{children}</div>}
-      </div>
-      <div className="hidden md:block">{children}</div>
-    </>
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between rounded-2xl border bg-card px-4 py-3 text-left shadow-card"
+        aria-expanded={open}
+      >
+        <span className="text-sm font-semibold">{title}</span>
+        <ChevronDown
+          className={`size-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && <div className="mt-3">{children}</div>}
+    </div>
   );
 }

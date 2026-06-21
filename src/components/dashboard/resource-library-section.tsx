@@ -25,6 +25,7 @@ import { fmtDate } from "@/lib/format";
 import type { Resource, ResourceKind } from "@/lib/types";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 import { removeRealtimeChannelsByTopicPrefix } from "@/lib/realtime";
+import { SectionSkeleton } from "@/components/dashboard/loading-screens";
 
 const KIND_ICON: Record<ResourceKind, typeof LinkIcon> = {
   link: LinkIcon,
@@ -56,18 +57,24 @@ export function ResourceLibrarySection({
   const [items, setItems] = useState<Resource[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Resource | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    const { data } = await supabase
-      .from("resources")
-      .select("*")
-      .eq("leader_id", leaderId)
-      .order("created_at", { ascending: false });
-    setItems((data as Resource[]) ?? []);
+    try {
+      const { data } = await supabase
+        .from("resources")
+        .select("*")
+        .eq("leader_id", leaderId)
+        .order("created_at", { ascending: false });
+      setItems((data as Resource[]) ?? []);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     if (!leaderId) return;
+    setLoading(true);
     load();
     removeRealtimeChannelsByTopicPrefix(supabase, `resources:${leaderId}`);
     const ch = supabase
@@ -85,6 +92,10 @@ export function ResourceLibrarySection({
   }, [leaderId]);
 
   const page = usePagedList(items, 8);
+
+  if (loading && items.length === 0) {
+    return <SectionSkeleton rows={4} />;
+  }
 
   const remove = async (r: Resource) => {
     if (!confirm(`Delete "${r.title}"?`)) return;

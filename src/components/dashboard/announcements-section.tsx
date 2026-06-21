@@ -20,6 +20,7 @@ import { fmtDate } from "@/lib/format";
 import type { Announcement } from "@/lib/types";
 import { usePagedList, ShowMoreButton } from "@/components/paged-list";
 import { removeRealtimeChannelsByTopicPrefix } from "@/lib/realtime";
+import { SectionSkeleton } from "@/components/dashboard/loading-screens";
 
 interface AnnouncementRow extends Announcement {
   expires_at: string | null;
@@ -41,18 +42,24 @@ export function AnnouncementsSection({
   const [expiresAt, setExpiresAt] = useState(""); // local datetime-input value
   const [isEmergency, setIsEmergency] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    const { data } = await supabase
-      .from("announcements")
-      .select("*")
-      .eq("leader_id", leaderId)
-      .order("created_at", { ascending: false });
-    setItems((data as AnnouncementRow[]) ?? []);
+    try {
+      const { data } = await supabase
+        .from("announcements")
+        .select("*")
+        .eq("leader_id", leaderId)
+        .order("created_at", { ascending: false });
+      setItems((data as AnnouncementRow[]) ?? []);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     if (!leaderId) return;
+    setLoading(true);
     load();
     removeRealtimeChannelsByTopicPrefix(supabase, `announcements:${leaderId}`);
     const ch = supabase
@@ -77,6 +84,10 @@ export function AnnouncementsSection({
     : items.filter((a) => !a.expires_at || new Date(a.expires_at).getTime() > now);
 
   const page = usePagedList(visible, 5);
+
+  if (loading && items.length === 0) {
+    return <SectionSkeleton rows={3} />;
+  }
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -51,6 +51,7 @@ import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist
 import { BankVerifier, type VerifiedBank } from "@/components/bank-verifier";
 import { ReportLeaderDialog } from "@/components/dashboard/report-leader-dialog";
 import { historicalLocalBalance } from "@/lib/historical-money";
+import { DashboardViewSkeleton } from "@/components/dashboard/loading-screens";
 
 
 
@@ -78,6 +79,7 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
   const [sponsorName, setSponsorName] = useState<string | null>(null);
   const [reverifyOpen, setReverifyOpen] = useState(false);
   const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [, forceTick] = useState(0);
   const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -130,14 +132,18 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
       : false;
 
   const load = async () => {
-    const [{ data: t }, { data: r }, { data: c }] = await Promise.all([
-      supabase.from("transactions").select("*").eq("member_id", profile.id).order("created_at", { ascending: false }),
-      supabase.from("withdrawal_requests").select("*").eq("member_id", profile.id).order("created_at", { ascending: false }),
-      supabase.from("invite_codes").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
-    ]);
-    setTxns((t as Transaction[]) ?? []);
-    setRequests((r as WithdrawalRequest[]) ?? []);
-    setCodes((c as InviteCodeRowData[]) ?? []);
+    try {
+      const [{ data: t }, { data: r }, { data: c }] = await Promise.all([
+        supabase.from("transactions").select("*").eq("member_id", profile.id).order("created_at", { ascending: false }),
+        supabase.from("withdrawal_requests").select("*").eq("member_id", profile.id).order("created_at", { ascending: false }),
+        supabase.from("invite_codes").select("*").eq("leader_id", profile.id).order("created_at", { ascending: false }),
+      ]);
+      setTxns((t as Transaction[]) ?? []);
+      setRequests((r as WithdrawalRequest[]) ?? []);
+      setCodes((c as InviteCodeRowData[]) ?? []);
+    } finally {
+      setInitialLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -229,6 +235,10 @@ export function MemberView({ profile, section = "all" }: { profile: Profile; sec
     await load();
     await refresh();
   };
+
+  if (initialLoading) {
+    return <DashboardViewSkeleton section={section} />;
+  }
 
   return (
     <div className="space-y-6">

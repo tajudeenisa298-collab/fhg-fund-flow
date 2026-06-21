@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import { Wallet, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth, isAccountBlocked } from "@/lib/auth-context";
 import { MemberView } from "@/components/dashboard/member-view";
 import { LeaderView } from "@/components/dashboard/leader-view";
@@ -14,6 +13,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { AccountStatusScreen } from "@/components/account-status-screen";
 import { DashboardSubNav, sectionFromPath } from "@/components/dashboard/dashboard-sub-nav";
 import { EmergencyAnnouncementPopup } from "@/components/emergency-announcement-popup";
+import { DashboardBootSkeleton } from "@/components/dashboard/loading-screens";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -36,20 +36,7 @@ function DashboardPage() {
   }, [loading, session, nav]);
 
   if (loading || !profile) {
-    return (
-      <div className="min-h-screen bg-gradient-soft p-6">
-        <div className="mx-auto max-w-5xl space-y-4">
-          <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-4 w-80" />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <Skeleton key={i} className="h-28 rounded-2xl" />
-            ))}
-          </div>
-          <Skeleton className="h-64 rounded-2xl" />
-        </div>
-      </div>
-    );
+    return <DashboardBootSkeleton />;
   }
 
   if (isAccountBlocked(profile)) {

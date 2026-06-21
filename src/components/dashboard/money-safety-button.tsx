@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Settings = {
   dual_approval_threshold_usd: number;
@@ -108,7 +109,15 @@ export function MoneySafetyButton({ onSaved }: { onSaved?: () => void }) {
               )}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <div className="space-y-4">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-3 w-44" />
+                  <Skeleton className="h-10 w-full rounded-md" />
+                  <Skeleton className="h-3 w-2/3" />
+                </div>
+              ))}
+            </div>
           )}
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>

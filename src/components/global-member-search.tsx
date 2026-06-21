@@ -9,6 +9,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { UserAvatar } from "@/components/user-avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, type Profile } from "@/lib/auth-context";
@@ -96,6 +97,19 @@ export function GlobalMemberSearch() {
           onValueChange={setQuery}
         />
         <CommandList>
+          {loading && (
+            <div className="space-y-2 p-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="flex items-center gap-3 rounded-md px-2 py-2">
+                  <Skeleton className="size-7 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-3 w-44" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           {!loading && results.length === 0 && (
             <CommandEmpty>No members found.</CommandEmpty>
           )}

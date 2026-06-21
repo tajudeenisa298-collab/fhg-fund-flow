@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fmtDate } from "@/lib/format";
 import { ExportCsvButton } from "@/components/export-csv-button";
 import { removeRealtimeChannelsByTopicPrefix } from "@/lib/realtime";
+import { SectionSkeleton } from "@/components/dashboard/loading-screens";
 
 interface AuditRow {
   id: string;
@@ -95,6 +96,10 @@ export function AdminAuditFeed() {
       )
     : rows;
 
+  if (loading && rows.length === 0) {
+    return <SectionSkeleton rows={5} />;
+  }
+
   return (
     <section className="rounded-2xl border bg-card p-6 shadow-card">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -135,10 +140,8 @@ export function AdminAuditFeed() {
       </div>
 
       <div className="mt-4 divide-y rounded-xl border">
-        {loading && (
-          <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-            Loading audit entries…
-          </p>
+        {loading && rows.length > 0 && (
+          <p className="px-4 py-3 text-center text-xs text-muted-foreground">Refreshing audit entries…</p>
         )}
         {!loading && filtered.length === 0 && (
           <p className="px-4 py-10 text-center text-sm text-muted-foreground">

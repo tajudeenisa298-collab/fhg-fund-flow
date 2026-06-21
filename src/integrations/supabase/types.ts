@@ -1355,6 +1355,7 @@ export type Database = {
         Args: { _ancestor: string; _descendant: string }
         Returns: boolean
       }
+      is_root_signup_available: { Args: never; Returns: boolean }
       is_valid_rank: { Args: { _rank: string }; Returns: boolean }
       leader_adjust_balance: {
         Args: {

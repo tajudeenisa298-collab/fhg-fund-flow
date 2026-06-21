@@ -41,6 +41,7 @@ function SignupPage() {
   const [gender, setGender] = useState<Gender | "">("");
   const [inviteCode, setInviteCode] = useState("");
   const [sponsorName, setSponsorName] = useState<string | null>(null);
+  const [rootSignupAvailable, setRootSignupAvailable] = useState(false);
   const [validating, setValidating] = useState(false);
   const [loading, setLoading] = useState(false);
   const [verifiedBank, setVerifiedBank] = useState<VerifiedBank | null>(null);
@@ -49,6 +50,16 @@ function SignupPage() {
   useEffect(() => {
     if (!authLoading && session) nav({ to: "/dashboard" });
   }, [authLoading, session, nav]);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase.rpc("is_root_signup_available").then(({ data }) => {
+      if (!cancelled) setRootSignupAvailable(Boolean(data));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const code = inviteCode.trim();
@@ -71,8 +82,8 @@ function SignupPage() {
     if (!gender) return toast.error("Please select your gender");
     const parsed = baseSchema.safeParse({ full_name, email, password, gender });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
-    if (!inviteCode.trim()) return toast.error("Invite code is required");
-    if (!sponsorName) return toast.error("Invite code is invalid or expired");
+    if (!rootSignupAvailable && !inviteCode.trim()) return toast.error("Invite code is required");
+    if (inviteCode.trim() && !sponsorName) return toast.error("Invite code is invalid or expired");
 
     setLoading(true);
     const { data: authData, error } = await supabase.auth.signUp({
@@ -120,7 +131,9 @@ function SignupPage() {
         <div className="rounded-2xl border bg-card p-8 shadow-card">
           <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Use your sponsor's invite code to join the correct hierarchy.
+            {rootSignupAvailable
+              ? "Create the first root leader account. Everyone after this will join by invite code."
+              : "Use your sponsor's invite code to join the correct hierarchy."}
           </p>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
@@ -157,14 +170,21 @@ function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="invite">Invite code</Label>
+              <Label htmlFor="invite">
+                Invite code {rootSignupAvailable ? "(optional for first account)" : ""}
+              </Label>
               <Input
                 id="invite"
                 value={inviteCode}
                 onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
                 placeholder="e.g. FHG-AB12CD"
-                required
+                required={!rootSignupAvailable}
               />
+              {rootSignupAvailable && !inviteCode && (
+                <p className="text-xs text-muted-foreground">
+                  No invite needed yet. This first account becomes the root Director.
+                </p>
+              )}
               {validating && <p className="text-xs text-muted-foreground">Checking code…</p>}
               {!validating && sponsorName && (
                 <p className="flex items-center gap-1.5 text-xs text-success">

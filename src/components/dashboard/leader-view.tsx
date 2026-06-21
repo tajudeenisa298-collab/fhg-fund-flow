@@ -15,6 +15,7 @@ import {
   Settings as SettingsIcon,
   Search,
   ArrowUpDown,
+  Undo2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -241,6 +242,31 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
     [requests],
   );
   const resolvedPage = usePagedList(resolvedRequests, 8);
+  const reversedTxnIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const t of txns) {
+      if (t.parent_txn_id && (t.note?.startsWith("Reversal of") || t.note?.startsWith("Undo of"))) {
+        set.add(t.parent_txn_id);
+      }
+    }
+    return set;
+  }, [txns]);
+  const recentDeposits = useMemo(
+    () =>
+      txns
+        .filter((t) => t.type === "deposit" && !reversedTxnIds.has(t.id))
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 8),
+    [txns, reversedTxnIds],
+  );
+  const undoableDeposits = useMemo(
+    () =>
+      recentDeposits.filter((t) => {
+        const until = (t as unknown as { reversal_window_until?: string | null }).reversal_window_until;
+        return until && new Date(until) > new Date();
+      }),
+    [recentDeposits],
+  );
 
   const generateCode = async () => {
     try {
@@ -250,6 +276,19 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not create invite code");
     }
+  };
+
+  const undoDeposit = async (txn: Transaction) => {
+    const member = memberById(txn.member_id);
+    if (!window.confirm(
+      `Undo this ${fmtUsd(txn.amount_usd)} deposit${member ? ` for ${member.full_name}` : ""}? ` +
+        "This creates a correcting deduction and keeps both records in the history."
+    )) return;
+    const { error } = await supabase.rpc("undo_recent_deposit", { _txn_id: txn.id });
+    if (error) return toast.error(error.message);
+    toast.success("Deposit undone");
+    await load();
+    await refresh();
   };
 
 
@@ -764,6 +803,13 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
       )}
 
       {show("money") && (<>
+        <RecentDepositUndoSection
+          deposits={recentDeposits}
+          undoableCount={undoableDeposits.length}
+          memberName={(id) => memberById(id)?.full_name ?? "Member"}
+          onUndo={undoDeposit}
+        />
+
         <MobileCollapsible title="Personal purse">
           <LeaderPurseSection leaderId={profile.id} />
         </MobileCollapsible>
@@ -860,6 +906,75 @@ export function LeaderView({ profile, section = "all" }: { profile: Profile; sec
 }
 
 /* ─── NGN rate editor ─── */
+
+function RecentDepositUndoSection({
+  deposits,
+  undoableCount,
+  memberName,
+  onUndo,
+}: {
+  deposits: Transaction[];
+  undoableCount: number;
+  memberName: (memberId: string) => string;
+  onUndo: (txn: Transaction) => void;
+}) {
+  return (
+    <section className="rounded-2xl border bg-card p-6 shadow-card">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-base font-semibold">Recent deposit undo</h2>
+          <p className="text-sm text-muted-foreground">
+            Deposits can be undone only while their reversal window is still open.
+          </p>
+        </div>
+        <span className="rounded-full bg-success/10 px-3 py-1 text-xs font-medium text-success">
+          {undoableCount} available
+        </span>
+      </div>
+
+      <div className="mt-4 divide-y rounded-xl border">
+        {deposits.length === 0 && (
+          <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+            No recent deposits to undo.
+          </p>
+        )}
+        {deposits.map((t) => {
+          const until = (t as unknown as { reversal_window_until?: string | null }).reversal_window_until;
+          const open = !!until && new Date(until) > new Date();
+          return (
+            <div key={t.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+              <div className="min-w-0">
+                <p className="font-medium">
+                  {memberName(t.member_id)} -{" "}
+                  <Money usd={t.amount_usd} rate={t.exchange_rate ?? undefined} size="sm" inline />
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Recorded {fmtDate(t.created_at)}
+                  {until && <> - undo {open ? "available until" : "expired"} {fmtDate(until)}</>}
+                </p>
+              </div>
+              {open ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-warning hover:text-warning"
+                  onClick={() => onUndo(t)}
+                >
+                  <Undo2 className="mr-1 size-3.5" /> Undo deposit
+                </Button>
+              ) : (
+                <span className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">
+                  Undo expired
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 function NgnRateButton({
   currentRate,

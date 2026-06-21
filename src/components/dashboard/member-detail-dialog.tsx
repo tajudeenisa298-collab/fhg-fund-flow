@@ -55,7 +55,9 @@ export function MemberDetailDialog({
   const reversedIds = useMemo(() => {
     const set = new Set<string>();
     for (const t of txns) {
-      if (t.parent_txn_id && t.note?.startsWith("Reversal of")) set.add(t.parent_txn_id);
+      if (t.parent_txn_id && (t.note?.startsWith("Reversal of") || t.note?.startsWith("Undo of"))) {
+        set.add(t.parent_txn_id);
+      }
     }
     return set;
   }, [txns]);
@@ -251,9 +253,9 @@ export function MemberDetailDialog({
                     <tbody className="divide-y">
                       {txns.map((t) => {
                         const isReversed = reversedIds.has(t.id);
-                        const isReversal = !!t.note?.startsWith("Reversal of");
+                        const isReversal = !!(t.note?.startsWith("Reversal of") || t.note?.startsWith("Undo of"));
                         const canReverse =
-                          REVERSIBLE_TYPES.has(t.type) && !isReversed && !isReversal;
+                          REVERSIBLE_TYPES.has(t.type) && t.type !== "deposit" && !isReversed && !isReversal;
                         return (
                           <tr key={t.id} className={isReversed ? "opacity-60" : ""}>
                             <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
@@ -278,6 +280,9 @@ export function MemberDetailDialog({
                                 const inWindow =
                                   t.type === "deposit" && !isReversed && !isReversal &&
                                   window && new Date(window) > new Date();
+                                const depositWindowClosed =
+                                  t.type === "deposit" && !isReversed && !isReversal &&
+                                  (!window || new Date(window) <= new Date());
                                 if (inWindow) {
                                   return (
                                     <Button
@@ -297,6 +302,13 @@ export function MemberDetailDialog({
                                     >
                                       <Undo2 className="mr-1 size-3.5" /> Undo
                                     </Button>
+                                  );
+                                }
+                                if (depositWindowClosed) {
+                                  return (
+                                    <span className="text-[10px] uppercase text-muted-foreground">
+                                      Undo expired
+                                    </span>
                                   );
                                 }
                                 if (canReverse) {

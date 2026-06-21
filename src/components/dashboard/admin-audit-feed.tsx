@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Shield, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ interface MiniProfile {
  * anyone in their downline. RLS does the access control — we just render.
  */
 export function AdminAuditFeed() {
+  const channelId = useRef(crypto.randomUUID());
   const [rows, setRows] = useState<AuditRow[]>([]);
   const [people, setPeople] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -65,7 +66,7 @@ export function AdminAuditFeed() {
   useEffect(() => {
     load();
     const ch = supabase
-      .channel("admin-audit-feed")
+      .channel(`admin-audit-feed:${channelId.current}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "admin_audit_log" },

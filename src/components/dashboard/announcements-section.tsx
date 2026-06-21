@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Megaphone, Plus, Trash2, AlertTriangle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ export function AnnouncementsSection({
   leaderId: string;
   canManage: boolean;
 }) {
+  const channelId = useRef(crypto.randomUUID());
   const [items, setItems] = useState<AnnouncementRow[]>([]);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -53,7 +54,7 @@ export function AnnouncementsSection({
     if (!leaderId) return;
     load();
     const ch = supabase
-      .channel(`announcements:${leaderId}`)
+      .channel(`announcements:${leaderId}:${channelId.current}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "announcements", filter: `leader_id=eq.${leaderId}` },

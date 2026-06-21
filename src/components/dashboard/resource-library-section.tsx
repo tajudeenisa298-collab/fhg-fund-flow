@@ -51,6 +51,7 @@ export function ResourceLibrarySection({
   leaderId: string;
   canManage: boolean;
 }) {
+  const channelId = useRef(crypto.randomUUID());
   const [items, setItems] = useState<Resource[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Resource | null>(null);
@@ -68,7 +69,7 @@ export function ResourceLibrarySection({
     if (!leaderId) return;
     load();
     const ch = supabase
-      .channel(`resources:${leaderId}`)
+      .channel(`resources:${leaderId}:${channelId.current}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "resources", filter: `leader_id=eq.${leaderId}` },
